@@ -20,7 +20,7 @@
                     <span>Invoice & Product</span>
                 </li>
                 @if($usr->can('invoiceView') || $usr->can('invoiceAdd') || $usr->can('invoiceDelete') || $usr->can('invoiceUpdate'))
-                {{-- <li class="nav-item">
+                 <li class="nav-item">
                      <a class="nav-link" href="#ordersSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="ordersSubmenu">
                         <i data-feather="shopping-bag"></i>
                         <span>Invoice</span>
@@ -34,7 +34,7 @@
                         <li><a class="nav-link {{Route::is('order.edit') || Route::is('order.index') || Route::is('order.show') ? 'active' : ''}}" href="{{route('order.index')}}">Invoice List</a></li>
                         @endif
                     </ul>
-                </li> --}}
+                </li>
                 @endif
                   @if ($usr->can('animationCategoryAdd') || $usr->can('animationCategoryView') ||  $usr->can('animationCategoryDelete') ||  $usr->can('animationCategoryUpdate') || $usr->can('brandAdd') || $usr->can('brandView') ||  $usr->can('brandDelete') ||  $usr->can('brandUpdate') || $usr->can('categoryAdd') || $usr->can('categoryView') ||  $usr->can('categoryDelete') ||  $usr->can('categoryUpdate') || $usr->can('productAdd') || $usr->can('productView') ||  $usr->can('productDelete') ||  $usr->can('productUpdate'))
                 <li class="nav-item">
@@ -133,7 +133,7 @@
                 <li class="sidebar-title">
                     <span>Offer & Coupon</span>
                 </li>
-                {{-- <li class="nav-item">
+                <li class="nav-item">
                     <a class="nav-link" href="#offerSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="offerSubmenu">
                         <i data-feather="file-text"></i>
                         <span>Offer List</span>
@@ -147,7 +147,7 @@
                          <li><a class="nav-link {{Route::is('offer-product.index') || Route::is('offer-product.edit') || Route::is('offer-product.create') || Route::is('offer-product.show')   ? 'active' : '' }}" href="{{route('offer-product.index')}}">Offer Product</a></li>
                          @endif
                     </ul>
-                </li> --}}
+                </li> 
                 @endif
                     @if ($usr->can('couponAdd') || $usr->can('couponView') ||  $usr->can('couponDelete') ||  $usr->can('couponUpdate'))
                 <li class="nav-item">
@@ -210,7 +210,7 @@
                 </li> --}}
    @if ($usr->can('expenseAdd') || $usr->can('expenseView') ||  $usr->can('expenseDelete') ||  $usr->can('expenseUpdate') || $usr->can('expense-categoryAdd') || $usr->can('expense-categoryView') ||  $usr->can('expense-categoryDelete') ||  $usr->can('expense-categoryUpdate'))
                  {{-- NEW EXPENSE MENU --}}
-                {{-- <li class="sidebar-title">
+                <li class="sidebar-title">
                     <span>Finance</span>
                 </li>
                 <li class="nav-item">
@@ -227,10 +227,10 @@
                         <li><a class="nav-link {{ Route::is('expense.index') ? 'active' : '' }}" href="{{ route('expense.index') }}">Expense List</a></li>
                         @endif
                     </ul>
-                </li> --}}
+                </li> 
 @endif
   @if ($usr->can('reportAdd'))
-                {{-- <li class="sidebar-title">
+                <li class="sidebar-title">
                     <span>Report</span>
                 </li>
                 <li class="nav-item">
@@ -246,7 +246,7 @@
                           <li><a class="nav-link {{ Route::is('report.income') ? 'active' : '' }}" href="{{ route('report.income') }}">Income Report</a></li>
                            <li><a class="nav-link {{ Route::is('report.profit_loss') ? 'active' : '' }}" href="{{ route('report.profit_loss') }}">Profit & Loss Report</a></li>
                     </ul>
-                </li> --}}
+                </li>
                 @endif
 
                 <li class="sidebar-title">
