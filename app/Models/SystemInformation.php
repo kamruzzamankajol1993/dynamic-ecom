@@ -12,7 +12,6 @@ class SystemInformation extends Model
 
             'ins_name',
             'logo',
-            'black_logo',
             'branch_id',
             'designation_id',
             'keyword',

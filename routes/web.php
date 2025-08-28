@@ -58,8 +58,13 @@ use App\Http\Controllers\Admin\ExpenseCategoryController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\PosController;
-
-
+use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\AnalyticSettingController;
+use App\Http\Controllers\Admin\SupportCategoryController;
+use App\Http\Controllers\Admin\SupportTicketController;
+use App\Http\Controllers\Admin\TicketContactInfoController;
 
 
 // Route::get('/', function () {
@@ -121,6 +126,36 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::group(['middleware' => ['auth']], function() {
 
+    Route::resource('ticket-contact-infos', TicketContactInfoController::class)->except('show');
+    Route::get('ajax-ticket-contact-infos-data', [TicketContactInfoController::class, 'data'])->name('ajax.ticket-contact-infos.data');
+
+    // Support Ticket (FAQ) Routes
+    Route::resource('support-tickets', SupportTicketController::class);
+    Route::get('ajax-support-tickets-data', [SupportTicketController::class, 'data'])->name('ajax.support-tickets.data');
+
+
+    // Support Ticket Category Routes
+    Route::resource('support-categories', SupportCategoryController::class);
+    Route::get('ajax-support-categories-data', [SupportCategoryController::class, 'data'])->name('ajax.support-categories.data');
+
+    Route::get('/settings-analytics', [AnalyticSettingController::class, 'index'])->name('settings.analytics.index');
+    Route::post('/settings-analytics-update', [AnalyticSettingController::class, 'update'])->name('settings.analytics.update');
+
+    Route::resource('purchase', PurchaseController::class);
+    Route::get('ajax/purchases/data', [PurchaseController::class, 'data'])->name('ajax.purchase.data');
+
+     // Supplier Routes
+    Route::resource('supplier', SupplierController::class);
+    Route::get('ajax-suppliers-data', [SupplierController::class, 'data'])->name('ajax.supplier.data');
+    Route::get('suppliers-export-pdf', [SupplierController::class, 'exportPdf'])->name('supplier.export.pdf');
+    Route::get('suppliers-export-excel', [SupplierController::class, 'exportExcel'])->name('supplier.export.excel');
+
+    // Stock Management Routes
+    Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::get('stock-products-variants/{product}', [StockController::class, 'getVariants'])->name('stock.variants.get');
+    Route::post('stock-update', [StockController::class, 'update'])->name('stock.update');
+    Route::get('/stock-variants-history-size/{variant}/{sizeId}', [StockController::class, 'getHistory'])->name('stock.history.get');
+
     Route::prefix('reports')->name('report.')->group(function () {
     Route::get('salesReport', [ReportController::class, 'salesReport'])->name('sales');
     Route::get('sales-data', [ReportController::class, 'salesReportData'])->name('sales.data');
@@ -141,10 +176,16 @@ Route::group(['middleware' => ['auth']], function() {
 Route::resource('pos', PosController::class);
 
 // Route to handle live customer search
+Route::get('/orders-invoice/{order}', [PosController::class, 'showInvoice'])->name('pos.orders.invoice');
+Route::get('/orders-print/{order}', [PosController::class, 'printInvoice'])->name('pos.orders.print');
+Route::post('/orders-store', [PosController::class, 'storeOrder'])->name('pos.orders.store');
 Route::get('customers-search', [PosController::class, 'search'])->name('customers.search');
-
+Route::get('/bundle-offers', [PosController::class, 'getBundleOffers'])->name('pos.bundle-offers.get');
+Route::get('/bundle-offers/{bundleOfferProduct}', [PosController::class, 'getBundleOfferDetails'])->name('pos.bundle-offers.details');
 // Route to handle new customer creation
 Route::post('customers', [PosController::class, 'store'])->name('customers.store');
+Route::get('pos-products', [PosController::class, 'getProducts'])->name('pos.products.get');
+    Route::get('pos-products/{product}', [PosController::class, 'getProductDetails'])->name('pos.products.details');
 
     Route::resource('expense-category', ExpenseCategoryController::class);
 Route::get('ajax-expense-category', [ExpenseCategoryController::class, 'data'])->name('expense-category.data');
@@ -289,7 +330,10 @@ Route::resource('defaultLocation', DefaultLocationController::class);
 
     Route::resource('banner', BannerController::class);
     Route::resource('clientSay', ClientSayController::class);
-    Route::resource('review', ReviewController::class);
+    //Route::resource('review', ReviewController::class);
+    // Review Routes
+    Route::resource('review', ReviewController::class)->except(['create', 'store']);
+    Route::get('ajax/reviews/data', [ReviewController::class, 'data'])->name('ajax.review.data');
     Route::resource('newsAndMedia', NewsAndMediaController::class);
     Route::resource('gallery', GalleryController::class);
     Route::resource('socialLink', SocialLinkController::class);

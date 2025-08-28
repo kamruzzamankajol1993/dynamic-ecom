@@ -26,12 +26,12 @@
         <div class="auth-container">
             <div class="auth-branding-column">
                 <h1 class="branding-title">{{$front_ins_name}}</h1>
-                <p class="branding-subtitle">The future of  retail management is here. Streamlined, simple, and powerful.</p>
+                <p class="branding-subtitle">The future of fashion retail management is here. Streamlined, simple, and powerful.</p>
             </div>
 
             <div class="auth-form-column">
                 <div class="auth-form-header">
-                    <img src="{{ asset('/') }}{{ $front_black_logo_name }}" alt="Logo" class="auth-logo">
+                    <img src="{{ asset('/') }}{{$front_black_logo_name}}" alt="Logo" class="auth-logo">
                     <h3 class="auth-title">Forgot Password?</h3>
                     <p class="text-muted">Enter your email and we'll send instructions to reset your password.</p>
                 </div>

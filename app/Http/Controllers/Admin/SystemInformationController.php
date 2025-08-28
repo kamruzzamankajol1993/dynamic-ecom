@@ -168,7 +168,6 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
                     'address' => 'required|string',
                     'email' => 'required|string',
                     'logo' => 'required|file',
-                    'black_logo' => 'required|file',
                     'icon' => 'required|file',
                 ]);
 
@@ -189,23 +188,7 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
                 $systemInformation->develop_by = $request->develop_by;
                 $systemInformation->tax	= $request->tax;
                 $systemInformation->charge = $request->charge;
-
-                if ($request->hasfile('black_logo')) {
-
-                    $productImage = $request->file('black_logo');
-                    $imageName = 'black_logo'.$time_dy.$productImage->getClientOriginalName();
-                    $directory = 'public/uploads/';
-                    $imageUrl = $directory.$imageName;
-
-                    $img=Image::read($productImage);
-                        // ->resize(140,50);
-                    $img->save($imageUrl);
-
-                    $systemInformation->black_logo =  'public/uploads/'.$imageName;
-
-                }
-
-                 
+                
                 if ($request->hasfile('logo')) {
 
 
@@ -219,6 +202,22 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
                     $img->save($imageUrl);
 
                     $systemInformation->logo =  'public/uploads/'.$imageName;
+
+                }
+
+                 if ($request->hasfile('black_logo')) {
+
+
+                    $productImage = $request->file('black_logo');
+                    $imageName = 'black_logo'.$time_dy.$productImage->getClientOriginalName();
+                    $directory = 'public/uploads/';
+                    $imageUrl = $directory.$imageName;
+
+                    $img=Image::read($productImage);
+                        // ->resize(140,50);
+                    $img->save($imageUrl);
+
+                    $systemInformation->black_logo =  'public/uploads/'.$imageName;
 
                 }
                 if ($request->hasfile('icon')) {
@@ -282,7 +281,6 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
         if ($request->hasfile('logo')) {
 
 
-
             $productImage = $request->file('logo');
             $imageName = 'logo'.$time_dy.$productImage->getClientOriginalName();
             $directory = 'public/uploads/';
@@ -295,7 +293,8 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
             $systemInformation->logo =  'public/uploads/'.$imageName;
 
         }
-           if ($request->hasfile('black_logo')) {
+        if ($request->hasfile('black_logo')) {
+
 
                     $productImage = $request->file('black_logo');
                     $imageName = 'black_logo'.$time_dy.$productImage->getClientOriginalName();

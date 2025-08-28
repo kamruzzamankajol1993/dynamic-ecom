@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('ins_name')->nullable();
             $table->string('logo')->nullable();
-            $table->string('black_logo')->nullable();
             $table->string('branch_id')->nullable();
             $table->string('icon')->nullable();
             $table->string('address')->nullable();

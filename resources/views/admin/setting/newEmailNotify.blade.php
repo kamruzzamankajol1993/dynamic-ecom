@@ -57,7 +57,7 @@
         <div class="auth-right py-40 px-24 flex-center flex-column">
             <div class="auth-right__inner mx-auto w-100">
                 <a href="{{route('home')}}" class="auth-right__logo">
-                    <img src="{{ asset('/') }}{{ $front_black_logo_name }}" alt="">
+                    <img src="{{ asset('/') }}{{ asset('/') }}{{$front_black_logo_name}}" alt="">
                 </a>
                
                     @include('flash_message')   

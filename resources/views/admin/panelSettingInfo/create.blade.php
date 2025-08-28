@@ -82,7 +82,6 @@ Panel Setting | {{ $ins_name }}
                 <label class="form-label">System Logo<span class="text-red font-w900">*</span>  </label>
                 <input type="file" class="form-control" name="logo" id="" placeholder="System Logo" required>
             </div>
-
             <div class="col-xl-12 col-xxl-12 col-sm-12 mb-3">
                 <label class="form-label">System Black Logo<span class="text-red font-w900">*</span>  </label>
                 <input type="file" class="form-control" name="black_logo" id="" placeholder="System Black Logo" required>

@@ -68,10 +68,10 @@ Panel Setting | {{ $ins_name }}
                                     <img src="{{ asset('/') }}{{ $panelSettingInfo->logo }}" style="height:20px;"/>
                                 </div>
                                 <div class="col-xl-6 col-xxl-6 col-sm-6 mb-3">
-                                    <label class="form-label">System Black Logo<span class="text-red font-w900">*</span>  </label>
-                                    <input type="file" class="form-control" name="black_logo" id="" placeholder="System Black Logo" >
-                                    <img src="{{ asset('/') }}{{ $panelSettingInfo->black_logo }}" style="height:20px;"/>
-                                </div>
+                <label class="form-label">System Black Logo<span class="text-red font-w900">*</span>  </label>
+                <input type="file" class="form-control" name="black_logo" id="" placeholder="System Black Logo" >
+                   <img src="{{ asset('/') }}{{ $panelSettingInfo->black_logo }}" style="height:20px;"/>
+            </div>
 <div class="col-xl-12 col-xxl-12 col-sm-12 mb-3">
                 <label class="form-label">Admin Url<span class="text-red font-w900">*</span>  </label>
                 <input type="text" class="form-control" value="{{ $panelSettingInfo->main_url }}" name="main_url" id="" placeholder="Admin Url" required>

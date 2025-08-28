@@ -81,7 +81,7 @@ class AppServiceProvider extends ServiceProvider
 
               view()->share('front_icon_name', $front_icon_name);
               view()->share('front_logo_name', $front_logo_name);
-              view()->share('front_black_logo_name', $front_black_logo_name);
+                view()->share('front_black_logo_name', $front_black_logo_name);
               view()->share('front_ins_name', $front_ins_name);
               view()->share('front_ins_add', $front_ins_add);
               view()->share('front_ins_email', $front_ins_email);
