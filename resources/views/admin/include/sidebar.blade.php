@@ -346,6 +346,15 @@
                     </a>
                 </li>
                 @endif
+
+                 @if ($usr->can('sliderAdd') || $usr->can('sliderView') ||  $usr->can('sliderDelete') ||  $usr->can('sliderUpdate'))
+                <li class="nav-item">
+                    <a class="nav-link {{ Route::is('main-slider.index') || Route::is('main-slider.edit') || Route::is('main-slider.create') ? 'active' : '' }}" href="{{ route('main-slider.index') }}">
+                        <i data-feather="image"></i>
+                        <span>Slider</span>
+                    </a>
+                </li>
+                @endif
                 
                 @if ( $usr->can('userAdd') || $usr->can('userView') ||  $usr->can('userDelete') ||  $usr->can('userUpdate') || $usr->can('designationAdd') || $usr->can('designationView') ||  $usr->can('designationDelete') ||  $usr->can('designationUpdate') || $usr->can('branchAdd') || $usr->can('branchView') ||  $usr->can('branchDelete') ||  $usr->can('branchUpdate'))
                 <li class="sidebar-title">

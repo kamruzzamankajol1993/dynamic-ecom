@@ -67,6 +67,7 @@ use App\Http\Controllers\Admin\SupportTicketController;
 use App\Http\Controllers\Admin\TicketContactInfoController;
 use App\Http\Controllers\Admin\OfferProductController;
 use App\Http\Controllers\Admin\OfferBannerController;
+use App\Http\Controllers\Admin\MainSliderController;
 
 
 // Route::get('/', function () {
@@ -127,6 +128,9 @@ Route::controller(AuthController::class)->group(function () {
 
 
 Route::group(['middleware' => ['auth']], function() {
+
+     Route::resource('main-slider', MainSliderController::class)->except(['show']);
+    Route::get('ajax-main-slider-data', [MainSliderController::class, 'data'])->name('ajax.main-slider.data');
 
 
      Route::resource('offer-banner', OfferBannerController::class)->except(['show']);
