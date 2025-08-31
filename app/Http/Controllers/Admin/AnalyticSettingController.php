@@ -7,14 +7,17 @@ use Illuminate\Http\Request;
 use App\Models\AnalyticSetting;
 class AnalyticSettingController extends Controller
 {
-        public function index()
+         public function index()
     {
         // Fetch all relevant settings and pass them to the view
         $settings = AnalyticSetting::whereIn('key', [
             'facebook_pixel_status',
             'facebook_pixel_id',
             'google_analytics_status',
-            'google_analytics_tracking_id'
+            'google_analytics_tracking_id',
+            'facebook_access_token',
+            'facebook_test_event_code',
+            'facebook_domain_verification_code'
         ])->pluck('value', 'key');
 
         return view('admin.setting.analytics', compact('settings'));
@@ -36,7 +39,7 @@ class AnalyticSettingController extends Controller
         foreach ($request->except(['_token', 'facebook_pixel_status', 'google_analytics_status']) as $key => $value) {
             AnalyticSetting::updateOrCreate(
                 ['key' => $key],
-                ['value' => $value]
+                ['value' => $value ?? '']
             );
         }
 

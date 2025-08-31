@@ -65,6 +65,8 @@ use App\Http\Controllers\Admin\AnalyticSettingController;
 use App\Http\Controllers\Admin\SupportCategoryController;
 use App\Http\Controllers\Admin\SupportTicketController;
 use App\Http\Controllers\Admin\TicketContactInfoController;
+use App\Http\Controllers\Admin\OfferProductController;
+use App\Http\Controllers\Admin\OfferBannerController;
 
 
 // Route::get('/', function () {
@@ -125,6 +127,13 @@ Route::controller(AuthController::class)->group(function () {
 
 
 Route::group(['middleware' => ['auth']], function() {
+
+
+     Route::resource('offer-banner', OfferBannerController::class)->except(['show']);
+    Route::get('ajax-offer-banner-data', [OfferBannerController::class, 'data'])->name('ajax.offer-banner.data');
+
+    Route::resource('offer-product', OfferProductController::class);
+    Route::get('ajax-offer-product-data', [OfferProductController::class, 'data'])->name('ajax.offer-product.data');
 
     Route::resource('ticket-contact-infos', TicketContactInfoController::class)->except('show');
     Route::get('ajax-ticket-contact-infos-data', [TicketContactInfoController::class, 'data'])->name('ajax.ticket-contact-infos.data');
@@ -233,10 +242,7 @@ Route::get('order-search-customers', [OrderController::class, 'searchCustomers']
     Route::get('ajax-bundle-offer-data', [BundleOfferController::class, 'data'])->name('ajax.bundle-offer.data');
     Route::get('ajax-bundle-offer-search-products', [BundleOfferController::class, 'searchProducts'])->name('ajax.bundle-offer.search-products');
 
-    // Routes for managing the specific Product Deals
-    Route::resource('offer-product', OfferDetailController::class);
-    // --- NEW: AJAX route for the product deals table ---
-    Route::get('ajax-offer-product-data', [OfferDetailController::class, 'data'])->name('ajax.offer-product.data');
+ 
 
     Route::get('frontend-control', [FrontendControlController::class, 'index'])->name('frontend.control.index');
     Route::post('frontend-control', [FrontendControlController::class, 'update'])->name('frontend.control.update');

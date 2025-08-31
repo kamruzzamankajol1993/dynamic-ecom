@@ -33,6 +33,24 @@
                                     <input type="text" id="facebook_pixel_id" name="facebook_pixel_id" class="form-control" value="{{ $settings['facebook_pixel_id'] ?? '' }}" placeholder="Facebook Pixel ID">
                                 </div>
                             </div>
+                             <div class="form-group row align-items-center mb-3">
+                                <label for="facebook_access_token" class="col-md-3 col-form-label">Access Token</label>
+                                <div class="col-md-9">
+                                    <input type="text" id="facebook_access_token" name="facebook_access_token" class="form-control" value="{{ $settings['facebook_access_token'] ?? '' }}" placeholder="Access Token for Conversation API">
+                                </div>
+                            </div>
+                            <div class="form-group row align-items-center mb-3">
+                                <label for="facebook_test_event_code" class="col-md-3 col-form-label">Test Event Code</label>
+                                <div class="col-md-9">
+                                    <input type="text" id="facebook_test_event_code" name="facebook_test_event_code" class="form-control" value="{{ $settings['facebook_test_event_code'] ?? '' }}" placeholder="Test Event Code">
+                                </div>
+                            </div>
+                            <div class="form-group row align-items-center mb-3">
+                                <label for="facebook_domain_verification_code" class="col-md-3 col-form-label">Domain Verification</label>
+                                <div class="col-md-9">
+                                    <input type="text" id="facebook_domain_verification_code" name="facebook_domain_verification_code" class="form-control" value="{{ $settings['facebook_domain_verification_code'] ?? '' }}" placeholder="Domain Verification Code">
+                                </div>
+                            </div>
                             <div class="form-group row">
                                 <div class="col-md-9 offset-md-3">
                                     <button type="submit" class="btn btn-primary">Save</button>
