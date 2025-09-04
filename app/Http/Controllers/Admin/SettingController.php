@@ -37,6 +37,8 @@ class SettingController extends Controller
     }
 
     public function profileSettingUpdate(Request $request){
+        
+        $time_dy=time();
 
         $id=$request->id;
         $input = $request->all();

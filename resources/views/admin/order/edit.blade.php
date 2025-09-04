@@ -113,7 +113,7 @@
                              <div class="mb-3">
                                 <label class="form-label">Warehouse*</label>
                                 <select name="warehouse" class="form-select" required>
-                                    <option>SpotLightAttires</option> {{-- Assuming this is static --}}
+                                    <option>Pick N Drop</option> {{-- Assuming this is static --}}
                                 </select>
                             </div>
                              <div class="mb-3">

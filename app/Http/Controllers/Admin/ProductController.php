@@ -432,9 +432,7 @@ class ProductController extends Controller
         if (!File::isDirectory($destinationPath)) {
             File::makeDirectory($destinationPath, 0777, true, true);
         }
-        Image::read($image->getRealPath())->resize(600, 600, function ($c) {
-            $c->aspectRatio(); $c->upsize();
-        })->save($destinationPath . '/' . $imageName);
+        Image::read($image->getRealPath())->resize(500, 428)->save($destinationPath . '/' . $imageName);
         return $directory . '/' . $imageName;
     }
 
@@ -445,9 +443,7 @@ class ProductController extends Controller
         if (!File::isDirectory($destinationPath)) {
             File::makeDirectory($destinationPath, 0777, true, true);
         }
-        Image::read($image->getRealPath())->resize(300, 300, function ($c) {
-            $c->aspectRatio(); $c->upsize();
-        })->save($destinationPath . '/' . $imageName);
+        Image::read($image->getRealPath())->resize(500, 428)->save($destinationPath . '/' . $imageName);
         return $directory . '/' . $imageName;
     }
 
