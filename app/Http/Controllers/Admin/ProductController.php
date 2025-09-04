@@ -137,7 +137,7 @@ class ProductController extends Controller
 
             $product = Product::create([
                 'name' => $request->name,
-                'slug' => Str::slug($request->name),
+                'slug' => Str::slug($request->name).'_'.mt_rand(100000, 999999),
                 'product_code' => $request->product_code,
                 'brand_id' => $request->brand_id,
                 'category_id' => $request->category_id,
@@ -316,7 +316,7 @@ class ProductController extends Controller
 
             $product->update([
                 'name' => $request->name,
-                'slug' => Str::slug($request->name),
+                'slug' => Str::slug($request->name).'_'.mt_rand(100000, 999999),
                 'product_code' => $request->product_code,
                 'brand_id' => $request->brand_id,
                 'category_id' => $request->category_id,

@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Payment;
 use Mpdf\Mpdf;
 use Carbon\Carbon;
+use App\Models\OrderTracking;
+use DateTimeZone;
+use DateTime;
 class OrderController extends Controller
 {
 
@@ -217,8 +220,56 @@ class OrderController extends Controller
      public function updateStatus(Request $request, Order $order)
     {
         $request->validate(['status' => 'required|string']);
-        $order->update(['status' => $request->status]);
 
+        $tz = new DateTimeZone('Asia/Dhaka');
+
+// Create a new DateTime object with the specified timezone
+$dt = new DateTime('now', $tz);
+
+// Format and display the current time in Bangladesh
+$now = $dt->format('h:i:s');
+
+        if($request->status == 'delivered'){
+
+            $order->update([
+                'status' => $request->status,
+                'total_pay' => $order->total_amount,
+                'cod' => 0,
+                'payment_status' => 'paid',
+                
+            ]);
+
+        }else{
+        $order->update(['status' => $request->status]);
+        }
+
+
+        $checkTheId = OrderTracking::where('tracking_number',$order->invoice_no)
+        ->where('status',$request->status)->value('id');
+
+
+        if(empty($checkTheId)){
+
+          $newtracking = new OrderTracking();
+          $newtracking->customer_id =  $order->customer_id;
+          $newtracking->tracking_number = $order->invoice_no;
+          $newtracking->status = $request->status;
+          $newtracking->bd_time = $now;
+          $newtracking->bd_date = date('Y-m-d');
+          $newtracking->save();
+
+        }else{
+
+            $newtracking =OrderTracking::find($checkTheId);
+          $newtracking->customer_id =  $order->customer_id;
+          $newtracking->tracking_number = $order->invoice_no;
+          $newtracking->status = $request->status;
+          $newtracking->bd_time = $now;
+          $newtracking->bd_date = date('Y-m-d');
+          $newtracking->save();
+
+
+        }
         
         return response()->json(['message' => 'Order status updated successfully.']);
     }
@@ -274,9 +325,25 @@ public function update(Request $request, Order $order)
         'items.*.quantity' => 'required|integer|min:1',
     ]);
 
+
+    //payment_status
+
+    
+
     DB::transaction(function () use ($request, $order) {
+
+        if($request->cod == 0.00){
+
+        $payment_status= 'paid';
+//dd($request->cod);
+    }else{
+
+        $payment_status= 'unpaid';
+
+    }
         // 1. Update the main order fields
         $order->update([
+            'payment_status' => $payment_status,
             'customer_id' => $request->customer_id,
             'invoice_no' => $request->invoice_no,
             'subtotal' => $request->subtotal,

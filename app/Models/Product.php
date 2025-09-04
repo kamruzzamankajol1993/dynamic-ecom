@@ -113,12 +113,14 @@ class Product extends Model
     /**
      * Boot the model.
      */
+
+    
     protected static function boot()
     {
         parent::boot();
         static::creating(function ($product) {
             if (empty($product->slug)) {
-                $product->slug = Str::slug($product->name);
+                $product->slug = Str::slug($product->name).'_'.mt_rand(100000, 999999);
             }
         });
     }

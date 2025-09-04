@@ -236,9 +236,9 @@ $(document).ready(function() {
                     } else if (order.payment_method === 'bkash' && order.statusMessage === 'successful') {
                         payStatusBadge = `<span class="badge bg-success">Paid</span>`;
                     } else if (parseFloat(order.cod) > 0) {
-                        payStatusBadge = `<span class="badge bg-danger">Unpaid</span>`;
+                        payStatusBadge = `<span class="badge bg-danger">1Unpaid</span>`;
                     } else {
-                        payStatusBadge = order.payment_status === 'paid' ? `<span class="badge bg-success">Paid</span>` : `<span class="badge bg-danger">Unpaid</span>`;
+                        payStatusBadge = order.payment_status === 'paid' ? `<span class="badge bg-success">Paid</span>` : `<span class="badge bg-danger">2Unpaid</span>`;
                     }
 
                     const statusKey = order.status.replace(' ', ' ');

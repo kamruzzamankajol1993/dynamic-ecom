@@ -82,6 +82,16 @@
                                     <input type="text" id="google_analytics_tracking_id" name="google_analytics_tracking_id" class="form-control" value="{{ $settings['google_analytics_tracking_id'] ?? '' }}" placeholder="Tracking ID">
                                 </div>
                             </div>
+
+                            <div class="form-group row align-items-center mb-3">
+                                <label for="google_analytics_tag_id" class="col-md-3 col-form-label">Tag Manager ID</label>
+                                <div class="col-md-9">
+                                    <input type="text" id="google_analytics_tag_id" name="google_analytics_tag_id" class="form-control" value="{{ $settings['google_analytics_tag_id'] ?? '' }}" placeholder="Tag Manager ID">
+                                </div>
+                            </div>
+
+
+                            
                             <div class="form-group row">
                                 <div class="col-md-9 offset-md-3">
                                     <button type="submit" class="btn btn-primary">Save</button>

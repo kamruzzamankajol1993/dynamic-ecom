@@ -15,6 +15,7 @@ class AnalyticSettingController extends Controller
             'facebook_pixel_id',
             'google_analytics_status',
             'google_analytics_tracking_id',
+            'google_analytics_tag_id',
             'facebook_access_token',
             'facebook_test_event_code',
             'facebook_domain_verification_code'
