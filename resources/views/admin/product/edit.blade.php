@@ -120,21 +120,29 @@
                                             <input type="number" name="variants[{{ $variantIndex }}][additional_price]" class="form-control" step="0.01" value="{{ $variant->additional_price }}">
                                         </div>
                                     </div>
-                                    <h6>Sizes & Quantity</h6>
-                                    <div class="p-2 border rounded bg-light">
-                                        @php
-                                            $variantSizes = collect($variant->sizes)->keyBy('size_id');
-                                        @endphp
-                                        @foreach($sizes as $sizeIndex => $size)
-                                        <div class="row align-items-center mb-2">
-                                            <div class="col-5"><label class="form-label-sm">{{ $size->code }}</label></div>
-                                            <div class="col-7">
-                                                <input type="hidden" name="variants[{{ $variantIndex }}][sizes][{{ $sizeIndex }}][size_id]" value="{{ $size->id }}">
-                                                <input type="number" name="variants[{{ $variantIndex }}][sizes][{{ $sizeIndex }}][quantity]" class="form-control form-control-sm" placeholder="Quantity" value="{{ $variantSizes[$size->id]['quantity'] ?? '' }}">
-                                            </div>
-                                        </div>
-                                        @endforeach
-                                    </div>
+                                    <h6>Sizes, Quantity & Price</h6>
+<div class="p-2 border rounded bg-light">
+    <div class="row mb-2 fw-bold">
+        <div class="col-4">Size</div>
+        <div class="col-4">Quantity</div>
+        <div class="col-4">Price</div>
+    </div>
+    @php
+        $variantSizes = collect($variant->sizes)->keyBy('size_id');
+    @endphp
+    @foreach($sizes as $sizeIndex => $size)
+    <div class="row align-items-center mb-2">
+        <div class="col-4"><label class="form-label-sm">{{ $size->code }}</label></div>
+        <div class="col-4">
+            <input type="number" name="variants[{{ $variantIndex }}][sizes][{{ $sizeIndex }}][quantity]" class="form-control form-control-sm" placeholder="Quantity" value="{{ $variantSizes[$size->id]['quantity'] ?? '' }}">
+        </div>
+        <div class="col-4">
+            <input type="number" name="variants[{{ $variantIndex }}][sizes][{{ $sizeIndex }}][price]" class="form-control form-control-sm" placeholder="Price" step="0.01" value="{{ $variantSizes[$size->id]['price'] ?? '' }}">
+        </div>
+        <input type="hidden" name="variants[{{ $variantIndex }}][sizes][{{ $sizeIndex }}][size_id]" value="{{ $size->id }}">
+    </div>
+    @endforeach
+</div>
                                 </div>
                                 @endforeach
                             </div>
@@ -406,14 +414,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = $('#variant-container');
         let colorOptions = colors.map(color => `<option value="${color.id}">${color.name}</option>`).join('');
         let sizeFields = sizes.map((size, sizeIndex) => `
-            <div class="row align-items-center mb-2">
-                <div class="col-5"><label class="form-label-sm">${size.code}</label></div>
-                <div class="col-7">
-                    <input type="hidden" name="variants[${variantIndex}][sizes][${sizeIndex}][size_id]" value="${size.id}">
-                    <input type="number" name="variants[${variantIndex}][sizes][${sizeIndex}][quantity]" class="form-control form-control-sm" placeholder="Quantity">
-                </div>
-            </div>
-        `).join('');
+    <div class="row align-items-center mb-2">
+        <div class="col-4"><label class="form-label-sm">${size.code}</label></div>
+        <div class="col-4">
+            <input type="number" name="variants[${variantIndex}][sizes][${sizeIndex}][quantity]" class="form-control form-control-sm" placeholder="Quantity">
+        </div>
+        <div class="col-4">
+            <input type="number" name="variants[${variantIndex}][sizes][${sizeIndex}][price]" class="form-control form-control-sm" placeholder="Price" step="0.01">
+        </div>
+        <input type="hidden" name="variants[${variantIndex}][sizes][${sizeIndex}][size_id]" value="${size.id}">
+    </div>
+`).join('');
         const variantHtml = `
             <div class="variant-section border rounded p-3 mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -439,8 +450,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <input type="number" name="variants[${variantIndex}][additional_price]" class="form-control" step="0.01" placeholder="e.g., 5.00">
                     </div>
                 </div>
-                <h6>Sizes & Quantity</h6>
-                <div class="p-2 border rounded bg-light">${sizeFields}</div>
+                <h6>Sizes, Quantity & Price</h6>
+        <div class="p-2 border rounded bg-light">
+            <div class="row mb-2 fw-bold">
+                <div class="col-4">Size</div>
+                <div class="col-4">Quantity</div>
+                <div class="col-4">Price</div>
+            </div>
+            ${sizeFields}
             </div>
         `;
         container.append(variantHtml);

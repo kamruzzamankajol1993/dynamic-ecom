@@ -197,8 +197,11 @@ class ProductController extends Controller
 
                     // Filter out sizes that don't have a quantity
                    // **FIXED LOGIC HERE**
-                    $sizesWithKeys = array_filter($variantData['sizes'], fn($size) => isset($size['quantity']) && $size['quantity'] !== null);
-                    $sizes = array_values($sizesWithKeys); // Re-index the array to remove keys
+                    $sizesWithData = array_filter($variantData['sizes'], function($size) {
+                return (isset($size['quantity']) && $size['quantity'] !== null) || 
+                       (isset($size['price']) && $size['price'] !== null);
+            });
+            $sizes = array_values($sizesWithData);
 
                     if (!empty($sizes)) {
                         $product->variants()->create([
@@ -391,8 +394,11 @@ class ProductController extends Controller
                         $variantImagePathmain = $variantData['existing_image'];
                     }
 
-                    $sizesWithKeys = array_filter($variantData['sizes'], fn($size) => isset($size['quantity']) && $size['quantity'] !== null);
-                    $sizes = array_values($sizesWithKeys); // Re-index the array
+                     $sizesWithData = array_filter($variantData['sizes'], function($size) {
+                return (isset($size['quantity']) && $size['quantity'] !== null) || 
+                       (isset($size['price']) && $size['price'] !== null);
+            });
+            $sizes = array_values($sizesWithData); // Re-index the array
 
                     if (!empty($sizes)) {
                         $product->variants()->create([

@@ -147,7 +147,10 @@ class OrderController extends Controller
                 return [
                     'id' => $sizeInfo['size_id'],
                     'name' => $sizeModel ? $sizeModel->name : 'N/A',
-                    'additional_price' => $sizeInfo['additional_price'] ?? 0, 
+                    // **THIS IS THE KEY CHANGE**
+                    // We check if a size-specific price exists in the variant data.
+                    // If it does, we send it. If not, we send 0.
+                    'price' => $sizeInfo['price'] ?? 0, 
                 ];
             });
 
@@ -160,6 +163,8 @@ class OrderController extends Controller
         });
 
         return response()->json([
+            // This is the product's main price (the fallback price).
+            // It correctly checks for a discount price first.
             'base_price' => $product->discount_price ?? $product->base_price,
             'variants' => $variantsData,
         ]);
