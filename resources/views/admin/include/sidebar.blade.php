@@ -176,6 +176,39 @@
                     </ul>
                 </li>
                 @endif
+                 @if ($usr->can('sliderSectionView') || $usr->can('offerSectionControlView') || $usr->can('sideBarView') || $usr->can('headerAdd') || $usr->can('headerView') ||  $usr->can('headerDelete') ||  $usr->can('headerUpdate'))
+                <li class="sidebar-title">
+                    <span>CMS</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#cmsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="cmsSubmenu">
+                        <i data-feather="file-text"></i>
+                        <span>Website CMS</span>
+                        <i data-feather="chevron-down" class="ms-auto"></i>
+                    </a>
+                    <ul class="collapse list-unstyled {{Route::is('homepage-section.index') || Route::is('featured-category.index') || Route::is('highlight-product.index') || Route::is('offer-section.control.index') ||  Route::is('slider.control.index') ||  Route::is('sidebar-menu.control.index') ||  Route::is('frontend.control.index')  ? 'show' : '' }}" id="cmsSubmenu" data-bs-parent="#sidebar-menu">
+                       
+                       
+                         <li><a class="nav-link {{Route::is('featured-category.index') ? 'active':''}}" href="{{route('featured-category.index')}}"> Home Page First Section</a></li>
+                         <li><a class="nav-link {{Route::is('homepage-section.index') ? 'active':''}}" href="{{route('homepage-section.index')}}"> Home Page Second Section</a></li>
+                       
+                       
+                        @if ($usr->can('headerAdd') || $usr->can('headerView') ||  $usr->can('headerDelete') ||  $usr->can('headerUpdate'))
+                        <li><a class="nav-link {{ Route::is('frontend.control.index')  ? 'active' : '' }}" href="{{route('frontend.control.index')}}"> Header</a></li>
+                        @endif
+                        @if ($usr->can('sidebarMenuView'))
+                         <li><a class="nav-link {{ Route::is('sidebar-menu.control.index')  ? 'active' : '' }}" href="{{route('sidebar-menu.control.index')}}">Side Bar</a></li>
+                          @endif
+                          @if ($usr->can('offerSectionControlView'))
+                          <li><a class="nav-link {{ Route::is('offer-section.control.index')  ? 'active' : '' }}" href="{{route('offer-section.control.index')}}">Offer Section</a></li>
+                          @endif
+                          @if ($usr->can('sliderSectionView'))
+                          <li><a class="nav-link {{ Route::is('slider.control.index')  ? 'active' : '' }}" href="{{route('slider.control.index')}}">Slider Section</a></li>
+                          @endif
+                           <li><a class="nav-link {{ Route::is('highlight-product.index') ? 'active' : '' }}" href="{{ route('highlight-product.index') }}">Highlight Product</a></li>
+                    </ul>
+                </li>
+                @endif
                 @if ($usr->can('anlyticSettingView'))
 <li class="sidebar-title">
                     <span>Marketing</span>

@@ -89,6 +89,10 @@ Route::get('/clear', function() {
     Route::get('highlight-product', [HighlightProductController::class, 'index'])->name('highlight-product.index');
     Route::post('highlight-product', [HighlightProductController::class, 'store'])->name('highlight-product.store');
 
+    // Homepage Section Routes (Single Page)
+    Route::get('homepage-section', [App\Http\Controllers\Admin\HomepageSectionController::class, 'index'])->name('homepage-section.index');
+    Route::post('homepage-section', [App\Http\Controllers\Admin\HomepageSectionController::class, 'update'])->name('homepage-section.update');
+
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
@@ -135,7 +139,8 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::group(['middleware' => ['auth']], function() {
 
-
+ Route::get('featured-category', [App\Http\Controllers\Admin\FeaturedCategoryController::class, 'index'])->name('featured-category.index');
+    Route::post('featured-category', [App\Http\Controllers\Admin\FeaturedCategoryController::class, 'update'])->name('featured-category.update');
 
 Route::delete('review-images/{image}', [ReviewController::class, 'destroyImage'])->name('review.image.destroy');
     // Profit & Loss Routes

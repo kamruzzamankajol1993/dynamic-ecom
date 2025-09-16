@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bundle_offers', function (Blueprint $table) {
+        Schema::create('homepage_sections', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->comment('e.g., Bundle Offer');
-            $table->string('slug')->unique()->comment('URL-friendly version of the name');
-            $table->string('title')->comment('e.g., Summer T-Shirt Deal');
+            $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->string('image')->nullable();
-            $table->string('startdate')->nullable();
-            $table->string('enddate')->nullable();
+            $table->string('row_identifier'); // e.g., 'row_1', 'row_2'
             $table->boolean('status')->default(true);
             $table->timestamps();
         });
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bundle_offers');
+        Schema::dropIfExists('homepage_sections');
     }
 };
