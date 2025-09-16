@@ -91,6 +91,7 @@ class SubSubcategoryController extends Controller
     public function destroy($id)
     {
         SubSubcategory::findOrFail($id)->delete();
-        return response()->json(['message' => 'Sub-Subcategory deleted successfully']);
+
+        return redirect()->back()->with('success', 'Sub-Subcategory deleted successfully!');
     }
 }

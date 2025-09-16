@@ -14,6 +14,11 @@ $(document).ready(function() {
     const searchInput = $('#search-input');
     let searchTimeout;
 
+    var routes = {
+        destroy: id => `{{ url('expense') }}/${id}`,
+        csrf: "{{ csrf_token() }}"
+    };
+
     function fetchData(page = 1, searchQuery = '') {
         spinner.show();
         tableBody.empty();
@@ -43,7 +48,11 @@ $(document).ready(function() {
                     <td>${item.description || ''}</td>
                     <td>
                         <button class="btn btn-sm btn-info edit-btn" data-id="${item.id}"><i class="fa fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${item.id}"><i class="fa fa-trash"></i></button>
+                        <form action="${routes.destroy(item.id)}" method="POST" class="d-inline">
+                            <input type="hidden" name="_token" value="${routes.csrf}">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="button" class="btn btn-sm btn-danger btn-delete"><i class="fa fa-trash"></i></button>
+                        </form>
                     </td>
                 </tr>`;
             tableBody.append(row);
@@ -93,21 +102,21 @@ $(document).ready(function() {
         }).fail(() => Swal.fire('Error!', 'Something went wrong.', 'error'));
     });
 
-    tableBody.on('click', '.delete-btn', function() {
-        let id = $(this).data('id');
-        let url = `{{ route('expense.destroy', ':id') }}`.replace(':id', id);
+     // UPDATED DELETE BUTTON CLICK HANDLER
+    $(document).on('click', '.btn-delete', function () {
+        const deleteButton = $(this); // Reference to the button
         Swal.fire({
             title: 'Are you sure?',
+            text: "You won't be able to revert this!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.post(url, { _token: '{{ csrf_token() }}', _method: 'DELETE' }, function(res) {
-                    Swal.fire('Deleted!', res.success, 'success');
-                    fetchData(paginationContainer.find('.active .page-link').data('page'), searchInput.val());
-                }).fail(() => Swal.fire('Error!', 'Something went wrong.', 'error'));
+                // Find the closest form and submit it
+                deleteButton.closest('form').submit();
             }
         });
     });

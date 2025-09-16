@@ -22,7 +22,7 @@ class SystemInformation extends Model
             'email',
             'phone',11,
             'main_url',
-            'admin_url',
+            'front_url',
             'tax',
             'charge',
             'usdollar',

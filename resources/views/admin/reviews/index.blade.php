@@ -27,7 +27,8 @@
                                 <th>Product</th>
                                 <th>Customer</th>
                                 <th>Rating</th>
-                                <th class="sortable" data-column="published">Status</th>
+                                {{-- Changed data-column from published to is_approved --}}
+                                <th class="sortable" data-column="is_approved">Status</th>
                                 <th class="sortable" data-column="created_at">Date</th>
                                 <th>Action</th>
                             </tr>
@@ -75,7 +76,8 @@ $(document).ready(function() {
                 rows = '<tr><td colspan="7" class="text-center">No reviews found.</td></tr>';
             } else {
                 res.data.forEach((review, i) => {
-                    const statusBadge = review.published == 1 ? '<span class="badge bg-success">Published</span>' : '<span class="badge bg-warning">Pending</span>';
+                    // Changed review.published to review.is_approved
+                    const statusBadge = review.is_approved == 1 ? '<span class="badge bg-success">Approved</span>' : '<span class="badge bg-warning">Pending</span>';
                     const showUrl = `{{ url('review') }}/${review.id}`;
                     const editUrl = `{{ url('review') }}/${review.id}/edit`;
                     const reviewDate = new Date(review.created_at).toLocaleDateString('en-GB');
@@ -83,7 +85,8 @@ $(document).ready(function() {
                     rows += `<tr>
                         <td>${(res.current_page - 1) * 10 + i + 1}</td>
                         <td>${review.product ? review.product.name : 'N/A'}</td>
-                        <td>${review.customer ? review.customer.name : 'N/A'}</td>
+                        {{-- Changed review.customer to review.user --}}
+                        <td>${review.user ? review.user.name : 'N/A'}</td>
                         <td>${renderStars(review.rating)}</td>
                         <td>${statusBadge}</td>
                         <td>${reviewDate}</td>
@@ -96,7 +99,36 @@ $(document).ready(function() {
                 });
             }
             $('#tableBody').html(rows);
-            // Pagination logic here (same as previous modules)
+             // Pagination
+            var paginationHtml = '';
+            if (res.last_page > 1) {
+                paginationHtml += `
+                    <li class="page-item ${res.current_page === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="1">First</a>
+                    </li>
+                    <li class="page-item ${res.current_page === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${res.current_page - 1}">Prev</a>
+                    </li>`;
+
+                const start = Math.max(1, res.current_page - 2);
+                const end = Math.min(res.last_page, res.current_page + 2);
+
+                for (var i = start; i <= end; i++) {
+                    paginationHtml += `
+                        <li class="page-item ${i === res.current_page ? 'active' : ''}">
+                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                        </li>`;
+                }
+
+                paginationHtml += `
+                    <li class="page-item ${res.current_page === res.last_page ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${res.current_page + 1}">Next</a>
+                    </li>
+                    <li class="page-item ${res.current_page === res.last_page ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${res.last_page}">Last</a>
+                    </li>`;
+            }
+            $('#pagination').html(paginationHtml);
         });
     }
 

@@ -99,7 +99,36 @@ $(document).ready(function() {
                 });
             }
             $('#tableBody').html(rows);
-            // Pagination logic here (same as customer index)
+            // Pagination
+            var paginationHtml = '';
+            if (res.last_page > 1) {
+                paginationHtml += `
+                    <li class="page-item ${res.current_page === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="1">First</a>
+                    </li>
+                    <li class="page-item ${res.current_page === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${res.current_page - 1}">Prev</a>
+                    </li>`;
+
+                const start = Math.max(1, res.current_page - 2);
+                const end = Math.min(res.last_page, res.current_page + 2);
+
+                for (var i = start; i <= end; i++) {
+                    paginationHtml += `
+                        <li class="page-item ${i === res.current_page ? 'active' : ''}">
+                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                        </li>`;
+                }
+
+                paginationHtml += `
+                    <li class="page-item ${res.current_page === res.last_page ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${res.current_page + 1}">Next</a>
+                    </li>
+                    <li class="page-item ${res.current_page === res.last_page ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${res.last_page}">Last</a>
+                    </li>`;
+            }
+            $('#pagination').html(paginationHtml);
         });
     }
 

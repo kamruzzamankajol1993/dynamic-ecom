@@ -87,6 +87,6 @@ class SizeChartController extends Controller
     {
         // The 'cascade' onDelete in the migration will handle deleting entries
         SizeChart::findOrFail($id)->delete();
-        return response()->json(['message' => 'Size Chart deleted successfully']);
+        return redirect()->route('size-chart.index')->with('success', 'Size Chart deleted successfully!');
     }
 }

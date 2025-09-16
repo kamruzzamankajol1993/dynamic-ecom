@@ -7,6 +7,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                 <span class="text-danger" style="font-size: 12px;">image width: 50px and height: 50px , image type webp</span>
                 <div class="mb-3">
                     <label for="editName" class="form-label">Name</label>
                     <input type="text" id="editName" name="name" class="form-control">
@@ -14,7 +15,7 @@
                 <div class="mb-3">
                     <label for="editImage" class="form-label">Image</label>
                     <input type="file" id="editImage" name="image" class="form-control">
-                    <img id="imagePreview" src="" alt="Image Preview" class="img-thumbnail mt-2" style="max-width: 100px; display: none;">
+                    <img id="imagePreview" accept="image/webp" src="" alt="Image Preview" class="img-thumbnail mt-2" style="max-width: 100px; display: none;">
                 </div>
                 <div class="mb-3">
                     <label for="editStatus" class="form-label">Status</label>

@@ -72,9 +72,10 @@ class SubCategoryController extends Controller
         return response()->json(['message' => 'Subcategory updated successfully']);
     }
 
-    public function destroy($id)
+     public function destroy($id)
     {
         Subcategory::findOrFail($id)->delete();
-        return response()->json(['message' => 'Subcategory deleted successfully']);
+        // Return a redirect with a success message instead of JSON
+        return redirect()->route('subcategory.index')->with('success', 'Subcategory deleted successfully!');
     }
 }

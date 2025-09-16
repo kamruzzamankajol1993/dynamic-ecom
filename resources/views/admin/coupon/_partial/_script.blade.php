@@ -22,6 +22,11 @@ $(document).ready(function() {
     const searchInput = $('#search-input');
     let searchTimeout;
 
+    var routes = {
+        destroy: id => `{{ url('coupon') }}/${id}`,
+        csrf: "{{ csrf_token() }}"
+    };
+
     function fetchCoupons(page = 1, searchQuery = '') {
         spinner.show();
         tableBody.empty();
@@ -75,10 +80,14 @@ $(document).ready(function() {
                     <td>${usage}</td>
                     <td>${expiresAt}</td>
                     <td>${statusBadge}</td>
-                    <td>
+                    <td >
                           <a href="${showUrl}" class="btn btn-sm btn-secondary"><i class="fa fa-eye"></i></a>
                         <button type="button" class="btn btn-sm btn-info edit-btn" data-id="${coupon.id}"><i class="fa fa-edit"></i></button>
-                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="${coupon.id}"><i class="fa fa-trash"></i></button>
+                          <form action="${routes.destroy(coupon.id)}" method="POST" class="d-inline">
+                            <input type="hidden" name="_token" value="${routes.csrf}">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="button" class="btn btn-sm btn-danger btn-delete"><i class="fa fa-trash"></i></button>
+                        </form>
                     </td>
                 </tr>
             `;
@@ -195,33 +204,21 @@ $(document).ready(function() {
     });
 
     // Delete Button Click
-    tableBody.on('click', '.delete-btn', function() {
-        let id = $(this).data('id');
-        let url = "{{ route('coupon.destroy', ':id') }}";
-        url = url.replace(':id', id);
-
+    // UPDATED DELETE BUTTON CLICK HANDLER
+    $(document).on('click', '.btn-delete', function () {
+        const deleteButton = $(this); // Reference to the button
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
-                    url: url,
-                    method: 'POST',
-                    data: { _token: '{{ csrf_token() }}', _method: 'DELETE' },
-                    success: function(response) {
-                        Swal.fire('Deleted!', response.success, 'success');
-                        const currentPage = paginationContainer.find('.active .page-link').data('page') || 1;
-                        fetchCoupons(currentPage, searchInput.val());
-                    },
-                    error: function() {
-                        Swal.fire('Error!', 'Something went wrong.', 'error');
-                    }
-                });
+                // Find the closest form and submit it
+                deleteButton.closest('form').submit();
             }
         });
     });

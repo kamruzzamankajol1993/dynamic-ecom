@@ -65,6 +65,6 @@ class ColorController extends Controller
     public function destroy($id)
     {
         Color::findOrFail($id)->delete();
-        return response()->json(['message' => 'Color deleted successfully']);
+        return redirect()->route('color.index')->with('success', 'Color deleted successfully!');
     }
 }

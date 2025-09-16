@@ -11,8 +11,381 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\Product;
+use App\Models\Account;
+use App\Models\OpeningBalance;
+use App\Models\TransactionEntry;
+use Mpdf\Mpdf;
 class ReportController extends Controller
 {
+
+     // --- VIEWS ---
+    public function generalLedgerIndex()
+    {
+        return view('admin.report.general_ledger');
+    }
+
+    public function balanceSheetIndex()
+    {
+        return view('admin.report.balance_sheet');
+    }
+
+    // --- AJAX DATA PROVIDERS ---
+
+    public function getReportDependencies()
+    {
+        return response()->json([
+            'accounts' => Account::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
+        ]);
+    }
+
+    public function generateGeneralLedger(Request $request)
+    {
+        $validated = $request->validate([
+            'account_id' => 'required|exists:accounts,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $accountId = $validated['account_id'];
+        $startDate = $validated['start_date'];
+        $endDate = $validated['end_date'];
+
+        $openingBalance = $this->getAccountBalanceAsOf(Account::find($accountId), $startDate, true);
+
+        $transactions = TransactionEntry::with('transaction')
+            ->where('account_id', $accountId)
+            ->whereHas('transaction', function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate]);
+            })
+            ->oldest('id')
+            ->get();
+
+        return response()->json([
+            'opening_balance' => $openingBalance,
+            'transactions' => $transactions,
+            'account' => Account::find($accountId),
+        ]);
+    }
+
+    // --- NEW METHOD FOR PDF PRINTING ---
+    public function printGeneralLedger(Request $request)
+    {
+        $validated = $request->validate([
+            'account_id' => 'required|exists:accounts,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $account = Account::findOrFail($validated['account_id']);
+        $startDate = $validated['start_date'];
+        $endDate = $validated['end_date'];
+
+        $openingBalance = $this->getAccountBalanceAsOf($account, $startDate, true);
+
+        $transactions = TransactionEntry::with('transaction')
+            ->where('account_id', $account->id)
+            ->whereHas('transaction', function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate]);
+            })
+            ->oldest('id')
+            ->get();
+        
+        $data = [
+            'account' => $account,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'opening_balance' => $openingBalance,
+            'transactions' => $transactions,
+        ];
+
+        $html = view('admin.report.print.general_ledger_pdf', $data)->render();
+
+        $mpdf = new Mpdf(['mode' => 'utf-8', 'format' => 'A4-L']); // A4-Landscape
+        $mpdf->WriteHTML($html);
+        return $mpdf->Output('general-ledger.pdf', 'I'); // 'I' for inline view
+    }
+    
+      public function generateBalanceSheet(Request $request)
+    {
+        $validated = $request->validate(['end_date' => 'required|date']);
+        $data = $this->getBalanceSheetData($validated['end_date']);
+        return response()->json($data);
+    }
+    
+   
+
+    
+    // --- NEW METHOD FOR PDF PRINTING ---
+    public function printBalanceSheet(Request $request)
+    {
+        $validated = $request->validate(['end_date' => 'required|date']);
+        $endDate = $validated['end_date'];
+
+        $data = $this->getBalanceSheetData($endDate);
+        $data['endDate'] = $endDate; // Pass the date to the view
+
+        $html = view('admin.report.print.balance_sheet_pdf', $data)->render();
+
+        $mpdf = new Mpdf(['mode' => 'utf-8', 'format' => 'A4']);
+        $mpdf->WriteHTML($html);
+        return $mpdf->Output('balance-sheet.pdf', 'I'); // 'I' for inline view
+    }
+
+
+    // --- HELPER FUNCTIONS ---
+
+    // NEW private helper to get all data for the balance sheet
+    private function getBalanceSheetData(string $endDate): array
+    {
+        $totalRevenue = $this->calculateAccountTypeTotal('Revenue', $endDate);
+        $totalExpense = $this->calculateAccountTypeTotal('Expense', $endDate);
+        $netProfit = $totalRevenue - $totalExpense;
+
+        $assets = $this->getAccountBalancesByType('Asset', $endDate);
+        $liabilities = $this->getAccountBalancesByType('Liability', $endDate);
+        $equity = $this->getAccountBalancesByType('Equity', $endDate);
+        
+        $equity[] = ['name' => 'Current Period Profit/Loss', 'amount' => $netProfit];
+
+        return [
+            'assets' => $assets,
+            'liabilities' => $liabilities,
+            'equity' => $equity,
+        ];
+    }
+
+    // --- HELPER FUNCTIONS ---
+
+    private function getAccountBalancesByType($type, $endDate)
+    {
+        $accounts = Account::where('type', $type)->where('is_active', true)->get();
+        $balances = [];
+        foreach ($accounts as $account) {
+            $balance = $this->getAccountBalanceAsOf($account, $endDate);
+            if ($balance != 0) {
+                // For liabilities and equity, balance is typically shown as positive
+                $balances[] = ['name' => $account->name, 'amount' => abs($balance)];
+            }
+        }
+        return $balances;
+    }
+
+    private function calculateAccountTypeTotal($type, $endDate)
+    {
+        $accounts = Account::where('type', $type)->where('is_active', true)->get();
+        $total = 0;
+        foreach ($accounts as $account) {
+            $total += $this->getAccountBalanceAsOf($account, $endDate);
+        }
+        return $total;
+    }
+
+    private function getAccountBalanceAsOf($account, $asOfDate, $isOpening = false)
+    {
+        $opening = OpeningBalance::where('account_id', $account->id)->first();
+        $balance = $opening ? ($opening->type === 'debit' ? $opening->amount : -$opening->amount) : 0;
+        
+        $dateOperator = $isOpening ? '<' : '<=';
+
+        $debits = TransactionEntry::where('account_id', $account->id)->where('type', 'debit')->whereHas('transaction', function ($q) use ($asOfDate, $dateOperator) { $q->where('date', $dateOperator, $asOfDate); })->sum('amount');
+        $credits = TransactionEntry::where('account_id', $account->id)->where('type', 'credit')->whereHas('transaction', function ($q) use ($asOfDate, $dateOperator) { $q->where('date', $dateOperator, $asOfDate); })->sum('amount');
+
+        if ($account->type === 'Asset' || $account->type === 'Expense') {
+            $balance += ($debits - $credits);
+        } else { // Liability, Equity, Revenue
+            $balance += ($credits - $debits);
+        }
+        return $balance;
+    }
+
+
+    // --- VIEWS ---
+    public function trialBalanceIndex()
+    {
+        return view('admin.report.trial_balance');
+    }
+    
+   
+
+
+    // --- AJAX DATA PROVIDERS ---
+
+    public function generateTrialBalance(Request $request)
+    {
+        $validated = $request->validate([
+            'end_date' => 'required|date',
+        ]);
+        
+        $endDate = $validated['end_date'];
+        $accounts = Account::where('is_active', true)->get();
+        $trialBalance = [];
+
+        foreach ($accounts as $account) {
+            // Get the final balance of the account as of the end date
+            $balance = $this->getAccountBalanceAsOf($account, $endDate);
+
+            // Only include accounts with a non-zero balance
+            if ($balance != 0) {
+                $trialBalance[] = [
+                    'account_name' => $account->name,
+                    'account_code' => $account->code,
+                    // Asset & Expense balances are debits. Liability, Equity, Revenue are credits.
+                    'debit' => ($account->type === 'Asset' || $account->type === 'Expense') ? $balance : 0,
+                    'credit' => ($account->type === 'Liability' || $account->type === 'Equity' || $account->type === 'Revenue') ? abs($balance) : 0,
+                ];
+            }
+        }
+
+        return response()->json($trialBalance);
+    }
+// --- NEW METHOD FOR PDF PRINTING ---
+    public function printTrialBalance(Request $request)
+    {
+        $validated = $request->validate([
+            'end_date' => 'required|date',
+        ]);
+
+        $endDate = $validated['end_date'];
+        $accounts = Account::where('is_active', true)->get();
+        $trialBalance = [];
+
+        foreach ($accounts as $account) {
+            $balance = $this->getAccountBalanceAsOf($account, $endDate);
+            if ($balance != 0) {
+                $trialBalance[] = [
+                    'account_name' => $account->name,
+                    'account_code' => $account->code,
+                    'debit' => ($account->type === 'Asset' || $account->type === 'Expense') ? $balance : 0,
+                    'credit' => ($account->type === 'Liability' || $account->type === 'Equity' || $account->type === 'Revenue') ? abs($balance) : 0,
+                ];
+            }
+        }
+        
+        $data = [
+            'endDate' => $endDate,
+            'trialBalance' => $trialBalance,
+        ];
+
+        $html = view('admin.report.print.trial_balance_pdf', $data)->render();
+
+        $mpdf = new Mpdf(['mode' => 'utf-8', 'format' => 'A4']);
+        $mpdf->WriteHTML($html);
+        return $mpdf->Output('trial-balance.pdf', 'I'); // 'I' for inline view
+    }
+
+    // --- VIEWS ---
+    public function profitAndLossIndex()
+    {
+        return view('admin.report.profit_and_loss');
+    }
+    
+    
+
+
+    // --- AJAX DATA PROVIDERS ---
+
+    public function generateProfitAndLoss(Request $request)
+    {
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = $validated['start_date'];
+        $endDate = $validated['end_date'];
+
+        $totalRevenue = $this->calculateAccountTypeTotalForPeriod('Revenue', $startDate, $endDate);
+        $totalExpense = $this->calculateAccountTypeTotalForPeriod('Expense', $startDate, $endDate);
+
+        return response()->json([
+            'revenues' => $this->getAccountBalancesForPeriod('Revenue', $startDate, $endDate),
+            'total_revenue' => $totalRevenue,
+            'expenses' => $this->getAccountBalancesForPeriod('Expense', $startDate, $endDate),
+            'total_expense' => $totalExpense,
+            'net_profit' => $totalRevenue - $totalExpense,
+        ]);
+    }
+
+
+    // --- NEW METHOD FOR PDF PRINTING ---
+    public function printProfitAndLoss(Request $request)
+    {
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = $validated['start_date'];
+        $endDate = $validated['end_date'];
+
+        $data = [
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'revenues' => $this->getAccountBalancesForPeriod('Revenue', $startDate, $endDate),
+            'total_revenue' => $this->calculateAccountTypeTotalForPeriod('Revenue', $startDate, $endDate),
+            'expenses' => $this->getAccountBalancesForPeriod('Expense', $startDate, $endDate),
+            'total_expense' => $this->calculateAccountTypeTotalForPeriod('Expense', $startDate, $endDate),
+        ];
+        
+        $data['net_profit'] = $data['total_revenue'] - $data['total_expense'];
+
+        $html = view('admin.report.print.profit_and_loss_pdf', $data)->render();
+
+        $mpdf = new Mpdf(['mode' => 'utf-8', 'format' => 'A4']);
+        $mpdf->WriteHTML($html);
+        return $mpdf->Output('profit-and-loss.pdf', 'I'); // 'I' for inline view
+    }
+    
+    
+    
+    // --- HELPER FUNCTIONS ---
+
+    // New helper to get balances for a specific period
+    private function getAccountBalancesForPeriod($type, $startDate, $endDate)
+    {
+        $accounts = Account::where('type', $type)->where('is_active', true)->get();
+        $balances = [];
+        foreach ($accounts as $account) {
+            $balance = $this->getAccountBalanceForPeriod($account, $startDate, $endDate);
+            if ($balance != 0) {
+                $balances[] = ['name' => $account->name, 'amount' => abs($balance)];
+            }
+        }
+        return $balances;
+    }
+
+    // New helper to calculate total for a period
+    private function calculateAccountTypeTotalForPeriod($type, $startDate, $endDate)
+    {
+        $accounts = Account::where('type', $type)->where('is_active', true)->get();
+        $total = 0;
+        foreach ($accounts as $account) {
+            $total += $this->getAccountBalanceForPeriod($account, $startDate, $endDate);
+        }
+        return abs($total);
+    }
+
+    // New helper to get the balance of a single account for a period
+    private function getAccountBalanceForPeriod($account, $startDate, $endDate)
+    {
+        $debits = TransactionEntry::where('account_id', $account->id)
+            ->where('type', 'debit')
+            ->whereHas('transaction', function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('date', [$startDate, $endDate]);
+            })->sum('amount');
+
+        $credits = TransactionEntry::where('account_id', $account->id)
+            ->where('type', 'credit')
+            ->whereHas('transaction', function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('date', [$startDate, $endDate]);
+            })->sum('amount');
+
+        if ($account->type === 'Expense') {
+            return $debits - $credits;
+        } else { // Revenue, Liability, Equity
+            return $credits - $debits;
+        }
+    }
     /**
      * Display the sales report view.
      */

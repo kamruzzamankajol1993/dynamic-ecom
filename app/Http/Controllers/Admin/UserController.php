@@ -77,6 +77,7 @@ class UserController extends Controller
             'status' => $user->status,
             'viewpassword' => $user->viewpassword,
             'image' => $user->image,
+            'is_shareholder' => $user->is_shareholder, 
             'branch_name' => \App\Models\Branch::where('id', $user->branch_id)->value('name'),
             'designation_name' => \App\Models\Designation::where('id', $user->designation_id)->value('name'),
             'roles' => $user->getRoleNames(), // from Spatie
@@ -170,8 +171,9 @@ class UserController extends Controller
         $time_dy = time().date("Ymd");
     
         $input = $request->all();
-        $input['password'] = Hash::make($input['password']);
         $input['viewpassword'] = $input['password'];
+        $input['password'] = Hash::make($input['password']);
+        
 
         if ($request->hasfile('image')) {
 
@@ -194,6 +196,7 @@ class UserController extends Controller
 
         }
         $input['image'] = $userImage;
+         $input['is_shareholder'] = $request->boolean('is_shareholder');
         $input['status'] = 1;
         $input['user_type'] = 2;
     
@@ -294,6 +297,7 @@ $time_dy = time().date("Ymd");
 
         }
         $input['image'] = $userImage;
+         $input['is_shareholder'] = $request->boolean('is_shareholder');
         $input['status'] = 1;
          $input['user_type'] = 2;
     
@@ -321,5 +325,57 @@ $time_dy = time().date("Ymd");
         User::find($id)->delete();
         return redirect()->route('users.index')
                         ->with('success','User deleted successfully');
+    }
+
+    // Add this method to show the Blade view
+    public function shareholderIndex(): View
+    {
+        return view('admin.users.shareholders');
+    }
+
+    // Add this method to fetch shareholder data via AJAX
+    public function shareholdersData(Request $request)
+    {
+        // The main difference is this query condition
+        $query = User::query()->where('is_shareholder', true);
+
+        // Search by name, or email
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('email', 'like', "%{$request->search}%");
+            });
+        }
+
+        // Sorting
+        $sort = $request->get('sort', 'id');
+        $direction = $request->get('direction', 'desc');
+        $query->orderBy($sort, $direction);
+
+        // Pagination
+        $perPage = $request->get('perPage', 10);
+        $paginated = $query->paginate($perPage);
+
+        // Transform each user record
+        $data = $paginated->getCollection()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'image' => $user->image,
+                'branch_name' => \App\Models\Branch::where('id', $user->branch_id)->value('name'),
+            ];
+        });
+
+        return response()->json([
+            'data' => $data,
+            'total' => $paginated->total(),
+            'from' => $paginated->firstItem(), // for serial number
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
+            'can_edit' => Auth::user()->can('userUpdate'),
+            'can_delete' => Auth::user()->can('userDelete'),
+            'can_show' => Auth::user()->can('userView'),
+        ]);
     }
 }

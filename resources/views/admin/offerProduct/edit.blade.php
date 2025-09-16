@@ -36,6 +36,18 @@
                             <input type="number" id="get_quantity" name="get_quantity" class="form-control quantity-input" value="{{ $offerProduct->get_quantity }}" min="0">
                         </div>
                     </div>
+                     <hr>
+                    <p class="text-muted">You can add products by selecting entire categories, choosing individual products, or both.</p>
+
+                    {{-- ADDED: Category selection field --}}
+                    <div class="mb-3">
+                        <label class="form-label">Select Categories</label>
+                        <select name="category_id[]" class="form-control category-select" multiple>
+                            @foreach($categories as $id => $name)
+                                <option value="{{ $id }}" {{ in_array($id, $selectedCategoryIds) ? 'selected' : '' }}>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Select Products</label>
                         <select name="product_id[]" class="form-control product-select" multiple required>
@@ -62,52 +74,56 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
-    function initializeSelect2(element, maxSelection) {
-        $(element).select2({
-            placeholder: 'Search and select products...',
-            maximumSelectionLength: maxSelection,
-            ajax: {
-                url: "{{ route('ajax.bundle-offer.search-products') }}",
-                dataType: 'json',
-                delay: 250,
-                processResults: function (data) {
-                    return {
-                        results: $.map(data, function(item) {
-                            return { id: item.id, text: `${item.name} (${item.product_code})` }
-                        })
-                    };
-                },
-                cache: true
-            }
-        });
-    }
-
-    // Initial setup for the edit page
-    const initialBuyQty = parseInt($('#buy_quantity').val(), 10) || 0;
-    const initialGetQty = parseInt($('#get_quantity').val(), 10) || 0;
-    initializeSelect2('.product-select', initialBuyQty + initialGetQty);
-
-    // Listen for changes on quantity inputs
-    $('.quantity-input').on('input', function() {
-        const buyQty = parseInt($('#buy_quantity').val(), 10) || 0;
-        const getQty = parseInt($('#get_quantity').val(), 10) || 0;
-        const productSelect = $('.product-select');
-        
-        const maxSelection = buyQty + getQty;
-        
-        let currentSelection = productSelect.val();
-
-        // Re-initialize Select2 with the new maximum selection length
-        productSelect.select2('destroy');
-        initializeSelect2(productSelect, maxSelection);
-        
-        // If current selection exceeds the new max, trim it
-        if (currentSelection && currentSelection.length > maxSelection) {
-            currentSelection = currentSelection.slice(0, maxSelection);
+    // Initialize Select2 without selection limit
+     const productSelect = $('.product-select').select2({
+        placeholder: 'Search and select products...',
+        ajax: {
+            url: "{{ route('ajax.bundle-offer.search-products') }}",
+            dataType: 'json',
+            delay: 250,
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item) {
+                        return { id: item.id, text: `${item.name} (${item.product_code})` }
+                    })
+                };
+            },
+            cache: true
         }
+    });
+
+     // Initialize Category Select2
+    $('.category-select').select2({
+        placeholder: 'Search and select categories...',
+    });
+
+    // --- NEW SCRIPT TO AUTO-POPULATE PRODUCTS ---
+    $('.category-select').on('change', function() {
+        const categoryIds = $(this).val();
         
-        // Set the potentially trimmed selection back
-        productSelect.val(currentSelection).trigger('change');
+        if (categoryIds && categoryIds.length > 0) {
+            $.ajax({
+                url: "{{ route('ajax.products-by-categories') }}",
+                type: 'GET',
+                dataType: 'json',
+                data: { category_ids: categoryIds },
+                success: function(products) {
+                    products.forEach(function(product) {
+                        // Check if the option already exists
+                        if (productSelect.find("option[value='" + product.id + "']").length) {
+                            // If it exists, do nothing to avoid duplicates
+                        } else {
+                            // Create and append the new option
+                            const newOption = new Option(product.text, product.id, true, true);
+                            productSelect.append(newOption).trigger('change');
+                        }
+                    });
+                },
+                error: function() {
+                    console.error('Failed to fetch products for the selected category.');
+                }
+            });
+        }
     });
 });
 </script>

@@ -231,6 +231,7 @@ public function store(Request $request)
     public function destroy(Customer $customer)
     {
         $customer->delete();
-        return response()->json(['message' => 'Customer deleted successfully.']);
+        return redirect()->route('customer.index')->with('success', 'Customer deleted successfully.');
+       // return response()->json(['message' => 'Customer deleted successfully.']);
     }
 }

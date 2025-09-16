@@ -106,6 +106,6 @@ class AnimationCategoryController extends Controller
             File::delete(public_path('uploads/'.$category->image));
         }
         $category->delete();
-        return response()->json(['message' => 'Animation Category deleted successfully']);
+        return redirect()->route('animationCategory.index')->with('success', 'Animation Category deleted successfully!');
     }
 }

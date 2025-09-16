@@ -67,14 +67,15 @@ Panel Setting | {{ $ins_name }}
                                     <input type="file" class="form-control" name="logo" id="" placeholder="System Logo" >
                                     <img src="{{ asset('/') }}{{ $panelSettingInfo->logo }}" style="height:20px;"/>
                                 </div>
-                                <div class="col-xl-6 col-xxl-6 col-sm-6 mb-3">
-                <label class="form-label">System Black Logo<span class="text-red font-w900">*</span>  </label>
-                <input type="file" class="form-control" name="black_logo" id="" placeholder="System Black Logo" >
-                   <img src="{{ asset('/') }}{{ $panelSettingInfo->black_logo }}" style="height:20px;"/>
-            </div>
 <div class="col-xl-12 col-xxl-12 col-sm-12 mb-3">
                 <label class="form-label">Admin Url<span class="text-red font-w900">*</span>  </label>
                 <input type="text" class="form-control" value="{{ $panelSettingInfo->main_url }}" name="main_url" id="" placeholder="Admin Url" required>
+            </div>
+
+            
+            <div class="col-xl-12 col-xxl-12 col-sm-12 mb-3">
+                <label class="form-label">Front Url<span class="text-red font-w900">*</span>  </label>
+                <input type="text" class="form-control" value="{{ $panelSettingInfo->front_url }}" name="front_url" id="" placeholder="Front Url" required>
             </div>
                                 <div class="col-xl-6 col-xxl-6 col-sm-6 mb-3">
                                     <label class="form-label">Tax(%)<span class="text-red font-w900">*</span>  </label>

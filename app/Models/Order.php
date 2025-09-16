@@ -11,6 +11,7 @@ class Order extends Model
 
     protected $fillable = [
         'customer_id',
+        'delivery_type',
         'invoice_no',
         'subtotal',
         'shipping_cost',
@@ -52,4 +53,12 @@ class Order extends Model
 {
     return $this->hasMany(Payment::class);
 }
+
+/**
+     * Get the tracking history for the order.
+     */
+    public function trackingHistory()
+    {
+        return $this->hasMany(OrderTracking::class)->orderBy('created_at', 'asc');
+    }
 }

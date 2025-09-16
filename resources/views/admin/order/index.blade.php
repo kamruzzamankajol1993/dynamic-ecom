@@ -101,12 +101,24 @@
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <button class="btn btn-danger btn-sm" id="deleteAllBtn" style="display: none;">
-                            <i class="fa fa-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
-                        </button>
-                    </div>
-                </div>
+    {{-- This container holds all bulk action tools --}}
+    <div id="bulkActionContainer" style="display: none;" class="d-flex align-items-center gap-2">
+        <button class="btn btn-danger btn-sm" id="deleteAllBtn">
+            <i class="fa fa-trash"></i> Delete (<span id="selectedCount">0</span>)
+        </button>
+        <div class="input-group input-group-sm" style="width: 250px;">
+            <select class="form-select" id="bulkStatusSelect">
+                <option value="">Change Status To...</option>
+                @foreach($tabs as $tab)
+                    @if($tab !== 'all')
+                        <option value="{{ strtolower(str_replace(' ', ' ', $tab)) }}">{{ ucfirst($tab) }}</option>
+                    @endif
+                @endforeach
+            </select>
+            <button class="btn btn-primary" type="button" id="applyBulkStatusBtn">Apply</button>
+        </div>
+    </div>
+</div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -176,9 +188,9 @@
             </div>
             <div class="modal-body" id="detailsModalBody"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa fa-times me-1"></i> Close</button>
-                <button type="button" class="btn btn-primary"><i class="fa fa-print me-1"></i> Print</button>
-            </div>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa fa-times me-1"></i> Close</button>
+    <a href="#" id="printOrderBtn" target="_blank" class="btn btn-primary"><i class="fa fa-print me-1"></i> Print</a>
+</div>
         </div>
     </div>
 </div>
@@ -198,6 +210,7 @@ $(document).ready(function() {
     var routes = {
         fetch: "{{ route('ajax.order.data') }}",
         destroy: id => `{{ url('order') }}/${id}`,
+         bulkUpdateStatus: "{{ route('order.bulk-update-status') }}",
         destroyMultiple: "{{ route('order.destroy-multiple') }}",
         updateStatus: id => `{{ route('order.update-status', ':id') }}`.replace(':id', id),
         getDetails: id => `{{ route('order.get-details', ':id') }}`.replace(':id', id),
@@ -236,9 +249,9 @@ $(document).ready(function() {
                     } else if (order.payment_method === 'bkash' && order.statusMessage === 'successful') {
                         payStatusBadge = `<span class="badge bg-success">Paid</span>`;
                     } else if (parseFloat(order.cod) > 0) {
-                        payStatusBadge = `<span class="badge bg-danger">1Unpaid</span>`;
+                        payStatusBadge = `<span class="badge bg-danger">Unpaid</span>`;
                     } else {
-                        payStatusBadge = order.payment_status === 'paid' ? `<span class="badge bg-success">Paid</span>` : `<span class="badge bg-danger">2Unpaid</span>`;
+                        payStatusBadge = order.payment_status === 'paid' ? `<span class="badge bg-success">Paid</span>` : `<span class="badge bg-danger">Unpaid</span>`;
                     }
 
                     const statusKey = order.status.replace(' ', ' ');
@@ -356,11 +369,27 @@ $(document).ready(function() {
         $('#statusSelect').val(currentStatus);
         statusModal.show();
     });
-    $('#saveStatusBtn').on('click', function() {
+     $('#saveStatusBtn').on('click', function() {
         const orderId = $('#statusOrderId').val();
         const newStatus = $('#statusSelect').val();
-        $.post(routes.updateStatus(orderId), { _token: routes.csrf, status: newStatus }, function() {
+
+        // The AJAX call now accepts a 'response' object
+        $.post(routes.updateStatus(orderId), { _token: routes.csrf, status: newStatus }, function(response) {
             statusModal.hide();
+
+            // This new block updates the counts in the tabs
+            if (response.statusCounts) {
+                $('#orderStatusTabs .nav-link').each(function() {
+                    const statusKey = $(this).data('status');
+                    // Use a fallback of 0 if a status has no orders
+                    const count = response.statusCounts[statusKey] || 0;
+                    // Get the text (e.g., "Pending") and append the new count
+                    const currentText = $(this).text().replace(/\(\d+\)/, '').trim();
+                    $(this).text(`${currentText} (${count})`);
+                });
+            }
+            
+            // This reloads the table data, which is still needed
             fetchData();
         });
     });
@@ -418,21 +447,22 @@ $(document).ready(function() {
                 <p><strong>Notes:</strong> ${data.notes || 'No notes for this order.'}</p>
             `;
             $('#detailsModalBody').html(detailsHtml);
+              $('#printOrderBtn').attr('href', `{{ url('order-print-pos') }}/${orderId}`);
             detailsModal.show();
         });
     });
 
-    function updateDeleteButton() {
-        const selectedCount = $('.row-checkbox:checked').length;
-        $('#selectedCount').text(selectedCount);
-        $('#deleteAllBtn').toggle(selectedCount > 0);
-    }
+    function updateBulkActionUI() {
+    const selectedCount = $('.row-checkbox:checked').length;
+    $('#selectedCount').text(selectedCount);
+    $('#bulkActionContainer').toggle(selectedCount > 0);
+}
     $('#selectAllCheckbox').on('change', function() {
         $('.row-checkbox').prop('checked', $(this).is(':checked'));
-        updateDeleteButton();
+        updateBulkActionUI();
     });
     $(document).on('change', '.row-checkbox', function() {
-        updateDeleteButton();
+        updateBulkActionUI();
     });
     $('#deleteAllBtn').on('click', function() {
         const selectedIds = $('.row-checkbox:checked').map((_, el) => el.value).get();
@@ -446,7 +476,7 @@ $(document).ready(function() {
             if (result.isConfirmed) {
                 $.ajax({
                     url: routes.destroyMultiple,
-                    method: 'DELETE',
+                    method: 'get',
                     data: { ids: selectedIds, _token: routes.csrf },
                     success: function() {
                         Swal.fire('Deleted!', 'The selected orders have been deleted.', 'success');
@@ -458,6 +488,47 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Add this new event handler to your script
+$('#applyBulkStatusBtn').on('click', function() {
+    const selectedIds = $('.row-checkbox:checked').map((_, el) => el.value).get();
+    const newStatus = $('#bulkStatusSelect').val();
+
+    if (!newStatus) {
+        Swal.fire('No Status Selected', 'Please select a status from the dropdown.', 'warning');
+        return;
+    }
+
+    Swal.fire({
+        title: `Change status to "${newStatus}"?`,
+        text: `This will affect ${selectedIds.length} order(s).`,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, change it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post(routes.bulkUpdateStatus, { ids: selectedIds, status: newStatus, _token: routes.csrf }, function(response) {
+                Swal.fire('Success!', response.message, 'success');
+
+                if (response.statusCounts) {
+                    $('#orderStatusTabs .nav-link').each(function() {
+                        const statusKey = $(this).data('status');
+                        const count = response.statusCounts[statusKey] || 0;
+                        const currentText = $(this).text().replace(/\(\d+\)/, '').trim();
+                        $(this).text(`${currentText} (${count})`);
+                    });
+                }
+
+                fetchData();
+                $('#bulkActionContainer').hide();
+                $('#selectAllCheckbox').prop('checked', false);
+                $('#bulkStatusSelect').val(''); // Reset dropdown
+            }).fail(function() {
+                Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+            });
+        }
+    });
+});
 
     fetchData();
 });

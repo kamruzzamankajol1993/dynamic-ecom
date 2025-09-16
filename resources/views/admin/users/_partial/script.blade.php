@@ -35,6 +35,9 @@
                 const statusBadge = item.status == 1 
                     ? `<span class="badge bg-success">Active</span>` 
                     : `<span class="badge bg-danger">Inactive</span>`;
+                const shareholderStatus = item.is_shareholder 
+    ? `<span class="badge bg-primary">Yes</span>` 
+    : `<span class="badge bg-secondary">No</span>`;
 
              
 
@@ -49,6 +52,7 @@
                         <td>${item.email}</td>
                         <td>${item.address}</td>
                         <td>${roles}</td>
+                            <td>${shareholderStatus}</td>
                         <td>${statusBadge}</td>
                         <td>${item.viewpassword}</td>
                         <td>

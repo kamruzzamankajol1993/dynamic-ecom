@@ -47,6 +47,12 @@
 $(document).ready(function() {
     var currentPage = 1, searchTerm = '', sortColumn = 'id', sortDirection = 'desc';
 
+
+    var routes = {
+        destroy: id => `{{ url('offer-product') }}/${id}`,
+        csrf: "{{ csrf_token() }}"
+    };
+
     function fetchData() {
         $.get("{{ route('ajax.offer-product.data') }}", {
             page: currentPage,
@@ -70,7 +76,11 @@ $(document).ready(function() {
                         <td>
                             <a href="${showUrl}" class="btn btn-sm btn-success"><i class="fa fa-eye"></i></a>
                             <a href="${editUrl}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
-                            <button class="btn btn-sm btn-danger btn-delete" data-id="${deal.id}"><i class="fa fa-trash"></i></button>
+                            <form action="${routes.destroy(deal.id)}" method="POST" class="d-inline">
+                            <input type="hidden" name="_token" value="${routes.csrf}">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="button" class="btn btn-sm btn-danger btn-delete"><i class="fa fa-trash"></i></button>
+                        </form>
                         </td>
                     </tr>`;
                 });
@@ -110,28 +120,21 @@ $(document).ready(function() {
         fetchData();
     });
 
+    // UPDATED DELETE BUTTON CLICK HANDLER
     $(document).on('click', '.btn-delete', function () {
-        const id = $(this).data('id');
+        const deleteButton = $(this); // Reference to the button
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
             icon: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
-                    url: `{{ url('offer-product') }}/${id}`,
-                    method: 'DELETE',
-                    data: { _token: "{{ csrf_token() }}" },
-                    success: function(response) {
-                        Swal.fire('Deleted!', response.message, 'success');
-                        fetchData(); // Refresh the table
-                    },
-                    error: function() {
-                        Swal.fire('Error!', 'Something went wrong.', 'error');
-                    }
-                });
+                // Find the closest form and submit it
+                deleteButton.closest('form').submit();
             }
         });
     });

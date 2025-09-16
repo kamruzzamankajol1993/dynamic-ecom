@@ -14,10 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Payment;
 use Mpdf\Mpdf;
+use App\Models\OrderTracking; 
 use Carbon\Carbon;
-use App\Models\OrderTracking;
-use DateTimeZone;
-use DateTime;
 class OrderController extends Controller
 {
 
@@ -147,10 +145,7 @@ class OrderController extends Controller
                 return [
                     'id' => $sizeInfo['size_id'],
                     'name' => $sizeModel ? $sizeModel->name : 'N/A',
-                    // **THIS IS THE KEY CHANGE**
-                    // We check if a size-specific price exists in the variant data.
-                    // If it does, we send it. If not, we send 0.
-                    'price' => $sizeInfo['price'] ?? 0, 
+                    'additional_price' => $sizeInfo['additional_price'] ?? 0, 
                 ];
             });
 
@@ -163,8 +158,6 @@ class OrderController extends Controller
         });
 
         return response()->json([
-            // This is the product's main price (the fallback price).
-            // It correctly checks for a discount price first.
             'base_price' => $product->discount_price ?? $product->base_price,
             'variants' => $variantsData,
         ]);
@@ -225,59 +218,96 @@ class OrderController extends Controller
      public function updateStatus(Request $request, Order $order)
     {
         $request->validate(['status' => 'required|string']);
-
-        $tz = new DateTimeZone('Asia/Dhaka');
-
-// Create a new DateTime object with the specified timezone
-$dt = new DateTime('now', $tz);
-
-// Format and display the current time in Bangladesh
-$now = $dt->format('h:i:s');
-
-        if($request->status == 'delivered'){
-
-            $order->update([
+    
+        DB::transaction(function () use ($request, $order) {
+            // 1. Update the order status
+            $order->update(['status' => $request->status]);
+    
+            // 2. Create a new tracking record for the status change
+            OrderTracking::create([
+                'order_id' => $order->id,
+                'invoice_no' => $order->invoice_no,
                 'status' => $request->status,
-                'total_pay' => $order->total_amount,
-                'cod' => 0,
-                'payment_status' => 'paid',
-                
             ]);
-
-        }else{
-        $order->update(['status' => $request->status]);
-        }
-
-
-        $checkTheId = OrderTracking::where('tracking_number',$order->invoice_no)
-        ->where('status',$request->status)->value('id');
-
-
-        if(empty($checkTheId)){
-
-          $newtracking = new OrderTracking();
-          $newtracking->customer_id =  $order->customer_id;
-          $newtracking->tracking_number = $order->invoice_no;
-          $newtracking->status = $request->status;
-          $newtracking->bd_time = $now;
-          $newtracking->bd_date = date('Y-m-d');
-          $newtracking->save();
-
-        }else{
-
-            $newtracking =OrderTracking::find($checkTheId);
-          $newtracking->customer_id =  $order->customer_id;
-          $newtracking->tracking_number = $order->invoice_no;
-          $newtracking->status = $request->status;
-          $newtracking->bd_time = $now;
-          $newtracking->bd_date = date('Y-m-d');
-          $newtracking->save();
-
-
-        }
-        
-        return response()->json(['message' => 'Order status updated successfully.']);
+        });
+    
+        // 3. Recalculate all status counts to send back to the frontend
+        $statusCounts = Order::select('status', DB::raw('count(*) as total'))
+                             ->groupBy('status')
+                             ->pluck('total', 'status');
+                             
+                             //new code for update start
+                             
+                             if($request->status == 'delivered'){
+                                 
+                                 $order->update([
+                                     'total_pay' => $order->total_amount,
+                                     'due'=>0,
+                                     'cod'=>0,
+                                     'payment_status'=>'paid'
+                                     ]);
+                                 
+                                 
+                             }
+                             
+                             
+                             //new code for update end 
+    
+        // Calculate the 'all' count
+        $statusCounts['all'] = $statusCounts->sum();
+    
+        return response()->json([
+            'message' => 'Order status updated successfully.',
+            'statusCounts' => $statusCounts // Send the new counts in the response
+        ]);
     }
+
+    public function bulkUpdateStatus(Request $request)
+{
+    $request->validate([
+        'ids'       => 'required|array',
+        'ids.*'     => 'exists:orders,id',
+        'status'    => 'required|string',
+    ]);
+
+    $orderIds = $request->ids;
+    $newStatus = $request->status;
+
+    DB::transaction(function () use ($orderIds, $newStatus) {
+        // Fetch the orders to get their invoice numbers for tracking
+        $ordersToUpdate = Order::whereIn('id', $orderIds)->get();
+
+        // Prepare tracking records for bulk insertion
+        $trackingData = [];
+        foreach ($ordersToUpdate as $order) {
+            $trackingData[] = [
+                'order_id'   => $order->id,
+                'invoice_no' => $order->invoice_no,
+                'status'     => $newStatus,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+        // Insert all tracking records in a single query
+        if (!empty($trackingData)) {
+            OrderTracking::insert($trackingData);
+        }
+
+        // Perform the bulk status update on the orders table
+        Order::whereIn('id', $orderIds)->update(['status' => $newStatus]);
+    });
+    
+    // Recalculate and return all status counts
+    $statusCounts = Order::select('status', DB::raw('count(*) as total'))
+                         ->groupBy('status')
+                         ->pluck('total', 'status');
+    $statusCounts['all'] = $statusCounts->sum();
+
+    return response()->json([
+        'message'      => 'Selected orders have been updated.',
+        'statusCounts' => $statusCounts,
+    ]);
+}
 
     /**
      * Fetch details for the order detail modal.
@@ -330,25 +360,9 @@ public function update(Request $request, Order $order)
         'items.*.quantity' => 'required|integer|min:1',
     ]);
 
-
-    //payment_status
-
-    
-
     DB::transaction(function () use ($request, $order) {
-
-        if($request->cod == 0.00){
-
-        $payment_status= 'paid';
-//dd($request->cod);
-    }else{
-
-        $payment_status= 'unpaid';
-
-    }
         // 1. Update the main order fields
         $order->update([
-            'payment_status' => $payment_status,
             'customer_id' => $request->customer_id,
             'invoice_no' => $request->invoice_no,
             'subtotal' => $request->subtotal,
@@ -421,7 +435,7 @@ public function printPOS(Order $order)
 {
     $order->load('customer', 'orderDetails.product', 'payments');
     $companyInfo = DB::table('system_information')->first(); // Fetch company info
-    $pdf = new Mpdf(['mode' => 'utf-8', 'format' => [80, 250]]); // Adjusted height for more content
+    $pdf = new Mpdf(['mode' => 'utf-8', 'format' => [75, 100]]); // Adjusted height for more content
     $html = view('admin.order.print_pos', compact('order', 'companyInfo'))->render();
     $pdf->WriteHTML($html);
     return $pdf->Output('receipt-'.$order->invoice_no.'.pdf', 'I');

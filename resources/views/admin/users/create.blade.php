@@ -79,6 +79,19 @@ User Management | {{ $ins_name }}
                 </select>
             </div>
             <div class="col-xl-6 col-xxl-6 col-sm-6 mb-3">
+    <label class="form-label">Is Shareholder?<span class="text-red font-w900">*</span></label>
+    <div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="is_shareholder" id="shareholder_yes" value="1" required>
+            <label class="form-check-label" for="shareholder_yes">Yes</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="is_shareholder" id="shareholder_no" value="0" checked required>
+            <label class="form-check-label" for="shareholder_no">No</label>
+        </div>
+    </div>
+</div>
+            <div class="col-xl-6 col-xxl-6 col-sm-6 mb-3">
                 <label class="form-label">Profile Image<span class="text-red font-w900">*</span>  </label>
                 <input type="file" class="form-control" name="image" id="" placeholder="Profile Image" required>
             </div>

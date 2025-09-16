@@ -146,7 +146,7 @@ class BundleOfferController extends Controller
             File::delete(public_path($bundleOffer->image));
         }
         $bundleOffer->delete();
-        return response()->json(['message' => 'Offer deleted successfully.']);
+        return redirect()->route('bundle-offer.index')->with('success', 'Offer deleted successfully.');
     }
 
     // AJAX method for product search

@@ -23,6 +23,7 @@ class User extends Authenticatable
         'branch_id',
         'customer_id',
         'designation_id',
+        'is_shareholder',
         'status',
         'old_id',
         'phone',

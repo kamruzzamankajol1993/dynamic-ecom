@@ -137,7 +137,7 @@ class ProductController extends Controller
 
             $product = Product::create([
                 'name' => $request->name,
-                'slug' => Str::slug($request->name).'_'.mt_rand(100000, 999999),
+                'slug' => Str::slug($request->name),
                 'product_code' => $request->product_code,
                 'brand_id' => $request->brand_id,
                 'category_id' => $request->category_id,
@@ -197,11 +197,8 @@ class ProductController extends Controller
 
                     // Filter out sizes that don't have a quantity
                    // **FIXED LOGIC HERE**
-                    $sizesWithData = array_filter($variantData['sizes'], function($size) {
-                return (isset($size['quantity']) && $size['quantity'] !== null) || 
-                       (isset($size['price']) && $size['price'] !== null);
-            });
-            $sizes = array_values($sizesWithData);
+                    $sizesWithKeys = array_filter($variantData['sizes'], fn($size) => isset($size['quantity']) && $size['quantity'] !== null);
+                    $sizes = array_values($sizesWithKeys); // Re-index the array to remove keys
 
                     if (!empty($sizes)) {
                         $product->variants()->create([
@@ -319,7 +316,7 @@ class ProductController extends Controller
 
             $product->update([
                 'name' => $request->name,
-                'slug' => Str::slug($request->name).'_'.mt_rand(100000, 999999),
+                'slug' => Str::slug($request->name),
                 'product_code' => $request->product_code,
                 'brand_id' => $request->brand_id,
                 'category_id' => $request->category_id,
@@ -394,11 +391,8 @@ class ProductController extends Controller
                         $variantImagePathmain = $variantData['existing_image'];
                     }
 
-                     $sizesWithData = array_filter($variantData['sizes'], function($size) {
-                return (isset($size['quantity']) && $size['quantity'] !== null) || 
-                       (isset($size['price']) && $size['price'] !== null);
-            });
-            $sizes = array_values($sizesWithData); // Re-index the array
+                    $sizesWithKeys = array_filter($variantData['sizes'], fn($size) => isset($size['quantity']) && $size['quantity'] !== null);
+                    $sizes = array_values($sizesWithKeys); // Re-index the array
 
                     if (!empty($sizes)) {
                         $product->variants()->create([
@@ -430,6 +424,36 @@ class ProductController extends Controller
 
         return response()->json(['message' => 'Product deleted successfully.']);
     }
+    
+    public function ajax_products_delete(Request $request) {
+        
+       $id = $request->id;
+    // Attempt to find the product by its ID
+    $product = Product::find($id);
+
+    // Check if the product exists. If not, return a 404 Not Found response.
+    if (!$product) {
+        return response()->json(['message' => 'Product not found.'], 404);
+    }
+
+    // Use a database transaction to ensure all operations succeed or fail together.
+    DB::transaction(function () use ($product) {
+        // Delete images for each product variant
+        foreach ($product->variants as $variant) {
+            $this->deleteImage($variant->variant_image);
+        }
+
+        // Delete the main and thumbnail images
+        $this->deleteImage($product->thumbnail_image);
+        $this->deleteImage($product->main_image);
+
+        // Delete the product record itself, but only after its images are successfully deleted
+        $product->delete();
+    });
+
+    // If the transaction completes without errors, return a success message.
+    return response()->json(['message' => 'Product deleted successfully.']);
+}
 
     private function uploadImage($image, $directory)
     {
@@ -438,7 +462,9 @@ class ProductController extends Controller
         if (!File::isDirectory($destinationPath)) {
             File::makeDirectory($destinationPath, 0777, true, true);
         }
-        Image::read($image->getRealPath())->resize(500, 428)->save($destinationPath . '/' . $imageName);
+        Image::read($image->getRealPath())->resize(600, 600, function ($c) {
+            $c->aspectRatio(); $c->upsize();
+        })->save($destinationPath . '/' . $imageName);
         return $directory . '/' . $imageName;
     }
 
@@ -449,7 +475,9 @@ class ProductController extends Controller
         if (!File::isDirectory($destinationPath)) {
             File::makeDirectory($destinationPath, 0777, true, true);
         }
-        Image::read($image->getRealPath())->resize(500, 428)->save($destinationPath . '/' . $imageName);
+        Image::read($image->getRealPath())->resize(300, 300, function ($c) {
+            $c->aspectRatio(); $c->upsize();
+        })->save($destinationPath . '/' . $imageName);
         return $directory . '/' . $imageName;
     }
 

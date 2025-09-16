@@ -103,7 +103,7 @@ $(document).ready(function() {
 
     var routes = {
         fetch: "{{ route('ajax.product.data') }}",
-        destroy: id => `{{ route('product.destroy', ':id') }}`.replace(':id', id),
+        destroy:"{{ route('ajax_products_delete') }}",
         csrf: "{{ csrf_token() }}"
     };
     
@@ -299,9 +299,9 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: routes.destroy(id),
-                    method: 'DELETE',
-                    data: { _token: routes.csrf },
+                    url: routes.destroy,
+                    method: 'get',
+                    data: { id: id },
                     success: function() {
                         Swal.fire('Deleted!', 'The product has been deleted.', 'success');
                         fetchData(); 

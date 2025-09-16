@@ -81,6 +81,10 @@ User Management | {{ $ins_name }}
                                 </div>
                                 <div class="col-md-8">
                                     <div class="row mb-2">
+    <div class="col-sm-4 fw-bold"><i class="bi bi-pie-chart-fill me-1"></i>Is Shareholder:</div>
+    <div class="col-sm-8">{{ $user->is_shareholder ? 'Yes' : 'No' }}</div>
+</div>
+                                    <div class="row mb-2">
                                         <div class="col-sm-4 fw-bold"><i class="bi bi-envelope-fill me-1"></i>Email:</div>
                                         <div class="col-sm-8">{{ $user->email }}</div>
                                     </div>

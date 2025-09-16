@@ -6,6 +6,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                 <span class="text-danger" style="font-size: 12px;">image width: 300px and height: 300px , image type webp</span>
                 <form id="addForm" method="post" action="{{ route('animationCategory.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
@@ -14,7 +15,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-dark">Image</label>
-                        <input type="file" name="image" class="form-control">
+                        <input type="file" accept="image/webp" name="image" class="form-control">
                     </div>
                     <div>
                         <button type="submit" class="btn btn-primary btn-sm w-md mt-4">Submit</button>

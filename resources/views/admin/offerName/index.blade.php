@@ -49,6 +49,13 @@
 $(document).ready(function() {
     var currentPage = 1, searchTerm = '', sortColumn = 'id', sortDirection = 'desc';
 
+
+    var routes = {
+        destroy: id => `{{ url('bundle-offer') }}/${id}`,
+        csrf: "{{ csrf_token() }}"
+    };
+
+
     function fetchData() {
         $.get("{{ route('ajax.bundle-offer.data') }}", {
             page: currentPage, search: searchTerm, sort: sortColumn, direction: sortDirection
@@ -79,7 +86,14 @@ $(document).ready(function() {
                         <td>${statusBadge}</td>
                         <td>
                             <a href="${editUrl}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
-                            <button class="btn btn-sm btn-danger btn-delete" data-id="${offer.id}"><i class="fa fa-trash"></i></button>
+                           
+
+                             <form action="${routes.destroy(offer.id)}" method="POST" class="d-inline">
+                            <input type="hidden" name="_token" value="${routes.csrf}">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="button" class="btn btn-sm btn-danger btn-delete"><i class="fa fa-trash"></i></button>
+                        </form>
+
                         </td>
                     </tr>`;
                 });
@@ -109,25 +123,21 @@ $(document).ready(function() {
     });
     $(document).on('click', '.page-link', function (e) { e.preventDefault(); currentPage = $(this).data('page'); fetchData(); });
 
+    // UPDATED DELETE BUTTON CLICK HANDLER
     $(document).on('click', '.btn-delete', function () {
-        const id = $(this).data('id');
+        const deleteButton = $(this); // Reference to the button
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
             icon: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
-                    url: `{{ url('bundle-offer') }}/${id}`,
-                    method: 'DELETE',
-                    data: { _token: "{{ csrf_token() }}" },
-                    success: function() {
-                        Swal.fire('Deleted!', 'The offer has been deleted.', 'success');
-                        fetchData();
-                    }
-                });
+                // Find the closest form and submit it
+                deleteButton.closest('form').submit();
             }
         });
     });

@@ -39,7 +39,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="formFile" class="form-label">Offer Image</label>
-                        <input class="form-control" type="file" name="image" id="formFile">
+                        <input class="form-control" accept="image/webp" type="file" name="image" id="formFile">
+                        <small class="text-danger">image width: 660px and height: 350px , image type webp</small>
                     </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" name="status" value="1" id="status" checked>

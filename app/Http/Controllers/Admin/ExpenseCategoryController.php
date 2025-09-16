@@ -52,6 +52,7 @@ class ExpenseCategoryController extends Controller
     public function destroy(ExpenseCategory $expenseCategory)
     {
         $expenseCategory->delete();
-        return response()->json(['success' => 'Category deleted successfully.']);
+        return redirect()->route('expense-category.index')->with('success', 'Category deleted successfully.');
+        //return response()->json(['success' => 'Category deleted successfully.']);
     }
 }

@@ -65,6 +65,6 @@ class FabricController extends Controller
     public function destroy($id)
     {
         Fabric::findOrFail($id)->delete();
-        return response()->json(['message' => 'Fabric deleted successfully']);
+        return redirect()->route('fabric.index')->with('success', 'Fabric deleted successfully!');
     }
 }

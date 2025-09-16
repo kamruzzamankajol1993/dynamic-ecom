@@ -31,7 +31,7 @@
 
             <div class="auth-form-column">
                 <div class="auth-form-header">
-                    <img src="{{ asset('/') }}{{$front_black_logo_name}}" alt="Logo" class="auth-logo">
+                    <img src="{{ asset('/') }}public/black.png" alt="Logo" class="auth-logo">
                     <h3 class="auth-title">Forgot Password?</h3>
                     <p class="text-muted">Enter your email and we'll send instructions to reset your password.</p>
                 </div>

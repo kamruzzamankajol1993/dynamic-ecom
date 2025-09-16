@@ -27,9 +27,13 @@
                     <td><img src="${logoUrl}" alt="${brand.name}" width="50" class="img-thumbnail"></td>
                     <td>${brand.name}</td>
                     <td>${statusBadge}</td>
-                    <td>
+                    <td class="d-flex gap-2">
                         <button class="btn btn-sm btn-info btn-edit btn-custom-sm" data-id="${brand.id}"><i class="fa fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger btn-delete btn-custom-sm" data-id="${brand.id}"><i class="fa fa-trash"></i></button>
+                         <form action="${routes.delete(brand.id)}" method="POST" class="d-inline">
+                            <input type="hidden" name="_token" value="${routes.csrf}">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="button" class="btn btn-sm btn-danger btn-delete"><i class="fa fa-trash"></i></button>
+                        </form>
                     </td>
                 </tr>`;
             });
@@ -119,25 +123,21 @@
     });
 
     // Delete Action
+    // UPDATED DELETE BUTTON CLICK HANDLER
     $(document).on('click', '.btn-delete', function () {
-        const id = $(this).data('id');
+        const deleteButton = $(this); // Reference to the button
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
             icon: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
-                    url: routes.delete(id),
-                    method: 'DELETE',
-                    data: { _token: routes.csrf },
-                    success: function() {
-                        Swal.fire({ toast: true, icon: 'success', title: 'Brand deleted successfully', showConfirmButton: false, timer: 3000 });
-                        fetchData();
-                    }
-                });
+                // Find the closest form and submit it
+                deleteButton.closest('form').submit();
             }
         });
     });

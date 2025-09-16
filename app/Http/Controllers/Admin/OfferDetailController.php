@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\BundleOffer;
 use App\Models\BundleOfferProduct;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 class OfferDetailController extends Controller
 {
@@ -51,35 +52,40 @@ class OfferDetailController extends Controller
      */
     public function create()
     {
+        $categories = Category::where('status', 1)->pluck('name', 'id');
         $bundleOffers = BundleOffer::where('status', 1)->pluck('name', 'id');
-        return view('admin.offerProduct.create', compact('bundleOffers'));
+        return view('admin.offerProduct.create', compact('bundleOffers', 'categories'));
     }
+
+    
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
+        // MODIFIED: Updated validation and logic
         $request->validate([
             'bundle_offer_id' => 'required|exists:bundle_offers,id',
             'title' => 'required|string|max:255',
             'buy_quantity' => 'required|integer|min:1',
             'get_quantity' => 'nullable|integer|min:0',
-            'product_id' => [
-                'required',
-                'array',
-                function ($attribute, $value, $fail) use ($request) {
-                    $totalQuantity = (int)$request->buy_quantity + (int)$request->get_quantity;
-                    if (count($value) > $totalQuantity) {
-                        $fail('The number of selected products cannot exceed the sum of Buy and Get quantities.');
-                    }
-                },
-            ],
-            'product_id.*' => 'required|exists:products,id',
+            'product_id' => 'nullable|array',
+            'product_id.*' => 'exists:products,id',
+            'category_id' => 'nullable|array',
+            'category_id.*' => 'exists:categories,id',
             'discount_price' => 'nullable|numeric|min:0',
         ]);
 
-        BundleOfferProduct::create($request->all());
+        if (empty($request->product_id) && empty($request->category_id)) {
+            return back()->withErrors(['selection' => 'You must select at least one product or one category.'])->withInput();
+        }
+
+        $data = $request->all();
+        $data['product_id'] = $request->product_id ?? [];
+        $data['category_id'] = $request->category_id ?? [];
+
+        BundleOfferProduct::create($data);
 
         return redirect()->route('offer-product.index')->with('success', 'Product Deal created successfully.');
     }
@@ -89,9 +95,20 @@ class OfferDetailController extends Controller
      */
     public function show(BundleOfferProduct $offerProduct)
     {
+        // MODIFIED: Logic to get products from both individual and category selections
         $productIds = $offerProduct->product_id ?? [];
-        $products = Product::whereIn('id', $productIds)->get();
-        return view('admin.offerProduct.show', compact('offerProduct', 'products'));
+        $categoryIds = $offerProduct->category_id ?? [];
+
+        $productsFromCategories = [];
+        if (!empty($categoryIds)) {
+            $productsFromCategories = Product::whereIn('category_id', $categoryIds)->pluck('id')->toArray();
+        }
+
+        $allProductIds = array_unique(array_merge($productIds, $productsFromCategories));
+        $products = Product::whereIn('id', $allProductIds)->get();
+        $categories = Category::whereIn('id', $categoryIds)->get();
+
+        return view('admin.offerProduct.show', compact('offerProduct', 'products', 'categories'));
     }
 
     /**
@@ -99,9 +116,13 @@ class OfferDetailController extends Controller
      */
     public function edit(BundleOfferProduct $offerProduct)
     {
+        // MODIFIED: Fetch categories and selected category IDs
         $bundleOffers = BundleOffer::where('status', 1)->pluck('name', 'id');
-        $selectedProducts = Product::whereIn('id', $offerProduct->product_id)->get();
-        return view('admin.offerProduct.edit', compact('offerProduct', 'bundleOffers', 'selectedProducts'));
+        $categories = Category::where('status', 1)->pluck('name', 'id');
+        $selectedProducts = Product::whereIn('id', $offerProduct->product_id ?? [])->get();
+        $selectedCategoryIds = $offerProduct->category_id ?? [];
+
+        return view('admin.offerProduct.edit', compact('offerProduct', 'bundleOffers', 'selectedProducts', 'categories', 'selectedCategoryIds'));
     }
 
     /**
@@ -109,26 +130,28 @@ class OfferDetailController extends Controller
      */
     public function update(Request $request, BundleOfferProduct $offerProduct)
     {
-                $request->validate([
+        // MODIFIED: Updated validation and logic
+        $request->validate([
             'bundle_offer_id' => 'required|exists:bundle_offers,id',
             'title' => 'required|string|max:255',
             'buy_quantity' => 'required|integer|min:1',
             'get_quantity' => 'nullable|integer|min:0',
-            'product_id' => [
-                'required',
-                'array',
-                function ($attribute, $value, $fail) use ($request) {
-                    $totalQuantity = (int)$request->buy_quantity + (int)$request->get_quantity;
-                    if (count($value) > $totalQuantity) {
-                        $fail('The number of selected products cannot exceed the sum of Buy and Get quantities.');
-                    }
-                },
-            ],
-            'product_id.*' => 'required|exists:products,id',
+            'product_id' => 'nullable|array',
+            'product_id.*' => 'exists:products,id',
+            'category_id' => 'nullable|array',
+            'category_id.*' => 'exists:categories,id',
             'discount_price' => 'nullable|numeric|min:0',
         ]);
 
-        $offerProduct->update($request->all());
+        if (empty($request->product_id) && empty($request->category_id)) {
+            return back()->withErrors(['selection' => 'You must select at least one product or one category.'])->withInput();
+        }
+
+        $data = $request->all();
+        $data['product_id'] = $request->product_id ?? [];
+        $data['category_id'] = $request->category_id ?? [];
+
+        $offerProduct->update($data);
 
         return redirect()->route('offer-product.index')->with('success', 'Product Deal updated successfully.');
     }
@@ -139,7 +162,28 @@ class OfferDetailController extends Controller
     public function destroy(BundleOfferProduct $offerProduct)
     {
         $offerProduct->delete();
+        return redirect()->route('offer-product.index')->with('success', 'Product Deal deleted successfully.');
         // Since we will use AJAX for deletion, we return a JSON response
-        return response()->json(['message' => 'Product Deal deleted successfully.']);
+       // return response()->json(['message' => 'Product Deal deleted successfully.']);
+    }
+
+       public function getProductsByCategories(Request $request)
+    {
+        $request->validate([
+            'category_ids' => 'required|array',
+            'category_ids.*' => 'integer|exists:categories,id',
+        ]);
+
+        $products = Product::whereIn('category_id', $request->category_ids)->get();
+
+        // Format the response for Select2
+        $response = $products->map(function($product) {
+            return [
+                'id' => $product->id,
+                'text' => $product->name . ' (' . $product->product_code . ')'
+            ];
+        });
+
+        return response()->json($response);
     }
 }

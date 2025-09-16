@@ -90,6 +90,6 @@ class ExpenseController extends Controller
     public function destroy(Expense $expense)
     {
         $expense->delete();
-        return response()->json(['success' => 'Expense deleted successfully.']);
+        return redirect()->route('expense.index')->with('success', 'Expense deleted successfully.');
     }
 }

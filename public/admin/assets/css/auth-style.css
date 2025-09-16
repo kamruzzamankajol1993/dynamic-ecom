@@ -35,7 +35,7 @@ body {
 ================================================== */
 .auth-branding-column {
     flex-basis: 45%;
-    background-color: #0f1531; /* Primary Color */
+    background-color: #1d1c1c; /* Primary Color */
     color: #fff;
     padding: 3rem;
     display: flex;
@@ -99,7 +99,7 @@ body {
 }
 
 .form-control:focus {
-    border-color: #00aaff; /* Accent Color */
+    border-color: #ffd66b; /* Accent Color */
     background-color: #fff;
     box-shadow: 0 0 0 0.25rem rgba(255, 214, 107, 0.3);
 }
@@ -112,12 +112,12 @@ body {
     transition: all 0.2s ease;
 }
 .form-control:focus + .input-group-text {
-    border-color: #00aaff;
+    border-color: #ffd66b;
     background-color: #fff;
 }
 
 .auth-link {
-    color: #0f1531;
+    color: #1d1c1c;
     text-decoration: none;
     font-weight: 500;
 }
@@ -129,8 +129,8 @@ body {
    Main Action Button
 ================================================== */
 .auth-btn {
-    background-color: #00aaff; /* Accent Color */
-    color: #0f1531; /* Primary Color Text */
+    background-color: #ffd66b; /* Accent Color */
+    color: #1d1c1c; /* Primary Color Text */
     border: none;
     border-radius: 0.5rem;
     padding: 1rem;

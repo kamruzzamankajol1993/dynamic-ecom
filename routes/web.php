@@ -62,13 +62,15 @@ use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\AnalyticSettingController;
-use App\Http\Controllers\Admin\SupportCategoryController;
-use App\Http\Controllers\Admin\SupportTicketController;
-use App\Http\Controllers\Admin\TicketContactInfoController;
-use App\Http\Controllers\Admin\OfferProductController;
-use App\Http\Controllers\Admin\OfferBannerController;
-use App\Http\Controllers\Admin\MainSliderController;
-
+use App\Http\Controllers\Admin\BankController;
+use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\AccountingSettingController;
+use App\Http\Controllers\Admin\OpeningBalanceController;
+use App\Http\Controllers\Admin\ShareholderDepositController;
+use App\Http\Controllers\Admin\ShareholderWithdrawController;
+use App\Http\Controllers\Admin\CashBookController;
+use App\Http\Controllers\Admin\BankBookController;
+use App\Http\Controllers\Admin\HighlightProductController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -82,6 +84,10 @@ Route::get('/clear', function() {
     \Illuminate\Support\Facades\Artisan::call('route:clear');
     return redirect()->back();
 });
+
+// Highlight Product Routes
+    Route::get('highlight-product', [HighlightProductController::class, 'index'])->name('highlight-product.index');
+    Route::post('highlight-product', [HighlightProductController::class, 'store'])->name('highlight-product.store');
 
 Auth::routes();
 
@@ -129,27 +135,76 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::group(['middleware' => ['auth']], function() {
 
-     Route::resource('main-slider', MainSliderController::class)->except(['show']);
-    Route::get('ajax-main-slider-data', [MainSliderController::class, 'data'])->name('ajax.main-slider.data');
 
 
-     Route::resource('offer-banner', OfferBannerController::class)->except(['show']);
-    Route::get('ajax-offer-banner-data', [OfferBannerController::class, 'data'])->name('ajax.offer-banner.data');
-
-    Route::resource('offer-product', OfferProductController::class);
-    Route::get('ajax-offer-product-data', [OfferProductController::class, 'data'])->name('ajax.offer-product.data');
-
-    Route::resource('ticket-contact-infos', TicketContactInfoController::class)->except('show');
-    Route::get('ajax-ticket-contact-infos-data', [TicketContactInfoController::class, 'data'])->name('ajax.ticket-contact-infos.data');
-
-    // Support Ticket (FAQ) Routes
-    Route::resource('support-tickets', SupportTicketController::class);
-    Route::get('ajax-support-tickets-data', [SupportTicketController::class, 'data'])->name('ajax.support-tickets.data');
+Route::delete('review-images/{image}', [ReviewController::class, 'destroyImage'])->name('review.image.destroy');
+    // Profit & Loss Routes
+    Route::get('profit-and-loss', [ReportController::class, 'profitAndLossIndex'])->name('profit_and_loss.index');
+    Route::get('profit-and-loss-generate', [ReportController::class, 'generateProfitAndLoss'])->name('profit_and_loss.generate');
+     Route::get('profit-and-loss-print', [ReportController::class, 'printProfitAndLoss'])->name('profit_and_loss.print');
 
 
-    // Support Ticket Category Routes
-    Route::resource('support-categories', SupportCategoryController::class);
-    Route::get('ajax-support-categories-data', [SupportCategoryController::class, 'data'])->name('ajax.support-categories.data');
+     // Trial Balance Routes
+    Route::get('trial-balance', [ReportController::class, 'trialBalanceIndex'])->name('trial_balance.index');
+    Route::get('trial-balance-generate', [ReportController::class, 'generateTrialBalance'])->name('trial_balance.generate');
+    Route::get('trial-balance-print', [ReportController::class, 'printTrialBalance'])->name('trial_balance.print');
+
+     // General Ledger
+    Route::get('general-ledger', [ReportController::class, 'generalLedgerIndex'])->name('general_ledger.index');
+    Route::get('general-ledger-generate', [ReportController::class, 'generateGeneralLedger'])->name('general_ledger.generate');
+      Route::get('general-ledger-print', [ReportController::class, 'printGeneralLedger'])->name('general_ledger.print');
+    
+    // Balance Sheet
+    Route::get('balance-sheet', [ReportController::class, 'balanceSheetIndex'])->name('balance_sheet.index');
+    Route::get('balance-sheet-generate', [ReportController::class, 'generateBalanceSheet'])->name('balance_sheet.generate');
+     Route::get('balance-sheet-print', [ReportController::class, 'printBalanceSheet'])->name('balance_sheet.print');
+    
+    // A single endpoint for dependencies like the account list
+    Route::get('dependencies', [ReportController::class, 'getReportDependencies'])->name('dependencies');
+
+
+     // Bank Book Report Routes
+    Route::get('reports-bank-book', [BankBookController::class, 'index'])->name('reports.bank_book.index');
+    Route::get('reports-bank-book-dependencies', [BankBookController::class, 'getDependencies'])->name('reports.bank_book.dependencies');
+    Route::get('reports-bank-book-generate', [BankBookController::class, 'generateReport'])->name('reports.bank_book.generate');
+    Route::get('reports/bank-book-print', [BankBookController::class, 'printReport'])->name('reports.bank_book.print');
+
+    Route::get('reports-cash-book', [CashBookController::class, 'index'])->name('reports.cash_book.index');
+    Route::get('reports-cash-book-dependencies', [CashBookController::class, 'getDependencies'])->name('reports.cash_book.dependencies');
+    Route::get('reports-cash-book-generate', [CashBookController::class, 'generateReport'])->name('reports.cash_book.generate');
+    Route::get('reports/cash-book-print', [CashBookController::class, 'printReport'])->name('reports.cash_book.print');
+
+
+      // Shareholder Withdraw Routes
+    Route::resource('shareholder-withdraws', ShareholderWithdrawController::class)->except('show');
+    Route::get('ajax-shareholder-withdraws-data', [ShareholderWithdrawController::class, 'data'])->name('ajax.shareholder-withdraws.data');
+
+
+    // Shareholder Deposit Routes
+    Route::resource('shareholder-deposits', ShareholderDepositController::class)->except('show');
+    Route::get('ajax-shareholder-deposits-data', [ShareholderDepositController::class, 'data'])->name('ajax.shareholder-deposits.data');
+
+     // Opening Balances Routes
+    Route::resource('opening-balances', OpeningBalanceController::class)->except('show');
+    Route::get('ajax-opening-balances-data', [OpeningBalanceController::class, 'data'])->name('ajax.opening-balances.data');
+
+     // Accounting Settings Routes
+    Route::resource('accounting-settings', AccountingSettingController::class)->except('show');
+    Route::get('ajax-accounting-settings-data', [AccountingSettingController::class, 'data'])->name('ajax.accounting-settings.data');
+
+
+    // Chart of Accounts Routes
+    Route::resource('accounts', AccountController::class);
+    Route::get('ajax-accounts-data', [AccountController::class, 'data'])->name('ajax.accounts.data');
+    Route::get('ajax-accounts-all', [AccountController::class, 'allAccounts'])->name('ajax.accounts.all');
+
+    // Bank Routes
+    Route::resource('banks', BankController::class);
+    Route::get('ajax-banks-data', [BankController::class, 'data'])->name('ajax.banks.data');
+
+    // Shareholder List Routes
+    Route::get('/shareholders', [UserController::class, 'shareholderIndex'])->name('shareholders.index');
+    Route::get('/ajax-shareholders-data', [UserController::class, 'shareholdersData'])->name('ajax.shareholders.data');
 
     Route::get('/settings-analytics', [AnalyticSettingController::class, 'index'])->name('settings.analytics.index');
     Route::post('/settings-analytics-update', [AnalyticSettingController::class, 'update'])->name('settings.analytics.update');
@@ -215,7 +270,7 @@ Route::get('ajax-expense', [ExpenseController::class, 'data'])->name('expense.da
 });
 
     // Add this to your admin route group
-
+Route::post('orders/bulk-update-status', [OrderController::class, 'bulkUpdateStatus'])->name('order.bulk-update-status');
     Route::post('order-payment/{order}', [OrderController::class, 'storePayment'])->name('order.payment.store');
 Route::get('order-print-a4/{order}', [OrderController::class, 'printA4'])->name('order.print.a4');
 Route::get('order-print-pos/{order}', [OrderController::class, 'printPOS'])->name('order.print.pos');
@@ -226,7 +281,7 @@ Route::get('order-search-customers', [OrderController::class, 'searchCustomers']
        Route::get('ajax_orders', [OrderController::class, 'data'])->name('ajax.order.data');
         Route::post('storeorder-update-status/{order}', [OrderController::class, 'updateStatus'])->name('order.update-status');
     Route::get('orderstore_details/{id}', [OrderController::class, 'getDetails'])->name('order.get-details');
-    Route::delete('orders-destroy-multiple', [OrderController::class, 'destroyMultiple'])->name('order.destroy-multiple');
+    Route::get('ordersdestroymultiple', [OrderController::class, 'destroyMultiple'])->name('order.destroy-multiple');
     Route::resource('order', OrderController::class);
 
      Route::get('order-get-customer-details/{id}', [OrderController::class, 'getCustomerDetails'])->name('order.get-customer-details');
@@ -246,7 +301,11 @@ Route::get('order-search-customers', [OrderController::class, 'searchCustomers']
     Route::get('ajax-bundle-offer-data', [BundleOfferController::class, 'data'])->name('ajax.bundle-offer.data');
     Route::get('ajax-bundle-offer-search-products', [BundleOfferController::class, 'searchProducts'])->name('ajax.bundle-offer.search-products');
 
- 
+    // Routes for managing the specific Product Deals
+    Route::resource('offer-product', OfferDetailController::class);
+    // --- NEW: AJAX route for the product deals table ---
+    Route::get('ajax-offer-product-data', [OfferDetailController::class, 'data'])->name('ajax.offer-product.data');
+    Route::get('ajax/products-by-categories', [OfferDetailController::class, 'getProductsByCategories'])->name('ajax.products-by-categories');
 
     Route::get('frontend-control', [FrontendControlController::class, 'index'])->name('frontend.control.index');
     Route::post('frontend-control', [FrontendControlController::class, 'update'])->name('frontend.control.update');
@@ -307,6 +366,8 @@ Route::resource('unit', UnitController::class);
     Route::get('get-sub-subcategories/{subcategoryId}', [ProductController::class, 'getSubSubcategories'])->name('get.sub-subcategories');
     Route::get('get-size-chart-entries/{id}', [ProductController::class, 'getSizeChartEntries'])->name('get.size-chart.entries');
     Route::resource('product', ProductController::class);
+Route::get('ajax_products_delete', [ProductController::class, 'ajax_products_delete'])->name('ajax_products_delete');
+
 
 Route::get('ajax_animation_category', [AnimationCategoryController::class, 'data'])->name('ajax.animation_category.data');
 Route::resource('animationCategory', AnimationCategoryController::class);

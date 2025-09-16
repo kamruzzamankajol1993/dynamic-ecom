@@ -182,6 +182,7 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
                 $systemInformation->email = $request->email;
                 $systemInformation->phone = $request->phone;
                 $systemInformation->main_url = $request->main_url;
+                $systemInformation->front_url = $request->front_url;
                 $systemInformation->address = $request->address;
                 $systemInformation->keyword = $request->keyword;
                 $systemInformation->description	= $request->description;
@@ -202,22 +203,6 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
                     $img->save($imageUrl);
 
                     $systemInformation->logo =  'public/uploads/'.$imageName;
-
-                }
-
-                 if ($request->hasfile('black_logo')) {
-
-
-                    $productImage = $request->file('black_logo');
-                    $imageName = 'black_logo'.$time_dy.$productImage->getClientOriginalName();
-                    $directory = 'public/uploads/';
-                    $imageUrl = $directory.$imageName;
-
-                    $img=Image::read($productImage);
-                        // ->resize(140,50);
-                    $img->save($imageUrl);
-
-                    $systemInformation->black_logo =  'public/uploads/'.$imageName;
 
                 }
                 if ($request->hasfile('icon')) {
@@ -271,6 +256,7 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
         $systemInformation->email = $request->email;
         $systemInformation->phone = $request->phone;
         $systemInformation->main_url = $request->main_url;
+        $systemInformation->front_url = $request->front_url;
         $systemInformation->address = $request->address;
         $systemInformation->keyword = $request->keyword;
         $systemInformation->description	= $request->description;
@@ -293,21 +279,6 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
             $systemInformation->logo =  'public/uploads/'.$imageName;
 
         }
-        if ($request->hasfile('black_logo')) {
-
-
-                    $productImage = $request->file('black_logo');
-                    $imageName = 'black_logo'.$time_dy.$productImage->getClientOriginalName();
-                    $directory = 'public/uploads/';
-                    $imageUrl = $directory.$imageName;
-
-                    $img=Image::read($productImage);
-                        // ->resize(140,50);
-                    $img->save($imageUrl);
-
-                    $systemInformation->black_logo =  'public/uploads/'.$imageName;
-
-                }
         if ($request->hasfile('icon')) {
 
 

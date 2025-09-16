@@ -1,84 +1,255 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Receipt - {{ $order->invoice_no }}</title>
-    <style>
-        body { font-family: monospace; font-size: 10px; color: #000; margin: 0; padding: 5px; }
-        .receipt-container { width: 100%; }
-        .header { text-align: center; margin-bottom: 10px; }
-        .header img { max-width: 60%; max-height: 40px; }
-        .header h4 { margin: 5px 0 0; font-size: 12px; }
-        .header p { margin: 2px 0; }
-        .info, .items, .totals { border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px; }
-        .info p { margin: 2px 0; }
-        .items table { width: 100%; }
-        .items th, .items td { padding: 2px 0; }
-        .items th { text-align: left; border-bottom: 1px dashed #000; }
-        .items .price { text-align: right; }
-        .totals table { width: 100%; }
-        .totals td { padding: 1px 0; }
-        .totals .label { text-align: left; }
-        .totals .value { text-align: right; }
-        .totals .grand-total { font-weight: bold; font-size: 12px; }
-        .footer { text-align: center; margin-top: 10px; padding-top: 5px; border-top: 1px dashed #000; }
+  <meta charset="UTF-8">
+  <title>Receipt - {{ $order->invoice_no }}</title>
+   <style>
+        body {
+            color: #333639;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* .body_size
+        {
+            width: 75mm;
+            height: 100mm;
+            padding: 3px;
+        } */
+
+        @page  {
+      size: 75mm 100mm;
+      margin: 3px;
+    }
+
+        table {
+            width: 100%;
+        }
+
+        .first_table tr td {
+            width: 50%;
+        }
+
+        .first_table tr td:nth-child(1) img {
+            height:70px;
+            width:450px;
+        }
+
+        .first_table tr td:nth-child(2)
+        {
+            text-align: right;
+        }
+
+        .first_table tr td:nth-child(2) img {
+           
+        }
+
+        .first_table tr td:nth-child(2) p {
+            font-size:8px;
+            padding:0;
+            margin:0;
+        }
+        .first_table tr td:nth-child(2) h4 {
+            font-size:12px;
+            padding:0;
+            margin:0;
+        }
+
+        hr{
+            margin-bottom: 0;
+            margin-top:0;
+        }
+
+        .second_table tr td {
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        .second_table tr td:nth-child(1) {
+            width: 40%;
+        }
+        .second_table tr td p{
+            margin: 0;
+            padding: 2px;
+        }
+
+        .second_table tr td:nth-child(2)
+        {
+            font-weight: bold;
+            width: 60%;
+        }
+
+        .third_table {
+            border-collapse: collapse;
+            margin-top: 5px;
+            font-size: 10px;
+        }
+        .third_table th {
+            padding: 2px;
+            text-align: left;
+            background-color: #F8F9FA;
+            border: 1px solid #e9ecef;
+        }
+
+        .third_table tr th:nth-child(2)
+        {
+            width: 40px;
+        }
+
+        .third_table td {
+            border: 1px solid #e9ecef;
+            padding: 4px;
+        }
+
+        .forth_table
+        {
+            font-size: 12px;
+            vertical-align: top;
+        }
+        .forth_table tr td:nth-child(1)
+        {
+            width: 40%;
+        }
+        .forth_table tr td:nth-child(2)
+        {
+            width: 60%;
+        }
+
+        .inner-table tr td:nth-child(1)
+        {
+            width: 65%;
+        }
     </style>
 </head>
 <body>
-    <div class="receipt-container">
-        <div class="header">
-            @if($companyInfo && $companyInfo->logo)
-                <img src="{{ asset('/') }}public/black.png" alt="Logo">
-            @endif
-            <h4>{{ $companyInfo->ins_name ?? 'Your Company' }}</h4>
-            <p>{{ $companyInfo->address ?? '' }}</p>
-            <p>Phone: {{ $companyInfo->phone ?? '' }}</p>
-        </div>
 
-        <div class="info">
-            <p>Order: #{{ $order->invoice_no }}</p>
-            <p>Date: {{ \Carbon\Carbon::parse($order->order_date)->format('d/m/y H:i') }}</p>
-            <p>Customer: {{ $order->customer->name }}</p>
-        </div>
 
-        <div class="items">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th class="price">Qty</th>
-                        <th class="price">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($order->orderDetails as $detail)
-                    <tr>
-                        <td colspan="3">{{ $detail->product->name }} ({{ $detail->size }})</td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td class="price">{{ $detail->quantity }} x {{ number_format($detail->unit_price, 2) }}</td>
-                        <td class="price">{{ number_format($detail->subtotal, 2) }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
 
-        <div class="totals">
-            <table>
-                <tr><td class="label">Subtotal:</td><td class="value">{{ number_format($order->subtotal, 2) }}</td></tr>
-                <tr><td class="label">Discount:</td><td class="value">-{{ number_format($order->discount, 2) }}</td></tr>
-                <tr><td class="label">Shipping:</td><td class="value">{{ number_format($order->shipping_cost, 2) }}</td></tr>
-                <tr class="grand-total"><td class="label">Total:</td><td class="value">{{ number_format($order->total_amount, 2) }}</td></tr>
-                <tr><td class="label">Paid:</td><td class="value">{{ number_format($order->total_pay, 2) }}</td></tr>
-                <tr class="grand-total"><td class="label">Due:</td><td class="value">{{ number_format($order->due, 2) }}</td></tr>
-            </table>
-        </div>
+            <table class="first_table">
+        <tr>
+            <td>
+                <!--<img src="{{ asset('public/new_admin/assets/images/rqr.jpg') }}" height="50" alt="">-->
+            </td>
+            <td>
+                 @if($companyInfo && $companyInfo->logo)
+                    <img src="{{ asset('/') }}public/black.png" alt="Logo">
+                @endif
+                <p style="font-weight: bold;">Merchant No: {{ $companyInfo->phone ?? '' }}</p>
+                <h4>spotlightattires.com</h4>
+            </td>
+        </tr>
+    </table>
 
-        <div class="footer">
-            <p>Thank You!</p>
-        </div>
-    </div>
+    <hr>
+
+    <table class="second_table">
+        <tr>
+            <td>Customer Name</td>
+            <td>:{{ $order->customer->name }}</td>
+        </tr>
+        <tr>
+
+            <td>Mobile Number</td>
+            <td>:{{ $order->customer->phone }}</td>
+        </tr>
+        <tr>
+            <td>Address</td>
+            <td>:{{ $order->shipping_address }}</td>
+        </tr>
+        
+       
+    </table>
+    
+
+
+
+<table class="third_table">
+
+    <thead>
+    <tr>
+       <th style="width:5%">#</th>
+                <th style="width:55%">Item</th>
+                <th style="width:15%">Rate</th>
+                <th style="width:5%">Q.T</th>
+                <th style="width:20%">Amount</th>
+    </tr>
+    </thead>
+    <tbody>
+        @foreach($order->orderDetails as $detail)
+        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $detail->product->name }} ({{ $detail->size }})</td>
+                            <td>{{ number_format($detail->unit_price, 2) }}</td>
+                            <td>{{ $detail->quantity }}</td>
+
+                            <td>{{ number_format($detail->subtotal, 2) }}</td>
+                        </tr>
+
+
+        @endforeach
+
+    </tbody>
+</table>
+
+<table class="forth_table">
+
+
+    <tr>
+    <td>
+                <h4>COD Charge:{{ number_format($order->cod, 2) }}
+                
+               
+                
+                
+                
+                
+                <br> <span style="font-size:8px;">Powered By ResNova Tech Limited</span>
+                </h4>
+            </td>
+    <td>
+      <table class="inner-table">
+        <tr>
+          <td>Sub Total</td>
+          <td>{{ number_format($order->subtotal, 2) }}</td>
+        </tr>
+        <tr>
+          <td>Ship.Charge</td>
+          <td>{{ number_format($order->shipping_cost, 2) }}</td>
+        </tr>
+        @if($order->discount  == 0 )
+
+        @else
+        <tr>
+            <td>Discount</td>
+            <td>{{ number_format($order->discount, 2) }}</td>
+          </tr>
+          @endif
+        <tr style="font-weight:bold">
+          <td>Total</td>
+          <td>{{ number_format($order->total_amount, 2) }}</td>
+        </tr>
+
+
+
+      </table>
+    </td>
+  </tr>
+</table>
+ @if(!empty($order->notes))
+ <table class="second_table">
+       
+      
+          
+
+            <tr>
+
+            <td><b>Note:</b> {{ $order->notes }}</td>
+        </tr>
+      
+    </table>
+      @endif
 </body>
 </html>
+
+
+   

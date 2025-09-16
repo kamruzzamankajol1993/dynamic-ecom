@@ -68,6 +68,7 @@ User Management | {{ $ins_name }}
     <th style="width:10%" class="sortable" data-column="email">Email <span class="sort-icon"></span></th>
     <th style="width:10%" class="sortable" data-column="address">Address <span class="sort-icon"></span></th>
     <th style="width:10%" class="sortable">Roles</th>
+     <th style="width:5%">Shareholder</th>
     <th style="width:10%" class="sortable" data-column="status">Status <span class="sort-icon"></span></th>
     <th style="width:5%" class="sortable" data-column="status">Password <span class="sort-icon"></span></th>
     <th style="width:7%" class="sortable">Actions</th>

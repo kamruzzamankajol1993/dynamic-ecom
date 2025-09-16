@@ -67,11 +67,10 @@ Panel Management | {{ $ins_name }}
                    <th style="width:15%" class="sortable" data-column="branch_name">Branch Name</th>
             <th style="width:10%" class="sortable" data-column="icon">Icon</th>
             <th  style="width:10%"class="sortable" data-column="logo">Logo</th>
-            <th  style="width:10%"class="sortable" data-column="black_logo">Black Logo</th>
-            <th style="width:10%" class="sortable" data-column="name">Name</th>
+            <th style="width:15%" class="sortable" data-column="name">Name</th>
             <th style="width:10%" class="sortable" data-column="phone">Phone</th>
             <th style="width:10%" class="sortable" data-column="email">Email</th>
-            <th style="width:10%" class="sortable" data-column="address">Address</th>
+            <th style="width:15%" class="sortable" data-column="address">Address</th>
                     <th class="sortable" style="width:10%">Action</th>
                                         </tr>
                                     </thead>

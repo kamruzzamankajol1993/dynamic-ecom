@@ -30,7 +30,6 @@
                     <td>${item.branch_name ?? ''}</td>
                     <td><img src="{{ asset('/') }}${item.icon}" style="height:40px;"></td>
                     <td><img src="{{ asset('/') }}${item.logo}" style="height:60px;"></td>
-                    <td><img src="{{ asset('/') }}${item.black_logo}" style="height:60px;"></td>
                     <td>${item.ins_name}</td>
                     <td>${item.phone}</td>
                     <td>${item.email}</td>

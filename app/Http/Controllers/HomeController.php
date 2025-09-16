@@ -26,7 +26,7 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function index(Request $request)
+     public function index(Request $request)
     {
         $filter = $request->get('filter', 'this_month'); // Default to 'this_month'
         $now = Carbon::now();
@@ -68,7 +68,7 @@ class HomeController extends Controller
             DB::raw("DATE_FORMAT(created_at, '%b') as month"),
             DB::raw("SUM(total_amount) as total")
         )->where('created_at', '>=', Carbon::now()->subMonths(5)->startOfMonth())
-         ->groupBy('month')->orderByRaw("MONTH(created_at)");
+         ->groupBy('month')->orderByRaw("MONTH(created_at) DESC");
 
         $salesData = $salesQuery->get();
         $salesChartData = [['Month', 'Sales']];

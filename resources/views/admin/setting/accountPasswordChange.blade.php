@@ -31,7 +31,7 @@
 
             <div class="auth-form-column">
                 <div class="auth-form-header">
-                    <img src="{{ asset('/') }}{{ asset('/') }}{{$front_black_logo_name}}" alt="Logo" class="auth-logo">
+                    <img src="{{ asset('/') }}{{ asset('/') }}public/black.png" alt="Logo" class="auth-logo">
                     <h3 class="auth-title">Create New Password</h3>
                     <p class="text-muted">Your new password must be secure and different from previous ones.</p>
                 </div>

@@ -82,27 +82,25 @@
                                          <p class="mb-1"><strong>SKU:</strong> {{ $variant->variant_sku ?? 'N/A' }}</p>
                                         <p class="mb-2"><strong>Additional Price:</strong> {{ $variant->additional_price }}</p>
                                         <table class="table table-sm table-bordered">
-    <thead>
-        <tr>
-            <th>Size</th>
-            <th>Quantity</th>
-            <th>Price</th>
-        </tr>
-    </thead>
-    <tbody>
-        @php
-            $sizes = collect($variant->sizes)->keyBy('size_id');
-            $sizeModels = \App\Models\Size::whereIn('id', $sizes->keys())->get()->keyBy('id');
-        @endphp
-        @foreach($sizes as $sizeId => $sizeInfo)
-        <tr>
-            <td>{{ $sizeModels[$sizeId]->name ?? 'Unknown Size' }}</td>
-            <td>{{ $sizeInfo['quantity'] }}</td>
-            <td>{{ isset($sizeInfo['price']) ? number_format($sizeInfo['price'], 2) : 'N/A' }}</td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Size</th>
+                                                    <th>Quantity</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @php
+                                                    $sizes = collect($variant->sizes)->keyBy('size_id');
+                                                    $sizeModels = \App\Models\Size::whereIn('id', $sizes->keys())->get()->keyBy('id');
+                                                @endphp
+                                                @foreach($sizes as $sizeId => $sizeInfo)
+                                                <tr>
+                                                    <td>{{ $sizeModels[$sizeId]->name ?? 'Unknown Size' }}</td>
+                                                    <td>{{ $sizeInfo['quantity'] }}</td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>

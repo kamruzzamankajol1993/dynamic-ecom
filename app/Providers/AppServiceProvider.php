@@ -51,7 +51,6 @@ class AppServiceProvider extends ServiceProvider
 
                 $front_icon_name = $frontEndData->icon;
                 $front_logo_name = $frontEndData->logo;
-                $front_black_logo_name = $frontEndData->black_logo;
                 $front_ins_name = $frontEndData->ins_name;
                 $front_ins_add = $frontEndData->address;
                 
@@ -67,7 +66,6 @@ class AppServiceProvider extends ServiceProvider
                 // Default values if no data is found
                 $front_icon_name = '';
                 $front_logo_name = '';
-                $front_black_logo_name = '';
                 $front_ins_name = '';
                 $front_ins_add = '';
                
@@ -81,7 +79,6 @@ class AppServiceProvider extends ServiceProvider
 
               view()->share('front_icon_name', $front_icon_name);
               view()->share('front_logo_name', $front_logo_name);
-                view()->share('front_black_logo_name', $front_black_logo_name);
               view()->share('front_ins_name', $front_ins_name);
               view()->share('front_ins_add', $front_ins_add);
               view()->share('front_ins_email', $front_ins_email);
@@ -127,7 +124,7 @@ class AppServiceProvider extends ServiceProvider
             view()->share('ins_add', $ins_add);
             view()->share('ins_phone', $ins_phone);
             view()->share('ins_email', $ins_email);
-
+            view()->share('ins_url', $ins_url);
             view()->share('keyword', $ins_k);
             view()->share('description', $ins_d);
 
@@ -141,7 +138,7 @@ class AppServiceProvider extends ServiceProvider
             view()->share('ins_add', $data->address);
             view()->share('ins_phone', $data->phone);
             view()->share('ins_email', $data->email);
-
+            view()->share('ins_url', $data->front_url);
             view()->share('keyword', $data->keyword);
             view()->share('description', $data->description);
 
@@ -179,7 +176,7 @@ class AppServiceProvider extends ServiceProvider
                 view()->share('ins_add', $ins_add);
                 view()->share('ins_phone', $ins_phone);
                 view()->share('ins_email', $ins_email);
-
+                view()->share('ins_url', $ins_url);
                 view()->share('keyword', $ins_k);
                 view()->share('description', $ins_d);
 

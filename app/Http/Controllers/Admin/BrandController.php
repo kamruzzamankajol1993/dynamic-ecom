@@ -143,6 +143,6 @@ class BrandController extends Controller
 
         $brand->delete();
         // CommonController::addToLog('brandDelete');
-        return response()->json(['message' => 'Brand deleted successfully']);
+        return redirect()->route('brand.index')->with('success', 'Brand deleted successfully!');
     }
 }

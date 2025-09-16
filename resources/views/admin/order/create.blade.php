@@ -108,7 +108,7 @@
                              <div class="mb-3">
                                 <label class="form-label">Warehouse*</label>
                                 <select name="warehouse" class="form-select" required>
-                                    <option>Pick N Drop</option>
+                                    <option>SpotLightAttires</option>
                                 </select>
                             </div>
                              <div class="mb-3">
@@ -363,7 +363,7 @@ $(document).ready(function() {
         colorSelect.trigger('change');
     }
 
-     $('#product-rows-container').on('change', '.color-select', function() {
+    $('#product-rows-container').on('change', '.color-select', function() {
         const row = $(this).closest('tr');
         const productId = row.find('input[name$="[product_id]"]').val();
         const selectedColor = $(this).val();
@@ -374,32 +374,19 @@ $(document).ready(function() {
         const variant = productData.variants.find(v => v.color_name === selectedColor);
         if (variant && variant.sizes) {
             variant.sizes.forEach(size => {
-                // Here, we embed the size-specific price (or 0) into a data attribute
-                sizeSelect.append(`<option value="${size.name}" data-price="${size.price || 0}">${size.name}</option>`);
+                sizeSelect.append(`<option value="${size.name}" data-price="${size.additional_price || 0}">${size.name}</option>`);
             });
         }
         sizeSelect.trigger('change');
     });
 
-    // This function sets the final price when a size is selected
     $('#product-rows-container').on('change', '.size-select', function() {
         const row = $(this).closest('tr');
         const productId = row.find('input[name$="[product_id]"]').val();
         const productData = productsCache[productId];
-        
-        const selectedOption = $(this).find('option:selected');
-        // Get the size-specific price from the data attribute. It will be 0 if not set.
-        const sizePrice = parseFloat(selectedOption.data('price')) || 0;
-        
-        // Get the main product price, which is our fallback.
+        const additionalPrice = parseFloat($(this).find('option:selected').data('price')) || 0;
         const basePrice = parseFloat(productData.base_price);
-
-        // **THIS IS THE FALLBACK LOGIC**
-        // If sizePrice is available (greater than 0), use it.
-        // Otherwise, use the main product's basePrice.
-        const finalPrice = sizePrice > 0 ? sizePrice : basePrice;
-
-        row.find('.unit-price').val(finalPrice.toFixed(2)).trigger('input');
+        row.find('.unit-price').val((basePrice + additionalPrice).toFixed(2)).trigger('input');
     });
 
     function calculateFinalTotals() {

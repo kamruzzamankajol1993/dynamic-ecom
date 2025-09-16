@@ -26,4 +26,10 @@ class Review extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+
+     // Add this new relationship
+    public function images()
+    {
+        return $this->hasMany(ReviewImage::class);
+    }
 }

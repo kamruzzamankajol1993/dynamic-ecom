@@ -110,6 +110,7 @@ public function show(Coupon $coupon)
     public function destroy(Coupon $coupon)
     {
         $coupon->delete();
-        return response()->json(['success' => 'Coupon deleted successfully.']);
+        return redirect()->route('coupon.index')->with('success', 'Coupon deleted successfully.');
+       // return response()->json(['success' => 'Coupon deleted successfully.']);
     }
 }

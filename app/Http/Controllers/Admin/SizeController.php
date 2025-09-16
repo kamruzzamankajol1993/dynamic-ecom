@@ -68,6 +68,6 @@ class SizeController extends Controller
     public function destroy($id)
     {
         Size::findOrFail($id)->delete();
-        return response()->json(['message' => 'Size deleted successfully']);
+        return redirect()->route('size.index')->with('success', 'Size deleted successfully!');
     }
 }

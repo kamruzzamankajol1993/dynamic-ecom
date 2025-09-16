@@ -65,6 +65,6 @@ class UnitController extends Controller
     public function destroy($id)
     {
         Unit::findOrFail($id)->delete();
-        return response()->json(['message' => 'Unit deleted successfully']);
+       return redirect()->route('unit.index')->with('success', 'Unit deleted successfully!');
     }
 }

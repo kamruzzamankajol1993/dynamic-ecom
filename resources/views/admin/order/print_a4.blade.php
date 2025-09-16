@@ -11,9 +11,7 @@
         .header-left { width: 60%; }
         .header-right { text-align: right; }
         .header-left img { max-height: 80px; max-width: 200px; }
-        .details { margin-bottom: 30px; }
-        .details-left, .details-right { display: inline-block; width: 49%; vertical-align: top; }
-        .details-right { text-align: right; }
+       .address-table { width: 100%; margin-bottom: 30px; }
         .items-table { width: 100%; line-height: inherit; text-align: left; border-collapse: collapse; }
         .items-table th { background: #eee; border-bottom: 1px solid #ddd; font-weight: bold; padding: 8px; }
         .items-table td { padding: 8px; border-bottom: 1px solid #eee; }
@@ -47,19 +45,21 @@
             </div>
         </div>
 
-        <div class="details">
-            <div class="details-left">
-                <strong>Billed To:</strong><br>
-                {{ $order->customer->name }}<br>
-                {{ $order->customer->address }}<br>
-                {{ $order->customer->phone }}
-            </div>
-            <div class="details-right">
-                <strong>Shipped To:</strong><br>
-                {{ $order->customer->name }}<br>
-                {{ $order->shipping_address }}
-            </div>
-        </div>
+        <table class="address-table">
+    <tr>
+        <td style="width: 50%; vertical-align: top;">
+            <strong>Billed To:</strong><br>
+            {{ $order->customer->name }}<br>
+            {{ $order->customer->address }}<br>
+            {{ $order->customer->phone }}
+        </td>
+        <td style="width: 50%; vertical-align: top; text-align: right;">
+            <strong>Shipped To:</strong><br>
+            {{ $order->customer->name }}<br>
+            {{ $order->shipping_address }}
+        </td>
+    </tr>
+</table>
 
         <table class="items-table">
             <thead>
@@ -90,11 +90,22 @@
                     <tr><td>Shipping:</td><td style="text-align: right;">{{ number_format($order->shipping_cost, 2) }}</td></tr>
                     <tr class="grand-total"><td>Grand Total:</td><td style="text-align: right;">{{ number_format($order->total_amount, 2) }}</td></tr>
                     <tr><td>Paid:</td><td style="text-align: right;">{{ number_format($order->total_pay, 2) }}</td></tr>
+                     {{-- COD Amount Added Here --}}
+            @if($order->cod > 0)
+                <tr><td>COD Amount:</td><td style="text-align: right;">{{ number_format($order->cod, 2) }}</td></tr>
+            @endif
                     <tr class="grand-total"><td>Due:</td><td style="text-align: right;">{{ number_format($order->due, 2) }}</td></tr>
                 </table>
             </div>
         </div>
         <div style="clear: both;"></div>
+
+        @if(!empty($order->notes))
+            <div class="notes-section" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
+                <strong>Notes:</strong>
+                <p style="margin-top: 5px; color: #555;">{{ $order->notes }}</p>
+            </div>
+        @endif
 
         <div class="footer">
             Thank you for your purchase!
