@@ -11,6 +11,7 @@ class HomepageSection extends Model
 
     protected $fillable = [
         'category_id',
+        'title',
         'image',
         'row_identifier',
         'status',

@@ -11,9 +11,6 @@ use Illuminate\Support\Facades\File;
 
 class HomepageSectionController extends Controller
 {
-    /**
-     * Display the single page for managing homepage sections.
-     */
     public function index()
     {
         $categories = Category::where('status', 1)->pluck('name', 'id');
@@ -23,30 +20,29 @@ class HomepageSectionController extends Controller
         return view('admin.homepage_section.index', compact('categories', 'row1', 'row2'));
     }
 
-    /**
-     * Update the settings for both rows from a single form submission.
-     */
     public function update(Request $request)
     {
         $request->validate([
             'row1_category_id' => 'nullable|exists:categories,id|different:row2_category_id',
+            'row1_title' => 'nullable|string|max:255', // Added title validation
             'row1_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'row1_status' => 'nullable|boolean',
             'row2_category_id' => 'nullable|exists:categories,id',
+            'row2_title' => 'nullable|string|max:255', // Added title validation
             'row2_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'row2_status' => 'nullable|boolean',
         ], [
             'row1_category_id.different' => 'The same category cannot be selected for both Row 1 and Row 2.',
         ]);
 
-        $this->processRow($request, 'row_1', 'row1_category_id', 'row1_image');
-        $this->processRow($request, 'row_2', 'row2_category_id', 'row2_image');
+        // Pass the title field name to the helper function
+        $this->processRow($request, 'row_1', 'row1_category_id', 'row1_image', 'row1_status', 'row1_title');
+        $this->processRow($request, 'row_2', 'row2_category_id', 'row2_image', 'row2_status', 'row2_title');
 
         return redirect()->route('homepage-section.index')->with('success', 'Homepage sections updated successfully.');
     }
 
-    /**
-     * Helper function to process data for a given row.
-     */
-    private function processRow(Request $request, $rowIdentifier, $categoryField, $imageField)
+    private function processRow(Request $request, $rowIdentifier, $categoryField, $imageField, $statusField, $titleField)
     {
         $categoryId = $request->input($categoryField) ?: null;
 
@@ -60,7 +56,12 @@ class HomepageSectionController extends Controller
         }
 
         $section = HomepageSection::firstOrNew(['row_identifier' => $rowIdentifier]);
-        $data = ['category_id' => $categoryId];
+        
+        $status = $request->has($statusField) ? 1 : 0;
+        $title = $request->input($titleField); // Get title from request
+        
+        // Add title to the data array
+        $data = ['category_id' => $categoryId, 'status' => $status, 'title' => $title];
 
         if ($request->hasFile($imageField)) {
             if ($section->image) {
@@ -68,15 +69,10 @@ class HomepageSectionController extends Controller
             }
             $data['image'] = $this->saveImage($request->file($imageField));
         }
-        
-        // REMOVED: The 'elseif' block for handling the remove image checkbox has been deleted.
 
         $section->fill($data)->save();
     }
 
-    /**
-     * Helper function to save a resized image.
-     */
     private function saveImage($imageFile)
     {
         $imageName = uniqid('section_') . '.' . $imageFile->getClientOriginalExtension();
@@ -88,18 +84,13 @@ class HomepageSectionController extends Controller
 
         Image::read($imageFile)->resize(410, 530)->save($destinationPath . '/' . $imageName);
         
-        // Return a path relative to the public directory
         return 'public/homepage_sections/' . $imageName;
     }
 
-    /**
-     * Helper function to delete an image file.
-     */
     private function deleteImage($imagePath)
     {
         if (!$imagePath) return;
         
-        // Construct the full path from the public directory
         $fullPath = public_path($imagePath);
 
         if (File::exists($fullPath)) {

@@ -19,6 +19,16 @@ use Carbon\Carbon;
 class OrderController extends Controller
 {
 
+    public function printA5(Order $order)
+{
+    $order->load('customer', 'orderDetails.product', 'payments');
+    $companyInfo = DB::table('system_information')->first(); // Fetch company info
+    $pdf = new Mpdf(['mode' => 'utf-8', 'format' => 'A5']);
+    $html = view('admin.order.print_a4', compact('order', 'companyInfo'))->render();
+    $pdf->WriteHTML($html);
+    return $pdf->Output('invoice-'.$order->invoice_no.'.pdf', 'I');
+}
+
     public function searchCustomers(Request $request)
 {
     $term = $request->get('term');

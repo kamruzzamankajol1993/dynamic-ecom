@@ -9,21 +9,12 @@
         <div class="card">
             <div class="card-body">
                 @include('flash_message')
-                @if($errors->any())
-                    <div class="alert alert-danger">
-                        <ul>
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
                 <form action="{{ route('featured-category.update') }}" method="POST">
                     @csrf
                     <div class="row">
                         {{-- First Row Section --}}
                         <div class="col-md-6">
-                            <h5 class="mb-3">First Row Section</h5>
+                            <h5 class="mb-3 border-bottom pb-2">First Row Section</h5>
                             <div class="mb-3">
                                 <label for="firstRowSelect" class="form-label">Select a type for the first row.</label>
                                 <select class="form-select" id="firstRowSelect" name="first_row">
@@ -36,11 +27,19 @@
                                     @endforeach
                                 </select>
                             </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="first_row_status" value="1" id="first_row_status" {{ $firstRowStatus ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="first_row_status">Show this row on homepage</label>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Second Row Section --}}
                         <div class="col-md-6">
-                            <h5 class="mb-3">Second Row Section</h5>
+                            <h5 class="mb-3 border-bottom pb-2">Second Row Section</h5>
                             <div class="mb-3">
                                 <label for="secondRowSelect" class="form-label">Select a type for the second row.</label>
                                 <select class="form-select" id="secondRowSelect" name="second_row">
@@ -52,6 +51,14 @@
                                         </option>
                                     @endforeach
                                 </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="second_row_status" value="1" id="second_row_status" {{ $secondRowStatus ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="second_row_status">Show this row on homepage</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -72,26 +79,25 @@ $(document).ready(function() {
     function syncSelects(sourceSelect, targetSelect) {
         const selectedValue = $(sourceSelect).val();
         
-        // First, enable all options in the target dropdown
         $(targetSelect).find('option').prop('disabled', false);
 
-        // If a value was selected in the source dropdown, disable that option in the target
         if (selectedValue) {
             $(targetSelect).find('option[value="' + selectedValue + '"]').prop('disabled', true);
         }
     }
+    
+    const row1Select = $('#firstRowSelect');
+    const row2Select = $('#secondRowSelect');
 
-    // Run the sync function when the page loads to set the initial state
-    syncSelects('#firstRowSelect', '#secondRowSelect');
-    syncSelects('#secondRowSelect', '#firstRowSelect');
+    syncSelects(row1Select, row2Select);
+    syncSelects(row2Select, row1Select);
 
-    // Add event listeners to sync whenever a selection changes
-    $('#firstRowSelect').on('change', function() {
-        syncSelects(this, '#secondRowSelect');
+    row1Select.on('change', function() {
+        syncSelects(this, row2Select);
     });
 
-    $('#secondRowSelect').on('change', function() {
-        syncSelects(this, '#firstRowSelect');
+    row2Select.on('change', function() {
+        syncSelects(this, row1Select);
     });
 });
 </script>

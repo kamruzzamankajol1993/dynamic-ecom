@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('homepage_sections', function (Blueprint $table) {
+        Schema::create('gateway_settings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->string('image')->nullable();
-            $table->string('title');
-            $table->string('row_identifier'); // e.g., 'row_1', 'row_2'
-            $table->boolean('status')->default(true);
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('homepage_sections');
+        Schema::dropIfExists('gateway_settings');
     }
 };

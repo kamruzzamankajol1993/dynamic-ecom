@@ -139,6 +139,11 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::group(['middleware' => ['auth']], function() {
 
+
+    // SMS Gateway Setting Routes
+    Route::get('setting/sms-gateway', [App\Http\Controllers\Admin\SmsGatewaySettingController::class, 'index'])->name('setting.sms.index');
+    Route::post('setting/sms-gateway', [App\Http\Controllers\Admin\SmsGatewaySettingController::class, 'store'])->name('setting.sms.store');
+
  Route::get('featured-category', [App\Http\Controllers\Admin\FeaturedCategoryController::class, 'index'])->name('featured-category.index');
     Route::post('featured-category', [App\Http\Controllers\Admin\FeaturedCategoryController::class, 'update'])->name('featured-category.update');
 
@@ -279,7 +284,7 @@ Route::post('orders/bulk-update-status', [OrderController::class, 'bulkUpdateSta
     Route::post('order-payment/{order}', [OrderController::class, 'storePayment'])->name('order.payment.store');
 Route::get('order-print-a4/{order}', [OrderController::class, 'printA4'])->name('order.print.a4');
 Route::get('order-print-pos/{order}', [OrderController::class, 'printPOS'])->name('order.print.pos');
-
+Route::get('order-print-a5/{order}', [OrderController::class, 'printA5'])->name('order.print.a5');
 
 Route::get('order-search-customers', [OrderController::class, 'searchCustomers'])->name('order.search-customers');
 

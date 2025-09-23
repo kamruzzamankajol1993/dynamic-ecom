@@ -458,6 +458,14 @@
                 <li class="sidebar-title">
                     <span>Settings</span>
                 </li>
+
+                 <li class="nav-item">
+                    <a class="nav-link {{ Route::is('setting.sms.index')  ? 'active' : '' }}" href="{{ route('setting.sms.index') }}">
+                        <i data-feather="folder"></i>
+                        <span>SMS Setting</span>
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <a class="nav-link" href="#accountSettingsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="accountSettingsSubmenu">
                         <i data-feather="user"></i>

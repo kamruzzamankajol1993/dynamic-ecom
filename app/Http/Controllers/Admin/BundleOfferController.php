@@ -109,6 +109,11 @@ class BundleOfferController extends Controller
 
         $data = $request->except('_token', '_method', 'image');
 
+        // START: FIX FOR STATUS
+        // Manually handle the status field because unchecked checkboxes are not submitted.
+        $data['status'] = $request->has('status') ? 1 : 0;
+        // END: FIX FOR STATUS
+
         if ($request->hasFile('image')) {
             // Delete old image if it exists
             if (File::exists(public_path($bundleOffer->image))) {

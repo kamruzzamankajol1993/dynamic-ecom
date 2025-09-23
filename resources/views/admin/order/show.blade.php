@@ -207,6 +207,7 @@
                             <a href="{{ route('order.edit', $order->id) }}" class="btn btn-outline-secondary"><i class="fa fa-edit me-1"></i> Edit Invoice</a>
                             <div class="btn-group">
                                 <a href="{{ route('order.print.a4', $order->id) }}" target="_blank" class="btn btn-outline-secondary"><i class="fa fa-print me-1"></i> A4</a>
+                                  <a href="{{ route('order.print.a5', $order->id) }}" target="_blank" class="btn btn-outline-secondary"><i class="fa fa-print me-1"></i> A5</a>
                                 <a href="{{ route('order.print.pos', $order->id) }}" target="_blank" class="btn btn-outline-secondary"><i class="fa fa-receipt me-1"></i> POS</a>
                             </div>
                             {{-- Remove onsubmit and add an ID to the form --}}

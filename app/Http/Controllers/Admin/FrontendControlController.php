@@ -80,5 +80,13 @@ class FrontendControlController extends Controller
                 ['route' => '/offer/' . $group->slug] // Example route
             );
         }
+
+        // START: NEW CODE
+        // Add a permanent static 'Offer' route to the menu items
+        MenuItem::firstOrCreate(
+            ['name' => 'Offer', 'type' => 'static'],
+            ['route' => '/offers']
+        );
+        // END: NEW CODE
     }
 }
