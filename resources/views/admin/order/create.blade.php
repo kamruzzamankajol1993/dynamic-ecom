@@ -4,6 +4,26 @@
 @section('css')
     <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <style>
+         /* --- Global Font & Layout Adjustments --- */
+        .main-content {
+            font-size: 0.9rem; /* Reduced base font size */
+        }
+        .main-content h2 { font-size: 1.6rem; }
+        .main-content h5 { font-size: 1.1rem; }
+        .main-content h6 { font-size: 0.95rem; }
+
+        /* --- Beautiful Label Style --- */
+        .form-label {
+            font-weight: 500;
+            color: #4a5568; /* A softer, modern dark gray */
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        /* --- Form & Table Adjustments --- */
+        .form-control, .form-select, .btn, .ui-autocomplete {
+            font-size: 0.875rem; /* Consistent smaller font size for inputs */
+        }
         .product-information-table th {
             background-color: #f8f9fa;
             font-weight: 500;
@@ -29,6 +49,7 @@
             z-index: 1055 !important; /* Ensure autocomplete appears over modals */
         }
     </style>
+    
 @endsection
 
 @section('body')

@@ -63,17 +63,7 @@
 
                     @endif
 
-                     @if ($usr->can('subcategoryAdd') || $usr->can('subcategoryView') ||  $usr->can('subcategoryDelete') ||  $usr->can('subcategoryUpdate'))
-
-                        <a class="nav-link {{ Route::is('subcategory.index') || Route::is('subcategory.edit') || Route::is('subcategory.create') ? 'active' : '' }}" href="{{ route('subcategory.index') }}">Sub Category</a>
-
-                    @endif
-
-                                    @if ($usr->can('sub-subcategoryAdd') || $usr->can('sub-subcategoryView') ||  $usr->can('sub-subcategoryDelete') ||  $usr->can('sub-subcategoryUpdate'))
-
-                        <a class="nav-link {{ Route::is('sub-subcategory.index') || Route::is('sub-subcategory.edit') || Route::is('sub-subcategory.create') ? 'active' : '' }}" href="{{ route('sub-subcategory.index') }}">Sub-subcategory</a>
-
-                    @endif
+                   
 
                     @if ($usr->can('animationCategoryAdd') || $usr->can('animationCategoryView') ||  $usr->can('animationCategoryDelete') ||  $usr->can('animationCategoryUpdate'))
 
@@ -176,17 +166,17 @@
                     </ul>
                 </li>
                 @endif
-                 @if ($usr->can('sliderSectionView') || $usr->can('offerSectionControlView') || $usr->can('sideBarView') || $usr->can('headerAdd') || $usr->can('headerView') ||  $usr->can('headerDelete') ||  $usr->can('headerUpdate'))
+                 @if ($usr->can('anlyticSettingView') || $usr->can('sliderSectionView') || $usr->can('offerSectionControlView') || $usr->can('sideBarView') || $usr->can('headerAdd') || $usr->can('headerView') ||  $usr->can('headerDelete') ||  $usr->can('headerUpdate'))
                 <li class="sidebar-title">
-                    <span>CMS</span>
+                    <span>Website Content</span>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#cmsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="cmsSubmenu">
                         <i data-feather="file-text"></i>
-                        <span>Website CMS</span>
+                        <span>Content</span>
                         <i data-feather="chevron-down" class="ms-auto"></i>
                     </a>
-                    <ul class="collapse list-unstyled {{Route::is('homepage-section.index') || Route::is('featured-category.index') || Route::is('highlight-product.index') || Route::is('offer-section.control.index') ||  Route::is('slider.control.index') ||  Route::is('sidebar-menu.control.index') ||  Route::is('frontend.control.index')  ? 'show' : '' }}" id="cmsSubmenu" data-bs-parent="#sidebar-menu">
+                    <ul class="collapse list-unstyled {{Route::is('review.index') || Route::is('review.edit') || Route::is('review.show')||Route::is('extraPage.index') ||  Route::is('message.index') ||  Route::is('aboutUs.index') ||  Route::is('socialLink.index') || Route::is('settings.analytics.index') || Route::is('homepage-section.index') || Route::is('featured-category.index') || Route::is('highlight-product.index') || Route::is('offer-section.control.index') ||  Route::is('slider.control.index') ||  Route::is('sidebar-menu.control.index') ||  Route::is('frontend.control.index')  ? 'show' : '' }}" id="cmsSubmenu" data-bs-parent="#sidebar-menu">
                        
                        
                          <li><a class="nav-link {{Route::is('featured-category.index') ? 'active':''}}" href="{{route('featured-category.index')}}"> Home Page First Section</a></li>
@@ -205,22 +195,51 @@
                           @if ($usr->can('sliderSectionView'))
                           <li><a class="nav-link {{ Route::is('slider.control.index')  ? 'active' : '' }}" href="{{route('slider.control.index')}}">Slider Section</a></li>
                           @endif
-                           <li><a class="nav-link {{ Route::is('highlight-product.index') ? 'active' : '' }}" href="{{ route('highlight-product.index') }}">Highlight Product</a></li>
-                    </ul>
-                </li>
-                @endif
-                @if ($usr->can('anlyticSettingView'))
-<li class="sidebar-title">
-                    <span>Marketing</span>
-                </li>
-
-                <li class="nav-item">
+                          @if ($usr->can('anlyticSettingView'))
+                           <li class="nav-item">
                     <a class="nav-link {{ Route::is('settings.analytics.index') ? 'active' : '' }}" href="{{ route('settings.analytics.index') }}">
-                        <i data-feather="bar-chart-2"></i>
+                        
                         <span>Facebook & Google</span>
                     </a>
                 </li>
                 @endif
+                   @if ($usr->can('reviewAdd') || $usr->can('reviewView') ||  $usr->can('reviewDelete') ||  $usr->can('reviewUpdate'))
+                    <li>
+                        <a class="nav-link {{ Route::is('review.index') || Route::is('review.edit') || Route::is('review.show') ? 'active' : '' }}" href="{{ route('review.index') }}">Review</a>
+                    </li>
+                    @endif
+                          @if ($usr->can('socialLinkAdd') || $usr->can('socialLinkView') ||  $usr->can('socialLinkDelete') ||  $usr->can('socialLinkUpdate'))
+                    <li>
+                        <a class="nav-link {{ Route::is('socialLink.index') || Route::is('socialLink.edit') || Route::is('socialLink.create') ? 'active' : '' }}" href="{{ route('socialLink.index') }}">Social Link</a>
+                    </li>
+                    @endif
+
+ 
+                    @if ($usr->can('extraPageAdd') || $usr->can('extraPageView') ||  $usr->can('extraPageDelete') ||  $usr->can('extraPageUpdate'))
+                    <li >
+                        <a class="nav-link {{ Route::is('extraPage.index') || Route::is('extraPage.edit') || Route::is('extraPage.create') ? 'active' : '' }}" href="{{ route('extraPage.index') }}">Extra Page</a>
+                    </li>
+                    @endif
+
+                        @if ($usr->can('messageAdd') || $usr->can('messageView') ||  $usr->can('messageDelete') ||  $usr->can('messageUpdate'))
+                    <li >
+                        <a class="nav-link {{ Route::is('message.index') || Route::is('message.edit') || Route::is('message.create') ? 'active' : '' }}" href="{{ route('message.index') }}">Message</a>
+                    </li>
+                    @endif
+
+                    @if ($usr->can('aboutUsAdd') || $usr->can('aboutUsView') ||  $usr->can('aboutUsDelete') ||  $usr->can('aboutUsUpdate'))
+                    <li>
+                        <a class="nav-link {{ Route::is('aboutUs.index') || Route::is('aboutUs.edit') || Route::is('aboutUs.create') ? 'active' : '' }}" href="{{ route('aboutUs.index') }}">About Us</a>
+                    </li>
+                    @endif
+                    </ul>
+                </li>
+                @endif
+                
+
+
+                
+                
 
 @if ($usr->can('stockView') || $usr->can('supplierAdd') || $usr->can('supplierView') ||  $usr->can('supplierDelete') ||  $usr->can('supplierUpdate') ||$usr->can('purchaseAdd') || $usr->can('purchaseView') ||  $usr->can('purchaseDelete') ||  $usr->can('purchaseUpdate'))
                  <li class="sidebar-title">
@@ -268,27 +287,7 @@
                         <span>Damage Product</span>
                     </a>
                 </li> --}}
-   @if ($usr->can('expenseAdd') || $usr->can('expenseView') ||  $usr->can('expenseDelete') ||  $usr->can('expenseUpdate') || $usr->can('expense-categoryAdd') || $usr->can('expense-categoryView') ||  $usr->can('expense-categoryDelete') ||  $usr->can('expense-categoryUpdate'))
-                 {{-- NEW EXPENSE MENU --}}
-                <li class="sidebar-title">
-                    <span>Finance</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#expenseSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="expenseSubmenu">
-                        <i data-feather="dollar-sign"></i>
-                        <span>Expense</span>
-                        <i data-feather="chevron-down" class="ms-auto"></i>
-                    </a>
-                    <ul class="collapse list-unstyled {{ Route::is('expense-category.index') || Route::is('expense.index') ? 'show' : '' }}" id="expenseSubmenu" data-bs-parent="#sidebar-menu">
-                         @if ( $usr->can('expense-categoryAdd') || $usr->can('expense-categoryView') ||  $usr->can('expense-categoryDelete') ||  $usr->can('expense-categoryUpdate'))
-                        <li><a class="nav-link {{ Route::is('expense-category.index') ? 'active' : '' }}" href="{{ route('expense-category.index') }}">Expense Category</a></li>
-                        @endif
-                         @if ($usr->can('expenseAdd') || $usr->can('expenseView') ||  $usr->can('expenseDelete') ||  $usr->can('expenseUpdate'))
-                        <li><a class="nav-link {{ Route::is('expense.index') ? 'active' : '' }}" href="{{ route('expense.index') }}">Expense List</a></li>
-                        @endif
-                    </ul>
-                </li>
-@endif
+  
    @if ($usr->can('accountSettingAdd') || $usr->can('accountSettingView') ||$usr->can('accountSettingDelete') || $usr->can('accountSettingUpdate') || $usr->can('opening-balancesAdd') || $usr->can('opening-balancesView') ||$usr->can('opening-balancesDelete') || $usr->can('opening-balancesUpdate') || $usr->can('coaAdd') || $usr->can('coaView') ||$usr->can('coaDelete') || $usr->can('coaUpdate') || $usr->can('bankAdd') || $usr->can('bankView') ||$usr->can('bankDelete') || $usr->can('bankUpdate') || $usr->can('shareholderAdd') || $usr->can('shareholderView') ||  $usr->can('shareholderDelete') ||  $usr->can('shareholderUpdate'))
      {{-- NEW EXPENSE MENU --}}
                 <li class="sidebar-title">
@@ -309,6 +308,24 @@
                         
                     </ul>
                 </li>
+                 @if ($usr->can('expenseAdd') || $usr->can('expenseView') ||  $usr->can('expenseDelete') ||  $usr->can('expenseUpdate') || $usr->can('expense-categoryAdd') || $usr->can('expense-categoryView') ||  $usr->can('expense-categoryDelete') ||  $usr->can('expense-categoryUpdate'))
+               
+                <li class="nav-item">
+                    <a class="nav-link" href="#expenseSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="expenseSubmenu">
+                        <i data-feather="dollar-sign"></i>
+                        <span>Expense</span>
+                        <i data-feather="chevron-down" class="ms-auto"></i>
+                    </a>
+                    <ul class="collapse list-unstyled {{ Route::is('expense-category.index') || Route::is('expense.index') ? 'show' : '' }}" id="expenseSubmenu" data-bs-parent="#sidebar-menu">
+                         @if ( $usr->can('expense-categoryAdd') || $usr->can('expense-categoryView') ||  $usr->can('expense-categoryDelete') ||  $usr->can('expense-categoryUpdate'))
+                        <li><a class="nav-link {{ Route::is('expense-category.index') ? 'active' : '' }}" href="{{ route('expense-category.index') }}">Expense Category</a></li>
+                        @endif
+                         @if ($usr->can('expenseAdd') || $usr->can('expenseView') ||  $usr->can('expenseDelete') ||  $usr->can('expenseUpdate'))
+                        <li><a class="nav-link {{ Route::is('expense.index') ? 'active' : '' }}" href="{{ route('expense.index') }}">Expense List</a></li>
+                        @endif
+                    </ul>
+                </li>
+@endif
                 @if ($usr->can('bankAdd') || $usr->can('bankView') ||$usr->can('bankDelete') || $usr->can('bankUpdate'))
                 <li class="nav-item">
                     <a class="nav-link {{ Route::is('banks.index')  || Route::is('banks.create') || Route::is('banks.edit') ? 'active' : '' }}" href="{{ route('banks.index') }}">
@@ -381,79 +398,8 @@
                 </li>
                 @endif
 
-                <li class="sidebar-title">
-                    <span>Website Content</span>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="#contentSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="contentSubmenu">
-                        <i data-feather="file-text"></i>
-                        <span>Content</span>
-                        <i data-feather="chevron-down" class="ms-auto"></i>
-                    </a>
-                    <ul class="collapse list-unstyled {{Route::is('review.index') || Route::is('review.edit') || Route::is('review.show')||Route::is('extraPage.index') ||  Route::is('message.index') ||  Route::is('aboutUs.index') ||  Route::is('socialLink.index')  ? 'show' : '' }}" id="contentSubmenu" data-bs-parent="#sidebar-menu">
-                      
-
-                        @if ($usr->can('reviewAdd') || $usr->can('reviewView') ||  $usr->can('reviewDelete') ||  $usr->can('reviewUpdate'))
-                    <li>
-                        <a class="nav-link {{ Route::is('review.index') || Route::is('review.edit') || Route::is('review.show') ? 'active' : '' }}" href="{{ route('review.index') }}">Review</a>
-                    </li>
-                    @endif
-                          @if ($usr->can('socialLinkAdd') || $usr->can('socialLinkView') ||  $usr->can('socialLinkDelete') ||  $usr->can('socialLinkUpdate'))
-                    <li>
-                        <a class="nav-link {{ Route::is('socialLink.index') || Route::is('socialLink.edit') || Route::is('socialLink.create') ? 'active' : '' }}" href="{{ route('socialLink.index') }}">Social Link</a>
-                    </li>
-                    @endif
-
- 
-                    @if ($usr->can('extraPageAdd') || $usr->can('extraPageView') ||  $usr->can('extraPageDelete') ||  $usr->can('extraPageUpdate'))
-                    <li >
-                        <a class="nav-link {{ Route::is('extraPage.index') || Route::is('extraPage.edit') || Route::is('extraPage.create') ? 'active' : '' }}" href="{{ route('extraPage.index') }}">Extra Page</a>
-                    </li>
-                    @endif
-
-                        @if ($usr->can('messageAdd') || $usr->can('messageView') ||  $usr->can('messageDelete') ||  $usr->can('messageUpdate'))
-                    <li >
-                        <a class="nav-link {{ Route::is('message.index') || Route::is('message.edit') || Route::is('message.create') ? 'active' : '' }}" href="{{ route('message.index') }}">Message</a>
-                    </li>
-                    @endif
-
-                    @if ($usr->can('aboutUsAdd') || $usr->can('aboutUsView') ||  $usr->can('aboutUsDelete') ||  $usr->can('aboutUsUpdate'))
-                    <li>
-                        <a class="nav-link {{ Route::is('aboutUs.index') || Route::is('aboutUs.edit') || Route::is('aboutUs.create') ? 'active' : '' }}" href="{{ route('aboutUs.index') }}">About Us</a>
-                    </li>
-                    @endif
-                    </ul>
-                </li>
-
-
-                 @if ($usr->can('sliderSectionView') || $usr->can('offerSectionControlView') || $usr->can('sideBarView') || $usr->can('headerAdd') || $usr->can('headerView') ||  $usr->can('headerDelete') ||  $usr->can('headerUpdate'))
-                <li class="sidebar-title">
-                    <span>CMS</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#cmsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="cmsSubmenu">
-                        <i data-feather="file-text"></i>
-                        <span>Website CMS</span>
-                        <i data-feather="chevron-down" class="ms-auto"></i>
-                    </a>
-                    <ul class="collapse list-unstyled {{Route::is('highlight-product.index') || Route::is('offer-section.control.index') ||  Route::is('slider.control.index') ||  Route::is('sidebar-menu.control.index') ||  Route::is('frontend.control.index')  ? 'show' : '' }}" id="cmsSubmenu" data-bs-parent="#sidebar-menu">
-                                         @if ($usr->can('headerAdd') || $usr->can('headerView') ||  $usr->can('headerDelete') ||  $usr->can('headerUpdate'))
-                        <li><a class="nav-link {{ Route::is('frontend.control.index')  ? 'active' : '' }}" href="{{route('frontend.control.index')}}"> Header</a></li>
-                        @endif
-                        @if ($usr->can('sidebarMenuView'))
-                         <li><a class="nav-link {{ Route::is('sidebar-menu.control.index')  ? 'active' : '' }}" href="{{route('sidebar-menu.control.index')}}">Side Bar</a></li>
-                          @endif
-                          @if ($usr->can('offerSectionControlView'))
-                          <li><a class="nav-link {{ Route::is('offer-section.control.index')  ? 'active' : '' }}" href="{{route('offer-section.control.index')}}">Offer Section</a></li>
-                          @endif
-                          @if ($usr->can('sliderSectionView'))
-                          <li><a class="nav-link {{ Route::is('slider.control.index')  ? 'active' : '' }}" href="{{route('slider.control.index')}}">Slider Section</a></li>
-                          @endif
-                           <li><a class="nav-link {{ Route::is('highlight-product.index') ? 'active' : '' }}" href="{{ route('highlight-product.index') }}">Highlight Product</a></li>
-                    </ul>
-                </li>
-                @endif
+                
+            
                 @if ( $usr->can('userAdd') || $usr->can('userView') ||  $usr->can('userDelete') ||  $usr->can('userUpdate') || $usr->can('designationAdd') || $usr->can('designationView') ||  $usr->can('designationDelete') ||  $usr->can('designationUpdate') || $usr->can('branchAdd') || $usr->can('branchView') ||  $usr->can('branchDelete') ||  $usr->can('branchUpdate'))
                 <li class="sidebar-title">
                     <span>Settings</span>
@@ -498,7 +444,7 @@
                 </li>
                 @endif
                    @if ($usr->can('permissionAdd') || $usr->can('permissionView') ||  $usr->can('permissionDelete') ||  $usr->can('permissionUpdate') || $usr->can('roleAdd') || $usr->can('roleView') ||  $usr->can('roleUpdate') ||  $usr->can('roleDelete') || $usr->can('panelSettingAdd') || $usr->can('panelSettingView') ||  $usr->can('panelSettingDelete') ||  $usr->can('panelSettingUpdate'))
-                 <li class="nav-item">
+                 <li class="nav-item mb-5">
                     <a class="nav-link" href="#generalSettingsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="generalSettingsSubmenu">
                         <i data-feather="settings"></i>
                         <span>General</span>

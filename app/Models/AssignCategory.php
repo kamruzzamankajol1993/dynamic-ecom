@@ -20,4 +20,12 @@ class AssignCategory extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+     /**
+     * NEW: Add this relationship to get the category details.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

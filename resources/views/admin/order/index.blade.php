@@ -3,6 +3,43 @@
 @section('css')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
+      /* --- Global Font & Layout Adjustments --- */
+    .main-content {
+        font-size: 0.9rem; /* Reduced base font size */
+    }
+    .main-content h2 { font-size: 1.6rem; }
+    .main-content h5 { font-size: 1.1rem; }
+
+    /* --- Beautiful Label Style --- */
+    .form-label {
+        font-weight: 500;
+        color: #4a5568; /* A softer, modern dark gray */
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
+    }
+
+    /* --- Component Adjustments --- */
+    .form-control, .form-select, .btn, .nav-tabs .nav-link {
+        font-size: 0.875rem;
+    }
+    .form-control-sm {
+        font-size: 0.8rem;
+    }
+    .table {
+        font-size: 0.875rem;
+    }
+    .table th, .table td {
+        padding: 0.6rem 0.5rem;
+    }
+    .pagination {
+        font-size: 0.875rem;
+    }
+    .modal {
+        font-size: 0.9rem; /* Reset modal font size to new base */
+    }
+    #entryInfo {
+        font-size: 0.85rem;
+    }
     .nav-tabs .nav-link {
         color: #6c757d;
         background-color: transparent;

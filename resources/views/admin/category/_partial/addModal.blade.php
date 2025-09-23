@@ -7,12 +7,24 @@
             </div>
             <div class="modal-body">
                 <span class="text-danger" style="font-size: 12px;">image width: 50px and height: 50px , image type webp</span>
-                <form id="addCategoryForm" method="post" action="{{ route('category.store') }}">
+                <form id="addCategoryForm" method="post" action="{{ route('category.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
                         <label class="form-label text-dark">Category Name</label>
                         <input type="text" name="name" class="form-control" placeholder="Enter Category Name" required>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="parentId" class="form-label">Parent Category</label>
+                        {{-- Add the 'select2-modal' class --}}
+                        <select name="parent_id" class="form-control select2-modal" style="width: 100%;">
+                            <option value="">None</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label text-dark">Image</label>
                         <input type="file" accept="image/webp" name="image" class="form-control">

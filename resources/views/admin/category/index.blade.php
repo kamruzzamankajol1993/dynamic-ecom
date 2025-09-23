@@ -4,6 +4,23 @@
 Category Management | {{ $ins_name }}
 @endsection
 
+{{-- Add Select2 CSS here --}}
+@section('css')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Style Select2 to match Bootstrap 5 */
+    .select2-container--default .select2-selection--single {
+        height: calc(2.25rem + 2px);
+        padding: .375rem .75rem;
+        border: 1px solid #ced4da;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 2.25rem;
+    }
+</style>
+@endsection
+
+
 @section('body')
 <main class="main-content">
     <div class="container-fluid">
@@ -29,6 +46,7 @@ Category Management | {{ $ins_name }}
                                 <th>Sl</th>
                                 <th>Image</th>
                                 <th class="sortable" data-column="name">Category Name</th>
+                                <th>Parent Category</th>
                                 <th class="sortable" data-column="status">Status</th>
                                 <th>Action</th>
                             </tr>
@@ -52,5 +70,8 @@ Category Management | {{ $ins_name }}
 @endsection
 
 @section('script')
+{{-- Add Select2 JS here, before your custom script --}}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 @include('admin.category._partial.script')
 @endsection

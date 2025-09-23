@@ -30,7 +30,7 @@ class ProductController extends Controller
     {
         return [
             'brands' => Brand::where('status', 1)->get(),
-            'categories' => Category::where('status', 1)->get(),
+             'categories' => Category::with('children')->whereNull('parent_id')->where('status', 1)->get(),
             'fabrics' => Fabric::where('status', 1)->get(),
             'units' => Unit::where('status', 1)->get(),
             'colors' => Color::where('status', 1)->get(),
@@ -113,7 +113,8 @@ class ProductController extends Controller
         ///dd($request->all());
         $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
+           'category_ids' => 'required|array|min:1',
+           'category_ids.*' => 'exists:categories,id',
             'unit_id' => 'required|exists:units,id',
             'base_price' => 'required|numeric|min:0',
             'purchase_price' => 'required|numeric|min:0',
@@ -122,7 +123,10 @@ class ProductController extends Controller
             'chart_entries' => 'nullable|array',
         ]);
 
-        DB::transaction(function () use ($request) {
+        // --- NEW: Get all parent categories from the selection ---
+        $finalCategoryIds = $this->getAllCategoryIdsWithParents($request->input('category_ids'));
+
+        DB::transaction(function () use ($request, $finalCategoryIds) {
             $thumbnailPaths = [];
             $mainPaths = [];
             if ($request->hasFile('thumbnail_image')) {
@@ -135,14 +139,16 @@ class ProductController extends Controller
                 }
             }
 
+            $primaryCategoryId = $request->category_ids[0] ?? null;
+
             $product = Product::create([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'product_code' => $request->product_code,
                 'brand_id' => $request->brand_id,
-                'category_id' => $request->category_id,
-                'subcategory_id' => $request->subcategory_id,
-                'sub_subcategory_id' => $request->sub_subcategory_id,
+                'category_id' => $primaryCategoryId, // For backward compatibility
+                'subcategory_id' => null, // Deprecated
+                'sub_subcategory_id' => null, // Deprecated
                 'fabric_id' => $request->fabric_id,
                 'unit_id' => $request->unit_id,
                 'description' => $request->description,
@@ -153,6 +159,16 @@ class ProductController extends Controller
                 'main_image' => $mainPaths,
                 'status' => $request->status ?? 1,
             ]);
+
+            // --- NEW: Handle Multiple Category Assignment ---
+            if (!empty($finalCategoryIds)) {
+                foreach ($finalCategoryIds as $catId) {
+                    $product->assigns()->create([
+                        'category_id' => $catId,
+                        'type' => 'product_category'
+                    ]);
+                }
+            }
 
               // Handle Assigned Categories
             if ($request->has('animation_category_ids')) {
@@ -218,27 +234,32 @@ class ProductController extends Controller
         return redirect()->route('product.index')->with('success', 'Product created successfully.');
     }
 
-      public function show(Product $product)
+       public function show(Product $product)
     {
-        // Eager load all necessary relationships for the view
+        // --- MODIFIED: Eager load relationships for the view ---
         $product->load([
             'brand',
-            'category',
-            'subcategory',
-            'subSubcategory',
             'fabric',
             'unit',
             'variants.color',
             'assignChart.entries',
-            'assignChart.originalSizeChart' // Load the original chart for its name
+            'assignChart.originalSizeChart',
+            // Load only the 'product_category' type assigns, and for those, load the category name.
+            'assigns' => function ($query) {
+                $query->where('type', 'product_category')->with('category');
+            }
         ]);
+        
         return view('admin.product.show', compact('product'));
     }
 
-    public function edit(Product $product)
+ public function edit(Product $product)
     {
         $data = $this->getProductData();
-        $data['product'] = $product->load('variants.color', 'assignChart.entries');
+        $product->load('variants.color', 'assignChart.entries', 'assigns');
+        $data['product'] = $product;
+        // --- NEW: Get assigned category IDs for the edit form ---
+        $data['assignedCategoryIds'] = $product->assigns->where('type', 'product_category')->pluck('category_id')->toArray();
         return view('admin.product.edit', $data);
     }
 
@@ -247,7 +268,8 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'product_code' => 'nullable|string|unique:products,product_code,' . $product->id,
-            'category_id' => 'required|exists:categories,id',
+           'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'exists:categories,id',
             'unit_id' => 'required|exists:units,id',
             'base_price' => 'required|numeric|min:0',
             'purchase_price' => 'required|numeric|min:0',
@@ -259,7 +281,9 @@ class ProductController extends Controller
 
         //dd($request->all());
 
-        DB::transaction(function () use ($request, $product) {
+           $finalCategoryIds = $this->getAllCategoryIdsWithParents($request->input('category_ids'));
+
+        DB::transaction(function () use ($request, $product, $finalCategoryIds) {
 
          
 
@@ -313,15 +337,15 @@ class ProductController extends Controller
             }
             
             // --- END OF REVISED IMAGE HANDLING LOGIC ---
-
+$primaryCategoryId = $request->category_ids[0] ?? null;
             $product->update([
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'product_code' => $request->product_code,
                 'brand_id' => $request->brand_id,
-                'category_id' => $request->category_id,
-                'subcategory_id' => $request->subcategory_id,
-                'sub_subcategory_id' => $request->sub_subcategory_id,
+                'category_id' => $primaryCategoryId, // For backward compatibility
+                'subcategory_id' => null, // Deprecated
+                'sub_subcategory_id' => null, // Deprecated
                 'fabric_id' => $request->fabric_id,
                 'unit_id' => $request->unit_id,
                 'description' => $request->description,
@@ -333,7 +357,19 @@ class ProductController extends Controller
                 'status' => $request->status ?? 1,
             ]);
 
-               $product->assigns()->delete();
+
+             // Delete old product-category associations first
+             $product->assigns()->delete();
+            if (!empty($finalCategoryIds)) {
+                foreach ($finalCategoryIds as $catId) {
+                    $product->assigns()->create([
+                        'category_id' => $catId,
+                        'type' => 'product_category'
+                    ]);
+                }
+            }
+
+              
             if ($request->has('animation_category_ids')) {
                 foreach ($request->animation_category_ids as $id) {
                     $category = AnimationCategory::find($id);
@@ -410,7 +446,23 @@ class ProductController extends Controller
 
         return redirect()->route('product.index')->with('success', 'Product updated successfully.');
     }
+ private function getAllCategoryIdsWithParents(array $selectedIds): array
+    {
+        $allIds = collect($selectedIds);
+        $categories = Category::with('parent')->findMany($selectedIds);
 
+        foreach ($categories as $category) {
+            $current = $category;
+            // Traverse up the tree until there is no parent
+            while ($current->parent) {
+                $allIds->push($current->parent->id);
+                $current = $current->parent;
+            }
+        }
+
+        // Return a unique, flat array of all IDs
+        return $allIds->unique()->values()->all();
+    }
     public function destroy(Product $product)
     {
         DB::transaction(function () use ($product) {

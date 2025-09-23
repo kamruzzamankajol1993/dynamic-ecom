@@ -2,16 +2,60 @@
 @section('title', 'Create Product')
 @section('css')
     <style>
-    .custom-select-container { position: relative; }
-    .custom-select-display { display: block; width: 100%; padding: 0.375rem 0.75rem; font-size: 1rem; font-weight: 400; line-height: 1.5; color: #212529; background-color: #fff; border: 1px solid #ced4da; border-radius: 0.25rem; cursor: pointer; position: relative; }
-    .custom-select-display::after { content: ''; position: absolute; top: 50%; right: 15px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid #333; transform: translateY(-50%); }
-    .custom-select-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ced4da; border-top: 0; z-index: 1051; max-height: 200px; overflow-y: auto; }
-    .custom-select-search-input { width: 100%; padding: 8px; border: none; border-bottom: 1px solid #ddd; }
-    .custom-select-option { padding: 10px; cursor: pointer; }
-    .custom-select-option:hover { background-color: #f0f0f0; }
-    .custom-select-option.is-hidden { display: none; }
-</style>
-<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+        /* --- Font & Layout Adjustments --- */
+        .main-content {
+            font-size: 0.9rem; /* Reduced base font size */
+        }
+        .main-content h2 { font-size: 1.6rem; }
+        .main-content h5 { font-size: 1.1rem; }
+        .main-content h6 { font-size: 0.95rem; }
+        .form-control, .form-select, .btn, .custom-select-display {
+            font-size: 0.875rem; /* Consistent font size for form elements */
+        }
+        .form-control-sm { font-size: 0.8rem; }
+        .card-body, .card-header, .card-footer { padding: 1rem; }
+
+        /* --- Beautiful Label Style --- */
+        .form-label {
+            font-weight: 500;
+            color: #4a5568; /* A softer, more modern dark gray */
+            margin-bottom: 0.35rem;
+            font-size: 0.85rem;
+            text-transform: capitalize;
+        }
+
+        /* --- Existing Custom Select --- */
+        .custom-select-container { position: relative; }
+        .custom-select-display { display: block; width: 100%; padding: 0.375rem 0.75rem; line-height: 1.5; color: #212529; background-color: #fff; border: 1px solid #ced4da; border-radius: 0.25rem; cursor: pointer; position: relative; }
+        .custom-select-display::after { content: ''; position: absolute; top: 50%; right: 15px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid #333; transform: translateY(-50%); }
+        .custom-select-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ced4da; border-top: 0; z-index: 1051; max-height: 200px; overflow-y: auto; }
+        .custom-select-search-input { width: 100%; padding: 8px; border: none; border-bottom: 1px solid #ddd; }
+        .custom-select-option { padding: 10px; cursor: pointer; }
+        .custom-select-option:hover { background-color: #f0f0f0; }
+        .custom-select-option.is-hidden { display: none; }
+
+          /* --- NEW: Styles for the Category Tree --- */
+        .category-tree-container {
+            border: 1px solid #dee2e6;
+            padding: 1rem;
+            border-radius: .25rem;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .category-tree-item .form-check-label {
+            cursor: pointer;
+        }
+        .category-tree-child {
+            padding-left: 1.5rem;
+            border-left: 1px dashed #ced4da;
+            margin-left: 7px;
+        }
+        .toggle-icon {
+            cursor: pointer;
+            color: #6c757d;
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
 @endsection
 @section('body')
 <main class="main-content">
@@ -28,6 +72,12 @@
                         <div class="card-body">
                             <h5 class="card-title mb-4">Main Information <br> <span class="text-danger" style="font-size: 12px;">image width: 600px and height: 600px , image type webp</span></h5>
                             
+                         
+                             <div class="mb-3">
+                                <label class="form-label">Thumbnail Images</label>
+                                <input type="file" accept="image/webp" name="thumbnail_image[]" class="form-control" id="thumbnailInput" multiple>
+                                <div id="thumbnail-preview-container" class="mt-2 d-flex flex-wrap gap-2"></div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label">Product Name</label>
                                 <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
@@ -59,8 +109,7 @@
                                 </select>
                             </div>
                             <div id="size-chart-entries-container">
-                                <!-- Entries will be loaded here via AJAX -->
-                            </div>
+                                </div>
                         </div>
                     </div>
 
@@ -73,8 +122,7 @@
                         <div class="card-body">
                             <p class="text-muted">Add color-wise variations. You can specify different images, prices, and stock quantities for each color and size.</p>
                             <div id="variant-container">
-                                <!-- Dynamic variant sections will be added here -->
-                            </div>
+                                </div>
                         </div>
                         <div class="card-footer d-flex justify-content-between align-items-center">
                              <h5 class="mb-0"></h5>
@@ -102,23 +150,22 @@
                                 <input type="number" name="discount_price" class="form-control" value="{{ old('discount_price') }}" step="0.01">
                             </div>
                             <hr>
+                                                        {{-- --- MODIFIED: Category Selection --- --}}
                             <div class="mb-3">
-                                <label class="form-label">Category</label>
-                                <select name="category_id" id="categoryId" class="form-select select2-like" required>
-                                    <option value="">Select Category</option>
-                                    @foreach($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
+                                <label class="form-label">Product Categories</label>
+                                <div class="category-tree-container">
+                                    <ul class="list-unstyled">
+                                        @include('admin.product._partials.category-tree-checkbox', [
+                                            'categories' => $categories, 
+                                            'assignedCategoryIds' => old('category_ids', [])
+                                        ])
+                                    </ul>
+                                </div>
+                                @error('category_ids')
+                                    <div class="text-danger mt-1" style="font-size: .8rem;">{{ $message }}</div>
+                                @enderror
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Subcategory</label>
-                                <select name="subcategory_id" id="subcategoryId" class="form-select select2-like"></select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Sub-Subcategory</label>
-                                <select name="sub_subcategory_id" id="subSubcategoryId" class="form-select select2-like"></select>
-                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Brand</label>
                                 <select name="brand_id" class="form-select ">
@@ -129,9 +176,9 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Matrial</label>
+                                <label class="form-label">Material</label>
                                 <select name="fabric_id" class="form-select ">
-                                     <option value="">Select Matrial</option>
+                                     <option value="">Select Material</option>
                                     @foreach($fabrics as $fabric)
                                     <option value="{{ $fabric->id }}">{{ $fabric->name }}</option>
                                     @endforeach
@@ -176,16 +223,7 @@
                             @endforeach
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-body">
-                             <h5 class="card-title mb-4">Media</h5>
-                             <div class="mb-3">
-                                <label class="form-label">Thumbnail Images</label>
-                                <input type="file" accept="image/webp" name="thumbnail_image[]" class="form-control" id="thumbnailInput" multiple>
-                                <div id="thumbnail-preview-container" class="mt-2 d-flex flex-wrap gap-2"></div>
-                            </div>
-                        </div>
-                    </div>
+                   
                 </div>
             </div>
             <button type="submit" class="btn btn-primary mt-3">Save Product</button>
@@ -196,6 +234,13 @@
 @section('script')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
+     // --- NEW: JavaScript for Category Tree Toggle ---
+    $('.category-tree-container').on('click', '.toggle-icon', function(e) {
+        e.preventDefault();
+        $(this).toggleClass('fa-plus-square fa-minus-square');
+        $(this).closest('.category-tree-item').children('.category-tree-child').slideToggle('fast');
+    });
 
      // --- Custom Searchable Select Plugin ---
     function createSearchableSelect(originalSelect) {

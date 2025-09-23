@@ -35,7 +35,7 @@ body {
 ================================================== */
 .auth-branding-column {
     flex-basis: 45%;
-    background-color: #1d1c1c; /* Primary Color */
+    background-color: black; /* Primary Color */
     color: #fff;
     padding: 3rem;
     display: flex;
@@ -117,7 +117,7 @@ body {
 }
 
 .auth-link {
-    color: #1d1c1c;
+    color: black;
     text-decoration: none;
     font-weight: 500;
 }
@@ -130,7 +130,7 @@ body {
 ================================================== */
 .auth-btn {
     background-color: #ffd66b; /* Accent Color */
-    color: #1d1c1c; /* Primary Color Text */
+    color: black; /* Primary Color Text */
     border: none;
     border-radius: 0.5rem;
     padding: 1rem;

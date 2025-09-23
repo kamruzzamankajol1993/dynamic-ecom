@@ -3,7 +3,7 @@
         <form id="editForm" class="modal-content">
             <input type="hidden" id="editId">
             <div class="modal-header">
-                <h5 class="modal-title">Edit  Category</h5>
+                <h5 class="modal-title">Edit Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -12,6 +12,18 @@
                     <label for="editName" class="form-label">Name</label>
                     <input type="text" id="editName" name="name" class="form-control">
                 </div>
+                
+                <div class="mb-3">
+                    <label for="editParentId" class="form-label">Parent Category</label>
+                    {{-- Add the 'select2-modal' class --}}
+                    <select id="editParentId" name="parent_id" class="form-control select2-modal" style="width: 100%;">
+                        <option value="">None</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="mb-3">
                     <label for="editImage" class="form-label">Image</label>
                     <input type="file" id="editImage" name="image" class="form-control">

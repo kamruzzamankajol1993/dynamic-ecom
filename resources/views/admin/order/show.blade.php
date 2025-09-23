@@ -6,6 +6,19 @@
     {{-- Add SweetAlert2 CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
+        /* --- Font Size Adjustments --- */
+        .main-content {
+            font-size: 0.9rem;
+        }
+        .main-content h2 { font-size: 1.6rem; }
+        .main-content h4 { font-size: 1.15rem; }
+        .main-content h5 { font-size: 1.1rem; }
+        .main-content h6 { font-size: 0.95rem; }
+        .btn, .form-control, .form-select { font-size: 0.875rem; }
+        .table, .list-group-item, .address-block { font-size: 0.875rem; }
+        .card-header, .card-body { padding: 1rem 1.25rem; }
+        .badge { font-size: 0.75em; }
+        .summary-card .grand-total { font-size: 1.1rem; }
         body { background-color: #f4f7f6; }
         .card {
             border: none;
