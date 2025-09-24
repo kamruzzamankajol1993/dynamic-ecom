@@ -50,7 +50,7 @@ class FooterBannerController extends Controller
             File::makeDirectory($destinationPath, 0777, true, true);
         }
 
-        Image::read($image->getRealPath())->resize(1200, 200)->save($destinationPath . '/' . $imageName);
+        Image::read($image->getRealPath())->resize(1200, 400)->save($destinationPath . '/' . $imageName);
         
         return $directory . '/' . $imageName;
     }

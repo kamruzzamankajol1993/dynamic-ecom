@@ -13,22 +13,25 @@ use App\Models\Unit;
 use App\Models\ExtraCategory;
 use App\Models\Color;
 use App\Models\Size;
-use App\Models\AnimationCategory; // Add this
+use App\Models\AnimationCategory;
 use App\Models\SizeChart;
 use App\Models\AssignChart;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Support\Facades\File;
 use App\Models\ProductVariant;
 use App\Models\AssignCategory;
+use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
     private function getProductData()
     {
+        try {
         return [
             'brands' => Brand::where('status', 1)->get(),
              'categories' => Category::with('children')->whereNull('parent_id')->where('status', 1)->get(),
@@ -40,39 +43,65 @@ class ProductController extends Controller
             'animation_categories' => AnimationCategory::where('status', 1)->get(),
              'extra_categories' => ExtraCategory::where('status', 1)->get(),
         ];
+
+        } catch (\Exception $e) {
+            Log::error('Error in getProductData: ' . $e->getMessage());
+            // Re-throw exception to be caught by the calling public method
+            throw $e;
+        }
     }
 
     // AJAX method to get subcategories
     public function getSubcategories($categoryId)
     {
+        try {
         return response()->json(Subcategory::where('category_id', $categoryId)->where('status', 1)->get());
+    } catch (\Exception $e) {
+            Log::error('Error getting subcategories: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not fetch subcategories.'], 500);
+        }
     }
 
     // AJAX method to get sub-subcategories
     public function getSubSubcategories($subcategoryId)
     {
+        try {
         return response()->json(SubSubcategory::where('subcategory_id', $subcategoryId)->where('status', 1)->get());
+         } catch (\Exception $e) {
+            Log::error('Error getting sub-subcategories: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not fetch sub-subcategories.'], 500);
+        }
     }
 
     // AJAX method to get size chart entries
     public function getSizeChartEntries($id)
     {
+       try { 
         return response()->json(SizeChart::with('entries')->findOrFail($id));
+        } catch (\Exception $e) {
+            Log::error('Error getting size chart entries: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not fetch size chart entries.'], 500);
+        }
     }
 
 
      public function index()
     {
 
-        
+         try {
         // Pass both sizes (for the modal) and categories (for the new filter)
         $sizes = Size::all()->keyBy('id');
         $categories = Category::where('status', 1)->orderBy('name')->get(); // MODIFIED: Get categories for the filter
         return view('admin.product.index', compact('sizes', 'categories')); // MODIFIED: Pass categories to the view
+         } catch (\Exception $e) {
+            Log::error('Error loading product index page: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not load product page.');
+        }
     }
 
     public function data(Request $request)
     {
+        try {
         $query = Product::with(['category', 'variants.color']);
 
         // --- NEW: Advanced Filtering Logic ---
@@ -101,17 +130,26 @@ class ProductController extends Controller
             'current_page' => $products->currentPage(),
             'last_page' => $products->lastPage(),
         ]);
+         } catch (\Exception $e) {
+            Log::error('Error fetching product data for table: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not fetch product data.'], 500);
+        }
     }
 
 
     public function create()
     {
+        try {
         return view('admin.product.create', $this->getProductData());
+         } catch (\Exception $e) {
+            Log::error('Error loading create product page: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not load the page to create a new product.');
+        }
     }
 
     public function store(Request $request)
     {
-
+try {
         ///dd($request->all());
         $request->validate([
             'name' => 'required|string|max:255',
@@ -236,10 +274,17 @@ class ProductController extends Controller
         });
 
         return redirect()->route('product.index')->with('success', 'Product created successfully.');
+         } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error storing product: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Something went wrong while saving the product.')->withInput();
+        }
     }
 
        public function show(Product $product)
     {
+        try {
         // --- MODIFIED: Eager load relationships for the view ---
         $product->load([
             'brand',
@@ -255,10 +300,15 @@ class ProductController extends Controller
         ]);
         
         return view('admin.product.show', compact('product'));
+        } catch (\Exception $e) {
+            Log::error('Error showing product details: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not load product details.');
+        }
     }
 
  public function edit(Product $product)
     {
+        try {
         $data = $this->getProductData();
         $product->load('variants.color', 'assignChart.entries', 'assigns');
         $data['product'] = $product;
@@ -266,10 +316,16 @@ class ProductController extends Controller
         $data['assignedCategoryIds'] = $product->assigns->where('type', 'product_category')->pluck('category_id')->toArray();
         $data['assignedExtraCategoryIds'] = $product->assigns->where('type', 'extra_category')->pluck('category_id')->toArray();
         return view('admin.product.edit', $data);
+        } catch (\Exception $e) {
+            Log::error('Error loading edit product page: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not load the page to edit the product.');
+        }
     }
 
     public function update(Request $request, Product $product)
     {
+
+        try {
         $request->validate([
             'name' => 'required|string|max:255',
             'product_code' => 'nullable|string|unique:products,product_code,' . $product->id,
@@ -452,9 +508,18 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
         });
 
         return redirect()->route('product.index')->with('success', 'Product updated successfully.');
+
+         } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error updating product: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Something went wrong while updating the product.')->withInput();
+        }
     }
  private function getAllCategoryIdsWithParents(array $selectedIds): array
     {
+
+        try {
         $allIds = collect($selectedIds);
         $categories = Category::with('parent')->findMany($selectedIds);
 
@@ -469,9 +534,14 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
 
         // Return a unique, flat array of all IDs
         return $allIds->unique()->values()->all();
+        } catch (\Exception $e) {
+            Log::error('Error in getAllCategoryIdsWithParents: ' . $e->getMessage());
+            throw $e;
+        }
     }
     public function destroy(Product $product)
     {
+        try {
         DB::transaction(function () use ($product) {
             foreach ($product->variants as $variant) {
                 $this->deleteImage($variant->variant_image);
@@ -482,9 +552,15 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
         });
 
         return response()->json(['message' => 'Product deleted successfully.']);
+        } catch (\Exception $e) {
+            Log::error('Error deleting product: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not delete the product.'], 500);
+        }
     }
     
     public function ajax_products_delete(Request $request) {
+
+        try {
         
        $id = $request->id;
     // Attempt to find the product by its ID
@@ -512,10 +588,16 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
 
     // If the transaction completes without errors, return a success message.
     return response()->json(['message' => 'Product deleted successfully.']);
+
+      } catch (\Exception $e) {
+            Log::error('Error deleting product via AJAX: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not delete the product.'], 500);
+        }
 }
 
     private function uploadImage($image, $directory)
     {
+        try {
         $imageName = Str::uuid() . '.' . 'webp';
         $destinationPath = public_path('uploads/' . $directory);
         if (!File::isDirectory($destinationPath)) {
@@ -525,10 +607,15 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
             $c->aspectRatio(); $c->upsize();
         })->save($destinationPath . '/' . $imageName);
         return $directory . '/' . $imageName;
+         } catch (\Exception $e) {
+            Log::error('Error in uploadImage: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     private function uploadImageMobile($image, $directory)
     {
+        try {
         $imageName = Str::uuid() . '.' . 'webp';
         $destinationPath = public_path('uploads/' . $directory);
         if (!File::isDirectory($destinationPath)) {
@@ -538,10 +625,15 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
             $c->aspectRatio(); $c->upsize();
         })->save($destinationPath . '/' . $imageName);
         return $directory . '/' . $imageName;
+        } catch (\Exception $e) {
+            Log::error('Error in uploadImageMobile: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     private function deleteImage($paths)
     {
+         try {
         if (is_array($paths)) {
             foreach ($paths as $path) {
                 if ($path && File::exists(public_path('uploads/' . $path))) {
@@ -553,5 +645,10 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
                 File::delete(public_path('uploads/' . $paths));
             }
         }
+        } catch (\Exception $e) {
+            Log::error('Error deleting image: ' . $e->getMessage());
+            // We don't re-throw here because a failed image deletion might not be a critical error.
+        }
     }
+    
 }

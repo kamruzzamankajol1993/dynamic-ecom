@@ -25,7 +25,7 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3"><label class="form-label">Title*</label><input type="text" name="top[title]" class="form-control" value="{{ $top->title }}" required></div>
                                 <div class="col-md-6 mb-3"><label class="form-label">Subtitle</label><input type="text" name="top[subtitle]" class="form-control" value="{{ $top->subtitle }}"></div>
-                                <div class="col-md-6 mb-3"><label class="form-label">Image</label><input type="file" name="top[image]" class="form-control"><small class="text-muted">Upload to change. Recommended: 800x400px</small> @if($top->image)<img src="{{ asset($top->image) }}" height="50" class="mt-2 d-block">@endif</div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Image</label><input type="file" name="top[image]" class="form-control"><small class="text-muted">Upload to change. Recommended: 800x400px</small> @if($top->image)<img src="{{ asset('public/'.$top->image) }}" height="50" class="mt-2 d-block">@endif</div>
                                 <div class="col-md-6 mb-3"><label class="form-label">Link to Bundle Offer*</label>
                                     <select name="top[bundle_offer_id]" class="form-select select2" required>
                                         @foreach($bundleOffers as $offer)<option value="{{ $offer->id }}" @selected($top->bundle_offer_id == $offer->id)>{{ $offer->name }}</option>@endforeach

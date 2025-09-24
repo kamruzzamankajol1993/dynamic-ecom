@@ -14,32 +14,45 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Payment;
 use Mpdf\Mpdf;
-use App\Models\OrderTracking; 
+use App\Models\OrderTracking;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 class OrderController extends Controller
 {
 
     public function printA5(Order $order)
 {
+    try {
     $order->load('customer', 'orderDetails.product', 'payments');
     $companyInfo = DB::table('system_information')->first(); // Fetch company info
     $pdf = new Mpdf(['mode' => 'utf-8', 'format' => 'A5']);
     $html = view('admin.order.print_a4', compact('order', 'companyInfo'))->render();
     $pdf->WriteHTML($html);
     return $pdf->Output('invoice-'.$order->invoice_no.'.pdf', 'I');
+     } catch (\Exception $e) {
+            Log::error('Error generating A5 PDF: ' . $e->getMessage());
+            return response('Could not generate PDF.', 500);
+        }
 }
 
     public function searchCustomers(Request $request)
 {
+    try {
     $term = $request->get('term');
     $customers = Customer::where('name', 'LIKE', $term . '%')
                        ->orWhere('phone', 'LIKE', $term . '%')
                        ->limit(10)
                        ->get();
     return response()->json($customers);
+     } catch (\Exception $e) {
+            Log::error('Error searching customers: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred during search.'], 500);
+        }
 }
     public function index()
     {
+        try {
         // Get counts for each status tab
         $statusCounts = Order::select('status', DB::raw('count(*) as total'))
                              ->groupBy('status')
@@ -49,10 +62,15 @@ class OrderController extends Controller
         $statusCounts['all'] = $statusCounts->sum();
 
         return view('admin.order.index', compact('statusCounts'));
+        } catch (\Exception $e) {
+            Log::error('Error loading order index page: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not load the order page.');
+        }
     }
 
     public function data(Request $request)
     {
+        try {
         $query = Order::with('customer');
 
         // Filter by status tab
@@ -97,10 +115,15 @@ class OrderController extends Controller
             'current_page' => $orders->currentPage(),
             'last_page' => $orders->lastPage(),
         ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching order data: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not fetch order data.'], 500);
+        }
     }
 
      public function create()
     {
+        try {
         // Generate a unique invoice number
         $newInvoiceId = 'INV-' . strtoupper(uniqid());
         
@@ -108,22 +131,33 @@ class OrderController extends Controller
         $customers = Customer::where('status', 1)->get(['id', 'name', 'phone']);
 
         return view('admin.order.create', compact('newInvoiceId', 'customers'));
+        } catch (\Exception $e) {
+            Log::error('Error loading create order page: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not load the new order page.');
+        }
     }
 
      // AJAX method to get customer details
     public function getCustomerDetails($id)
     {
+                try {
+
         $customer = Customer::with('addresses')->findOrFail($id);
         return response()->json([
             'main_address' => $customer->address,
             'addresses' => $customer->addresses,
         ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching customer details: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not fetch customer details.'], 500);
+        }
     }
 
      // AJAX method for product search
     // AJAX method for product search
     public function searchProducts(Request $request)
 {
+    try {
     $term = $request->get('term');
     
     $products = Product::where('name', 'LIKE', $term . '%')
@@ -143,10 +177,15 @@ class OrderController extends Controller
     });
 
     return response()->json($formattedProducts);
+    } catch (\Exception $e) {
+            Log::error('Error searching products: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred while searching for products.'], 500);
+        }
 }
 
     public function getProductDetails($id)
     {
+        try {
         $product = Product::with('variants.color')->findOrFail($id);
         
         $variantsData = $product->variants->map(function ($variant) {
@@ -171,10 +210,16 @@ class OrderController extends Controller
             'base_price' => $product->discount_price ?? $product->base_price,
             'variants' => $variantsData,
         ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching product details: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not fetch product details.'], 500);
+        }
     }
 
     public function store(Request $request)
 {
+
+    try {
     $request->validate([
         'customer_id' => 'required|exists:customers,id',
         'invoice_no' => 'required|string|unique:orders,invoice_no',
@@ -223,10 +268,17 @@ class OrderController extends Controller
     });
 
     return redirect()->route('order.index')->with('success', 'Order created successfully.');
+    } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error creating order: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred while creating the order.')->withInput();
+        }
 }
 
      public function updateStatus(Request $request, Order $order)
     {
+        try {
         $request->validate(['status' => 'required|string']);
     
         DB::transaction(function () use ($request, $order) {
@@ -270,10 +322,17 @@ class OrderController extends Controller
             'message' => 'Order status updated successfully.',
             'statusCounts' => $statusCounts // Send the new counts in the response
         ]);
+
+    } catch (\Exception $e) {
+            Log::error('Error updating order status: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not update order status.'], 500);
+        }
     }
 
     public function bulkUpdateStatus(Request $request)
 {
+
+     try {
     $request->validate([
         'ids'       => 'required|array',
         'ids.*'     => 'exists:orders,id',
@@ -317,6 +376,11 @@ class OrderController extends Controller
         'message'      => 'Selected orders have been updated.',
         'statusCounts' => $statusCounts,
     ]);
+
+     } catch (\Exception $e) {
+            Log::error('Error during bulk status update: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not update selected orders.'], 500);
+        }
 }
 
     /**
@@ -324,14 +388,24 @@ class OrderController extends Controller
      */
     public function getDetails($id)
     {
+         try {
         $order = Order::with('customer', 'orderDetails.product')->findOrFail($id);
         return response()->json($order);
+        } catch (\Exception $e) {
+            Log::error('Error fetching order details for modal: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not fetch order details.'], 500);
+        }
     }
 
     public function destroy(Order $order)
     {
+        try {
         $order->delete();
         return response()->json(['message' => 'Order deleted successfully.']);
+        } catch (\Exception $e) {
+            Log::error('Error deleting order: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not delete the order.'], 500);
+        }
     }
     
     /**
@@ -339,9 +413,14 @@ class OrderController extends Controller
      */
     public function destroyMultiple(Request $request)
     {
+         try {
         $request->validate(['ids' => 'required|array']);
         Order::whereIn('id', $request->ids)->delete();
         return response()->json(['message' => 'Selected orders have been deleted.']);
+        } catch (\Exception $e) {
+            Log::error('Error deleting multiple orders: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not delete the selected orders.'], 500);
+        }
     }
 
     /**
@@ -349,10 +428,15 @@ class OrderController extends Controller
  */
 public function edit(Order $order)
 {
+    try {
     // Eager load the relationships to prevent too many database queries in the view
     $order->load('customer', 'orderDetails.product');
 
     return view('admin.order.edit', compact('order'));
+    } catch (\Exception $e) {
+            Log::error('Error loading edit order page: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not load the order for editing.');
+        }
 }
 
 /**
@@ -360,6 +444,7 @@ public function edit(Order $order)
  */
 public function update(Request $request, Order $order)
 {
+    try {
     $request->validate([
         'customer_id' => 'required|exists:customers,id',
         // Make sure the invoice number is unique, but ignore the current order's ID
@@ -413,14 +498,26 @@ public function update(Request $request, Order $order)
     });
 
     return redirect()->route('order.index')->with('success', 'Order updated successfully.');
+
+     } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error updating order: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred while updating the order.')->withInput();
+        }
 }
 
 
 public function show(Order $order)
 {
+     try {
     $order->load('customer', 'orderDetails.product', 'payments');
     $companyInfo = DB::table('system_information')->first(); // Fetch company info
     return view('admin.order.show', compact('order', 'companyInfo'));
+    } catch (\Exception $e) {
+            Log::error('Error showing order: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not display the order details.');
+        }
 }
 
 // ...
@@ -430,12 +527,17 @@ public function show(Order $order)
  */
 public function printA4(Order $order)
 {
+    try {
     $order->load('customer', 'orderDetails.product', 'payments');
     $companyInfo = DB::table('system_information')->first(); // Fetch company info
     $pdf = new Mpdf(['mode' => 'utf-8', 'format' => 'A4']);
     $html = view('admin.order.print_a4', compact('order', 'companyInfo'))->render();
     $pdf->WriteHTML($html);
     return $pdf->Output('invoice-'.$order->invoice_no.'.pdf', 'I');
+     } catch (\Exception $e) {
+            Log::error('Error generating A4 PDF: ' . $e->getMessage());
+            return response('Could not generate PDF.', 500);
+        }
 }
 
 /**
@@ -443,12 +545,17 @@ public function printA4(Order $order)
  */
 public function printPOS(Order $order)
 {
+    try {
     $order->load('customer', 'orderDetails.product', 'payments');
     $companyInfo = DB::table('system_information')->first(); // Fetch company info
     $pdf = new Mpdf(['mode' => 'utf-8', 'format' => [75, 100]]); // Adjusted height for more content
     $html = view('admin.order.print_pos', compact('order', 'companyInfo'))->render();
     $pdf->WriteHTML($html);
     return $pdf->Output('receipt-'.$order->invoice_no.'.pdf', 'I');
+     } catch (\Exception $e) {
+            Log::error('Error generating POS PDF: ' . $e->getMessage());
+            return response('Could not generate PDF.', 500);
+        }
 }
 
 /**
@@ -456,6 +563,7 @@ public function printPOS(Order $order)
      */
     public function storePayment(Request $request, Order $order)
     {
+         try {
         $request->validate([
             'amount' => 'required|numeric|min:0.01|max:' . $order->due,
             'payment_date' => 'required|date_format:d-m-Y',
@@ -477,5 +585,12 @@ public function printPOS(Order $order)
         });
 
         return redirect()->route('order.show', $order->id)->with('success', 'Payment added successfully.');
+    
+    } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error storing payment: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred while adding the payment.')->withInput();
+        }
     }
 }

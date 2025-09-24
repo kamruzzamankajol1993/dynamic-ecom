@@ -216,9 +216,7 @@
                           @if ($usr->can('offerSectionControlView'))
                           <li><a class="nav-link {{ Route::is('offer-section.control.index')  ? 'active' : '' }}" href="{{route('offer-section.control.index')}}">Combo Offer</a></li>
                           @endif
-                          @if ($usr->can('sliderSectionView'))
-                          <li><a class="nav-link {{ Route::is('slider.control.index')  ? 'active' : '' }}" href="{{route('slider.control.index')}}">Slider Section</a></li>
-                          @endif
+                         
                           @if ($usr->can('anlyticSettingView'))
                            <li class="nav-item">
                     <a class="nav-link {{ Route::is('settings.analytics.index') ? 'active' : '' }}" href="{{ route('settings.analytics.index') }}">

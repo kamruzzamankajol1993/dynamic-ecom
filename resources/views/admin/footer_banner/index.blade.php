@@ -16,14 +16,14 @@
                             <div class="mb-3">
                                 <label for="image" class="form-label">Upload New Banner Image*</label>
                                 <input type="file" name="image" id="image" class="form-control" required>
-                                <small class="form-text text-muted">Recommended dimensions: 1200px width and 200px height.</small>
+                                <small class="form-text text-muted">Recommended dimensions: 1200px width and 400px height.</small>
                             </div>
                             
                             @if($bannerImage)
                             <div class="mb-3">
                                 <label class="form-label">Current Banner</label>
                                 <div>
-                                    <img src="{{ asset($bannerImage) }}" alt="Current Footer Banner" class="img-fluid img-thumbnail" style="max-height: 100px;">
+                                    <img src="{{ asset('public/'.$bannerImage) }}" alt="Current Footer Banner" class="img-fluid img-thumbnail" style="max-height: 100px;">
                                 </div>
                             </div>
                             @endif
