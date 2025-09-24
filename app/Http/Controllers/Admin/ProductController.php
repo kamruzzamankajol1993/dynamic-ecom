@@ -10,6 +10,7 @@ use App\Models\Subcategory;
 use App\Models\SubSubcategory;
 use App\Models\Fabric;
 use App\Models\Unit;
+use App\Models\ExtraCategory;
 use App\Models\Color;
 use App\Models\Size;
 use App\Models\AnimationCategory; // Add this
@@ -37,6 +38,7 @@ class ProductController extends Controller
             'sizes' => Size::where('status', 1)->get(),
             'size_charts' => SizeChart::where('status', 1)->get(),
             'animation_categories' => AnimationCategory::where('status', 1)->get(),
+             'extra_categories' => ExtraCategory::where('status', 1)->get(),
         ];
     }
 
@@ -183,12 +185,14 @@ class ProductController extends Controller
                     }
                 }
             }
-            if ($request->has('other_categories')) {
-                foreach ($request->other_categories as $name) {
-                    $product->assigns()->create([
-                        'category_name' => $name,
-                        'type' => 'other'
-                    ]);
+             if ($request->has('extra_category_ids')) {
+                foreach ($request->extra_category_ids as $id) {
+                    $category = ExtraCategory::find($id);
+                    if ($category) {
+                        $product->assigns()->create([
+                            'category_id' => $id, 'category_name' => $category->name, 'type' => 'other'
+                        ]);
+                    }
                 }
             }
 
@@ -260,6 +264,7 @@ class ProductController extends Controller
         $data['product'] = $product;
         // --- NEW: Get assigned category IDs for the edit form ---
         $data['assignedCategoryIds'] = $product->assigns->where('type', 'product_category')->pluck('category_id')->toArray();
+        $data['assignedExtraCategoryIds'] = $product->assigns->where('type', 'extra_category')->pluck('category_id')->toArray();
         return view('admin.product.edit', $data);
     }
 
@@ -382,12 +387,14 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
                     }
                 }
             }
-            if ($request->has('other_categories')) {
-                foreach ($request->other_categories as $name) {
-                    $product->assigns()->create([
-                        'category_name' => $name,
-                        'type' => 'other'
-                    ]);
+              if ($request->has('extra_category_ids')) {
+                foreach ($request->extra_category_ids as $id) {
+                    $category = ExtraCategory::find($id);
+                    if ($category) {
+                        $product->assigns()->create([
+                            'category_id' => $id, 'category_name' => $category->name, 'type' => 'other'
+                        ]);
+                    }
                 }
             }
 

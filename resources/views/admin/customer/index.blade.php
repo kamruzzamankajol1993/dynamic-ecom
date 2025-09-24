@@ -10,6 +10,38 @@
         height: 1.5rem;
         border-width: .2em;
     }
+     /* --- Font & Layout Adjustments --- */
+    .main-content {
+        font-size: 0.9rem; /* Reduced base font size */
+    }
+    .main-content h2 { font-size: 1.6rem; }
+    .main-content h5 { font-size: 1.1rem; }
+
+    /* Forms & Buttons */
+    .form-control, .form-select, .btn {
+        font-size: 0.875rem; /* Consistent font size for form elements */
+    }
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 0.3rem;
+    }
+    /* Cards */
+    .card-body, .card-header, .card-footer {
+        padding: 1rem;
+    }
+
+    /* Tables */
+    .table {
+        font-size: 0.875rem;
+    }
+    .table th, .table td {
+        padding: 0.6rem 0.5rem; /* Reduce padding for a tighter look */
+        vertical-align: middle;
+    }
+    .pagination {
+        font-size: 0.875rem;
+    }
 </style>
 @endsection
 @section('body')

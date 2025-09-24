@@ -271,7 +271,7 @@
 
                      @php
                         $assignedAnimCategories = $product->assigns->where('type', 'animation')->pluck('category_id')->toArray();
-                        $assignedOtherCategories = $product->assigns->where('type', 'other')->pluck('category_name')->toArray();
+                         $assignedExtraCategoryIds = $product->assigns->where('type', 'other')->pluck('category_id')->toArray();
                     @endphp
                       {{-- Animation Category --}}
             <div class="card mb-4">
@@ -290,21 +290,21 @@
             </div>
 
             {{-- Other Category --}}
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Other Category</h5>
-                    @foreach(['New', 'Trending', 'Discount'] as $item)
-                    @php $itemValue = strtolower($item); @endphp
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="other_categories[]" value="{{ $itemValue }}" id="other_cat_{{ $itemValue }}"
-                            @if(in_array($itemValue, $assignedOtherCategories)) checked @endif>
-                        <label class="form-check-label" for="other_cat_{{ $itemValue }}">
-                            {{ $item }}
-                        </label>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
+           <div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Other Category</h5>
+        {{-- Loop through extra_categories and check if it's in the assigned list --}}
+        @foreach($extra_categories as $category)
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="extra_category_ids[]" value="{{ $category->id }}" id="extra_cat_{{ $category->id }}"
+                @if(in_array($category->id, $assignedExtraCategoryIds)) checked @endif>
+            <label class="form-check-label" for="extra_cat_{{ $category->id }}">
+                {{ $category->name }}
+            </label>
+        </div>
+        @endforeach
+    </div>
+</div>
                      
                 </div>
             </div>

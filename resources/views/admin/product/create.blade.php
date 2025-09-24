@@ -211,18 +211,19 @@
 
                     {{-- Other Category --}}
                     <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title mb-3">Other Category</h5>
-                            @foreach(['New', 'Trending', 'Discount'] as $item)
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="other_categories[]" value="{{ strtolower($item) }}" id="other_cat_{{ strtolower($item) }}">
-                                <label class="form-check-label" for="other_cat_{{ strtolower($item) }}">
-                                    {{ $item }}
-                                </label>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
+    <div class="card-body">
+        <h5 class="card-title mb-3">Other Category</h5>
+        {{-- Loop through the new extra_categories variable --}}
+        @foreach($extra_categories as $category)
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="extra_category_ids[]" value="{{ $category->id }}" id="extra_cat_{{ $category->id }}">
+            <label class="form-check-label" for="extra_cat_{{ $category->id }}">
+                {{ $category->name }}
+            </label>
+        </div>
+        @endforeach
+    </div>
+</div>
                    
                 </div>
             </div>

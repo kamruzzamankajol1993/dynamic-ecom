@@ -71,7 +71,10 @@ use App\Http\Controllers\Admin\ShareholderWithdrawController;
 use App\Http\Controllers\Admin\CashBookController;
 use App\Http\Controllers\Admin\BankBookController;
 use App\Http\Controllers\Admin\HighlightProductController;
-
+use App\Http\Controllers\Admin\ExtraCategoryController;
+use App\Http\Controllers\Admin\HeroLeftSliderController;
+use App\Http\Controllers\Admin\HeroRightSliderController;
+use App\Http\Controllers\Admin\FooterBannerController;
 // Route::get('/', function () {
 //     return view('welcome');
 // });
@@ -138,6 +141,19 @@ Route::controller(AuthController::class)->group(function () {
 
 
 Route::group(['middleware' => ['auth']], function() {
+
+    Route::get('footer-banner', [FooterBannerController::class, 'index'])->name('footer-banner.index');
+Route::post('footer-banner', [FooterBannerController::class, 'update'])->name('footer-banner.update');
+
+    Route::get('hero-right-slider', [HeroRightSliderController::class, 'index'])->name('hero-right-slider.index');
+Route::post('hero-right-slider', [HeroRightSliderController::class, 'update'])->name('hero-right-slider.update');
+
+    Route::resource('hero-left-slider', HeroLeftSliderController::class)->parameters([
+    'hero-left-slider' => 'heroLeftSlider' // Use a shorter parameter name for route model binding
+]);
+
+    Route::get('ajax_extra_category', [ExtraCategoryController::class, 'data'])->name('ajax.extracategory.data');
+Route::resource('extracategory', ExtraCategoryController::class);
 
 
     // SMS Gateway Setting Routes
@@ -320,7 +336,7 @@ Route::get('order-search-customers', [OrderController::class, 'searchCustomers']
     Route::get('frontend-control', [FrontendControlController::class, 'index'])->name('frontend.control.index');
     Route::post('frontend-control', [FrontendControlController::class, 'update'])->name('frontend.control.update');
 
-
+Route::delete('frontend-control/menu/{menuItem}', [FrontendControlController::class, 'destroyMenuItem'])->name('frontend.control.menu.destroy');
      Route::get('barcode', [BarcodeController::class, 'index'])->name('barcode.index');
     Route::get('barcode/search', [BarcodeController::class, 'search'])->name('barcode.search');
     Route::post('barcode/print', [BarcodeController::class, 'print'])->name('barcode.print');

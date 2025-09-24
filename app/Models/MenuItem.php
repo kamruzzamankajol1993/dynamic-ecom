@@ -10,6 +10,7 @@ class MenuItem extends Model
     use HasFactory;
 
     protected $fillable = [
+       'source_id',
         'name',
         'route',
         'type', 

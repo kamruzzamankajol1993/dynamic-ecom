@@ -43,7 +43,7 @@
                         <span>Products</span>
                         <i data-feather="chevron-down" class="ms-auto"></i>
                     </a>
-                    <ul class="collapse list-unstyled {{Route::is('barcode.index')|| Route::is('product.index') || Route::is('size-chart.index') || Route::is('unit.index') || Route::is('size.index') || Route::is('color.index') ||  Route::is('fabric.index') || Route::is('sub-subcategory.index') ||  Route::is('subcategory.index') || Route::is('animationCategory.index') || Route::is('animationCategory.edit') || Route::is('animationCategory.create') || Route::is('brand.show') || Route::is('brand.index') || Route::is('brand.edit') || Route::is('brand.create') || Route::is('category.index') || Route::is('category.edit') || Route::is('category.create') || Route::is('product.index') || Route::is('product.edit')|| Route::is('product.show') || Route::is('product.create') ? 'show' : '' }}" id="productsSubmenu" data-bs-parent="#sidebar-menu">
+                    <ul class="collapse list-unstyled {{Route::is('extracategory.index') || Route::is('extracategory.edit') || Route::is('extracategory.create') || Route::is('barcode.index')|| Route::is('product.index') || Route::is('size-chart.index') || Route::is('unit.index') || Route::is('size.index') || Route::is('color.index') ||  Route::is('fabric.index') || Route::is('sub-subcategory.index') ||  Route::is('subcategory.index') || Route::is('animationCategory.index') || Route::is('animationCategory.edit') || Route::is('animationCategory.create') || Route::is('brand.show') || Route::is('brand.index') || Route::is('brand.edit') || Route::is('brand.create') || Route::is('category.index') || Route::is('category.edit') || Route::is('category.create') || Route::is('product.index') || Route::is('product.edit')|| Route::is('product.show') || Route::is('product.create') ? 'show' : '' }}" id="productsSubmenu" data-bs-parent="#sidebar-menu">
                            @if ($usr->can('productView') ||  $usr->can('productDelete') ||  $usr->can('productUpdate'))
                         <li><a class="nav-link {{ Route::is('product.index') || Route::is('product.edit') || Route::is('product.show') ? 'active' : '' }}" href="{{route('product.index')}}">Product List</a></li>
                         @endif
@@ -63,7 +63,9 @@
 
                     @endif
 
-                   
+                 
+    <a class="nav-link {{ Route::is('extracategory.index') || Route::is('extracategory.edit') || Route::is('extracategory.create') ? 'active' : '' }}" href="{{ route('extracategory.index') }}">Extra Category</a>
+
 
                     @if ($usr->can('animationCategoryAdd') || $usr->can('animationCategoryView') ||  $usr->can('animationCategoryDelete') ||  $usr->can('animationCategoryUpdate'))
 
@@ -121,12 +123,12 @@
 @endif
                     @if ($usr->can('offerDetailAdd') || $usr->can('offerDetailView') ||  $usr->can('offerDetailDelete') || $usr->can('offerDetailUpdate') || $usr->can('bundleofferAdd') || $usr->can('bundleofferView') ||  $usr->can('bundleofferDelete') ||  $usr->can('bundleofferUpdate'))
                 <li class="sidebar-title">
-                    <span>Offer & Coupon</span>
+                    <span>Commbo Offer & Coupon</span>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#offerSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="offerSubmenu">
                         <i data-feather="file-text"></i>
-                        <span>Offer List</span>
+                        <span>Combo Offer</span>
                         <i data-feather="chevron-down" class="ms-auto"></i>
                     </a>
                     <ul class="collapse list-unstyled {{Route::is('offer-product.create') || Route::is('offer-product.edit') || Route::is('offer-product.index') || Route::is('offer-product.show') || Route::is('bundle-offer.show') || Route::is('bundle-offer.create') || Route::is('bundle-offer.edit') || Route::is('bundle-offer.index')  ? 'show' : '' }}" id="offerSubmenu" data-bs-parent="#sidebar-menu">
@@ -176,7 +178,7 @@
                         <span>Content</span>
                         <i data-feather="chevron-down" class="ms-auto"></i>
                     </a>
-                    <ul class="collapse list-unstyled {{Route::is('review.index') || Route::is('review.edit') || Route::is('review.show')||Route::is('extraPage.index') ||  Route::is('message.index') ||  Route::is('aboutUs.index') ||  Route::is('socialLink.index') || Route::is('settings.analytics.index') || Route::is('homepage-section.index') || Route::is('featured-category.index') || Route::is('highlight-product.index') || Route::is('offer-section.control.index') ||  Route::is('slider.control.index') ||  Route::is('sidebar-menu.control.index') ||  Route::is('frontend.control.index')  ? 'show' : '' }}" id="cmsSubmenu" data-bs-parent="#sidebar-menu">
+                    <ul class="collapse list-unstyled {{Route::is('footer-banner.index')  || Route::is('hero-right-slider.*') || Route::is('hero-left-slider.index') || Route::is('hero-left-slider.create') || Route::is('hero-left-slider.edit') || Route::is('review.index') || Route::is('review.edit') || Route::is('review.show')||Route::is('extraPage.index') ||  Route::is('message.index') ||  Route::is('aboutUs.index') ||  Route::is('socialLink.index') || Route::is('settings.analytics.index') || Route::is('homepage-section.index') || Route::is('featured-category.index') || Route::is('highlight-product.index') || Route::is('offer-section.control.index') ||  Route::is('slider.control.index') ||  Route::is('sidebar-menu.control.index') ||  Route::is('frontend.control.index')  ? 'show' : '' }}" id="cmsSubmenu" data-bs-parent="#sidebar-menu">
                        
                        
                          <li><a class="nav-link {{Route::is('featured-category.index') ? 'active':''}}" href="{{route('featured-category.index')}}"> Home Page First Section</a></li>
@@ -186,11 +188,33 @@
                         @if ($usr->can('headerAdd') || $usr->can('headerView') ||  $usr->can('headerDelete') ||  $usr->can('headerUpdate'))
                         <li><a class="nav-link {{ Route::is('frontend.control.index')  ? 'active' : '' }}" href="{{route('frontend.control.index')}}"> Header</a></li>
                         @endif
+ @if ($usr->can('footerBannerView') || $usr->can('footerBannerUpdate'))
+    <li><a class="nav-link {{ Route::is('footer-banner.index') ? 'active' : '' }}" href="{{ route('footer-banner.index') }}">Footer Banner</a></li>
+    @endif
+                          {{-- NEW HERO SECTION DROPDOWN --}}
+@if ($usr->can('heroLeftSliderAdd') || $usr->can('heroLeftSliderView'))
+<li class="nav-item">
+    <a class="nav-link" href="#heroSectionSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="heroSectionSubmenu">
+        <span>Hero Section</span>
+        <i data-feather="chevron-down" class="ms-auto"></i>
+    </a>
+    <ul class="collapse list-unstyled {{Route::is('hero-right-slider.*') || Route::is('hero-left-slider.index') || Route::is('hero-left-slider.create') || Route::is('hero-left-slider.edit') ? 'show' : '' }}" id="heroSectionSubmenu">
+        {{-- Updated Left Side Link --}}
+        @if ($usr->can('heroLeftSliderView'))
+        <li><a class="nav-link {{ Route::is('hero-left-slider.index') || Route::is('hero-left-slider.create') || Route::is('hero-left-slider.edit') ? 'active' : '' }}" href="{{ route('hero-left-slider.index') }}">Left Side</a></li>
+        @endif
+         @if ($usr->can('heroRightSliderView'))
+        <li><a class="nav-link {{ Route::is('hero-right-slider.*') ? 'active' : '' }}" href="{{ route('hero-right-slider.index') }}">Right Side</a></li>
+        @endif
+    </ul>
+</li>
+@endif
+{{-- END NEW HERO SECTION DROPDOWN --}}
                         @if ($usr->can('sidebarMenuView'))
                          <li><a class="nav-link {{ Route::is('sidebar-menu.control.index')  ? 'active' : '' }}" href="{{route('sidebar-menu.control.index')}}">Side Bar</a></li>
                           @endif
                           @if ($usr->can('offerSectionControlView'))
-                          <li><a class="nav-link {{ Route::is('offer-section.control.index')  ? 'active' : '' }}" href="{{route('offer-section.control.index')}}">Offer Section</a></li>
+                          <li><a class="nav-link {{ Route::is('offer-section.control.index')  ? 'active' : '' }}" href="{{route('offer-section.control.index')}}">Combo Offer</a></li>
                           @endif
                           @if ($usr->can('sliderSectionView'))
                           <li><a class="nav-link {{ Route::is('slider.control.index')  ? 'active' : '' }}" href="{{route('slider.control.index')}}">Slider Section</a></li>
