@@ -15,7 +15,7 @@
                             @csrf
                             <div class="mb-3">
                                 <label for="image" class="form-label">Upload New Banner Image*</label>
-                                <input type="file" name="image" id="image" class="form-control" required>
+                                <input type="file" accept="image/webp" name="image" id="image" class="form-control" required>
                                 <small class="form-text text-muted">Recommended dimensions: 1200px width and 400px height.</small>
                             </div>
                             

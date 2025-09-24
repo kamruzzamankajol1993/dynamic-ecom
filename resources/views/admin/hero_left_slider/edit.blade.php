@@ -21,7 +21,7 @@
                     <div class="mb-3"><label for="subtitle" class="form-label">Subtitle</label><input type="text" name="subtitle" id="subtitle" class="form-control" value="{{ $heroLeftSlider->subtitle }}"></div>
                     <div class="mb-3">
     <label for="image" class="form-label">Image</label>
-    <input type="file" name="image" id="image" class="form-control" accept="image/*">
+    <input type="file" name="image" accept="image/webp" id="image" class="form-control" accept="image/*">
     <small class="form-text text-muted">Recommended dimensions: 680px width and 695px height. (Only upload to change)</small>
     
     {{-- Current Image Display --}}

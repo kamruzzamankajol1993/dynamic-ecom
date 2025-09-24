@@ -20,7 +20,7 @@
                     <div class="mb-3"><label for="subtitle" class="form-label">Subtitle</label><input type="text" name="subtitle" id="subtitle" class="form-control"></div>
                   <div class="mb-3">
     <label for="image" class="form-label">Image*</label>
-    <input type="file" name="image" id="image" class="form-control" required accept="image/*">
+    <input type="file" accept="image/webp" name="image" id="image" class="form-control" required accept="image/*">
     <small class="form-text text-muted">Recommended dimensions: 680px width and 695px height.</small>
     
     {{-- New Image Preview Container --}}
