@@ -62,6 +62,7 @@
     <div class="container-fluid">
         <div class="mb-4">
             <h2>Edit Product: {{ $product->name }}</h2>
+            @include('flash_message')
         </div>
         <form action="{{ route('product.update', $product->id) }}" method="POST" enctype="multipart/form-data">
             @csrf

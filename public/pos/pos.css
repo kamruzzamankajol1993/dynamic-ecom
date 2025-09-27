@@ -150,23 +150,21 @@ body {
     font-size: 13px; 
 }
 
-/* --- Right Panel & Product Grid Styles (Corrected) --- */
+/* --- Right Panel & Product Grid Styles --- */
 .right-panel { 
     background-color: #FFFFFF; 
 }
 
-/* Set the parent container to a fixed height and make it a flex column */
 .main-container {
-    height: calc(100vh - 1rem); /* Full viewport height minus padding */
+    height: calc(100vh - 70px); /* Adjusted for header height */
     display: flex;
     flex-direction: column;
 }
 
-/* Make the product grid grow to fill remaining space and handle its own scrolling */
 .product-grid {
-    flex-grow: 1;         /* Allows this element to grow and take up available space */
-    overflow-y: auto;     /* Adds a vertical scrollbar ONLY when needed */
-    min-height: 0;        /* Essential for flex-grow to work correctly in a scrolling container */
+    flex-grow: 1;
+    overflow-y: auto;
+    min-height: 0;
     padding: 1rem;
     border: 1px solid #dee2e6;
     border-radius: .375rem;
@@ -270,105 +268,20 @@ body {
     color: white;
 }
 
-/* --- New Calculator Design --- */
-.calculator {
-    background: #2a3a48;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    width: 100%;
-    max-width: 320px;
-    margin: auto;
-}
+/*
+========================================
+--- MOBILE RESPONSIVE STYLES ---
+========================================
+*/
 
-.calculator-display {
-    width: 100%;
-    height: 70px;
-    background: #222e38;
-    color: #fff;
-    text-align: right;
-    padding: 20px;
-    font-size: 2.2rem;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    font-weight: 300;
-    overflow-x: auto;
-    white-space: nowrap;
-}
-
-.calculator-keys {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-}
-
-.calculator-keys button {
-    height: 60px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.5rem;
-    font-weight: 500;
-    background-color: #3b4d5e;
-    color: #fff;
-    transition: background-color 0.2s;
-    cursor: pointer;
-}
-
-.calculator-keys button:active { 
-    transform: scale(0.97); 
-}
-
-.calculator-keys button.key-operator { 
-    background-color: #ff9f0a; 
-}
-
-.calculator-keys button.key-func { 
-    background-color: #6c7a89; 
-}
-
-.calculator-keys button.key-equal { 
-    background-color: var(--primary-color); 
-}
-
-.calculator-keys button.key-zero { 
-    grid-column: span 2; 
-}
-
-.calculator-keys button:hover { 
-    filter: brightness(1.2); 
-}
-
-/* --- Mobile Responsive Styles --- */
 @media (max-width: 991.98px) {
-    .pos-header h4 { 
-        display: none; 
-    }
-    
-    .pos-header {
-        flex-direction: column;
-        padding: 8px;
-    }
-
-    .pos-header .d-flex {
-        width: 100%;
-        justify-content: center !important;
-    }
-
-    .pos-header .d-flex:first-child { 
-        margin-bottom: 8px; 
-    }
-
-    .pos-header .btn-group .btn {
-        font-size: 12px;
-        padding: 6px 10px;
-    }
-
     .pos-content { 
         padding: 4px; 
     }
 
-    .main-container, .product-grid {
-        height: auto;
+    /* --- General Layout --- */
+    .main-container {
+        height: auto; /* Allow height to be auto for stacked layout */
         max-height: none;
     }
 
@@ -376,11 +289,17 @@ body {
         margin-top: 0.5rem; 
     }
 
-    .cart-table thead { 
-        display: none; 
+    /* --- Cart Table on Mobile --- */
+    .cart-table-scroll {
+        max-height: none;      /* Remove fixed height */
+        overflow-y: visible; /* Remove internal scrollbar */
     }
 
-    .cart-table tr {
+    .cart-table thead { 
+        display: none; /* Hide table header on mobile */
+    }
+
+    .cart-table tbody tr {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -399,33 +318,66 @@ body {
         padding: 4px 0; 
     }
 
-    .cart-table td:nth-of-type(1) { width: 10%; order: 1; }
-    .cart-table td:nth-of-type(2) { display: none; }
-    .cart-table td:nth-of-type(3) { width: 90%; order: 2; font-weight: 600; font-size: 1em; padding-left: 10px; }
-    .cart-table td:nth-of-type(4) { width: 60%; order: 3; padding-top: 10px; display: flex; align-items: center; }
-    .cart-table td:nth-of-type(4)::before { content: "Qty:"; font-weight: 500; margin-right: 10px; }
+    /* Flexbox ordering for table cells to create a card-like view */
+    .cart-table td:nth-of-type(1) { width: 10%; order: 1; } /* Checkbox */
+    .cart-table td:nth-of-type(2) { display: none; } /* # Number */
+    .cart-table td:nth-of-type(3) { width: 90%; order: 2; font-weight: 600; font-size: 1em; padding-left: 10px; } /* Item Name */
+    .cart-table td:nth-of-type(4) { width: 60%; order: 3; padding-top: 10px; display: flex; align-items: center; } /* Quantity */
+    .cart-table td:nth-of-type(4)::before { content: "Qty:"; font-weight: 500; margin-right: 10px; } /* Qty Label */
     .cart-table td:nth-of-type(4) .qty-control { margin: 0; }
-    .cart-table td:nth-of-type(5) { width: 40%; order: 4; justify-content: flex-end; font-weight: 600; padding-top: 10px; display: flex; }
-    .cart-table td:nth-of-type(6) { position: absolute; top: 10px; right: 0; width: auto; order: 5; }
+    .cart-table td:nth-of-type(5) { width: 40%; order: 4; justify-content: flex-end; font-weight: 600; padding-top: 10px; display: flex; } /* Price */
+    .cart-table td:nth-of-type(6) { position: absolute; top: 10px; right: 0; width: auto; order: 5; } /* Remove Button */
     
     .cart-table-header { 
         padding: 0.5rem; 
+        flex-direction: column;
+        gap: 0.5rem;
     }
 
     .cart-table-header .btn { 
         width: 100%; 
     }
 
+    /* --- Product Grid --- */
+    .product-grid { 
+        height: auto;
+        min-height: auto; /* Remove minimum height for natural flow */
+        border: none;
+        padding: 0.5rem;
+    }
+
     .action-buttons-bar { 
         justify-content: center; 
     }
 
-    .product-grid { 
-        min-height: 60vh; 
+    /* --- UPDATED HEADER STYLES --- */
+    .pos-header {
+        flex-direction: column; /* Stack the two button groups */
+        padding: 8px;
+    }
+
+    .pos-header > .d-flex {
+        width: 100%;
+        justify-content: center !important;
+    }
+
+    .pos-header > .d-flex:first-child {
+        margin-bottom: 8px;
+    }
+
+    .pos-header .btn-group {
+        flex-wrap: wrap; /* Allow buttons to wrap to the next line */
+        justify-content: center;
+    }
+    
+    .pos-header .btn-group .btn {
+        margin: 2px; /* Add a small gap between wrapped buttons */
+        flex-grow: 1; /* Allow buttons to grow to fill space */
     }
 }
 
 @media (max-width: 576px) {
+    /* --- Cart Summary on Small Screens --- */
     .cart-summary .d-flex {
         flex-direction: column;
         align-items: flex-start !important;
@@ -442,17 +394,32 @@ body {
     .cart-summary .d-flex p { 
         margin-bottom: 0; 
     }
+    
+    /* Handle radio buttons alignment */
+    .cart-summary .d-flex > div:has(.form-check-inline) {
+        align-self: flex-start !important;
+    }
 
+    /* Handle button groups */
     .cart-summary .btn-group, .cart-summary .d-flex.gap-2 {
         flex-direction: row;
         flex-wrap: wrap;
+        width: 100%;
     }
 
     .cart-summary .d-flex.gap-2 button { 
+        flex-basis: 48%; /* Allow two buttons per row */
         flex-grow: 1; 
     }
+    
+    /* Further refine header for very small screens */
+    .pos-header .btn-group .btn {
+        padding: 6px 10px; /* Make buttons a bit smaller */
+        font-size: 12px;
+    }
 
-    .pos-header .btn-group .btn { 
-        padding: 6px; 
+    /* Remove icon margin when text is hidden */
+    .pos-header .btn i[class*="me-"] {
+        margin-right: 0 !important;
     }
 }

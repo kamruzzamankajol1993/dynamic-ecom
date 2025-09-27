@@ -69,6 +69,7 @@ class HeroRightSliderController extends Controller
 
         if ($position === 'top') {
             $updateData['bundle_offer_id'] = $data['bundle_offer_id'];
+            $updateData['linkable_type'] = BundleOffer::class;
         } else {
             $updateData['linkable_type'] = $data['link_type'] === 'category' ? Category::class : ExtraCategory::class;
             $updateData['linkable_id'] = $data['link_id'];

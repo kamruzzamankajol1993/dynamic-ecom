@@ -6,16 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\FeaturedCategory;
 use Illuminate\Validation\Rule;
-
+use App\Models\ExtraCategory;
 class FeaturedCategoryController extends Controller
 {
     public function index()
     {
-        $options = [
-            'trending' => 'Trending',
-            'new' => 'New',
-            'discount' => 'Discount',
-        ];
+         $options = ExtraCategory::where('status', 1)->pluck('name', 'slug');
 
         $settings = FeaturedCategory::pluck('value', 'key')->all();
         
@@ -31,7 +27,7 @@ class FeaturedCategoryController extends Controller
 
     public function update(Request $request)
     {
-        $allowedValues = ['trending', 'new', 'discount'];
+          $allowedValues = ExtraCategory::where('status', 1)->pluck('slug')->toArray();
 
         $request->validate([
             'first_row' => ['nullable', 'string', Rule::in($allowedValues), 'different:second_row'],

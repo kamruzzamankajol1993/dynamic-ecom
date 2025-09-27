@@ -28,7 +28,7 @@
     <!-- Feather Icons -->
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     
-    <link rel="stylesheet" href="{{ asset('/') }}public/admin/assets/css/style.css">
+    <link rel="stylesheet" href="{{ asset('/') }}public/admin/assets/css/style.css?v=1">
      <link rel="stylesheet" href="{{asset('/')}}public/online/toastr.min.css">
     <link rel="stylesheet" href="{{ asset('/') }}public/parsely.css"/>
     
@@ -39,7 +39,7 @@
 {{-- Summernote CSS --}}
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css" integrity="sha512-q3eWabyZPc1XTCmF+8/LuE1ozpg5xxn7iO89yfSOd5/oKvyqLngoNGsx8jq92Y8eXJ/IRxQbEC+FGSYxtk2oiw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css" xintegrity="sha512-q3eWabyZPc1XTCmF+8/LuE1ozpg5xxn7iO89yfSOd5/oKvyqLngoNGsx8jq92Y8eXJ/IRxQbEC+FGSYxtk2oiw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
 
          /* --- Font & Layout Adjustments --- */
@@ -215,7 +215,7 @@
     font-size: 15px;
 }
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.css" integrity="sha512-f8gN/IhfI+0E9Fc/LKtjVq4ywfhYAVeMGKsECzDUHcFJ5teVwvKTqizm+5a84FINhfrgdvjX8hEJbem2io1iTA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.css" xintegrity="sha512-f8gN/IhfI+0E9Fc/LKtjVq4ywfhYAVeMGKsECzDUHcFJ5teVwvKTqizm+5a84FINhfrgdvjX8hEJbem2io1iTA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     @yield('css')
 </head>
 <body>
@@ -235,7 +235,10 @@
            
         </div>
     </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- NEW: Sidebar overlay for mobile -->
+    <div class="sidebar-overlay"></div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" xintegrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -251,16 +254,78 @@
         // Initialize Feather Icons
         feather.replace();
 
-        // Sidebar Toggle Functionality
-        document.getElementById('sidebarToggleBtn').addEventListener('click', function () {
-            document.querySelector('.wrapper').classList.toggle('sidebar-collapsed');
+        // --- UPDATED: Advanced Sidebar Toggle Functionality ---
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const wrapper = document.querySelector('.wrapper');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const sidebar = document.getElementById('sidebar');
+
+        function isMobile() {
+            return window.innerWidth <= 991.98;
+        }
+
+        function toggleSidebar() {
+            if (isMobile()) {
+                // Mobile behavior: Toggle a class that brings sidebar over the content
+                wrapper.classList.toggle('sidebar-mobile-active');
+                overlay.classList.toggle('active');
+            } else {
+                // Desktop behavior: Toggle a class that pushes content
+                wrapper.classList.toggle('sidebar-collapsed');
+            }
+        }
+
+        function closeMobileSidebar() {
+            if (isMobile()) {
+                wrapper.classList.remove('sidebar-mobile-active');
+                overlay.classList.remove('active');
+            }
+        }
+        
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', function() {
+             if (isMobile()) {
+                wrapper.classList.remove('sidebar-mobile-active');
+                overlay.classList.remove('active');
+             } else {
+                wrapper.classList.remove('sidebar-collapsed');
+             }
         });
+
+        // Event Listeners
+        if(sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', toggleSidebar);
+        if(overlay) overlay.addEventListener('click', closeMobileSidebar);
+
+        // Bonus: Close sidebar if a nav link is clicked on mobile
+        if(sidebar) {
+            sidebar.addEventListener('click', function(e) {
+                if (isMobile() && e.target.closest('.nav-link')) {
+                    // Check if it's not a dropdown toggle, which shouldn't close the sidebar
+                    if (!e.target.closest('.nav-link[data-bs-toggle="collapse"]')) {
+                        closeMobileSidebar();
+                    }
+                }
+            });
+        }
+        
+        // Adjust sidebar state on window resize
+        window.addEventListener('resize', function() {
+            if (!isMobile()) {
+                // If we resize to desktop view, remove mobile-specific classes
+                wrapper.classList.remove('sidebar-mobile-active');
+                overlay.classList.remove('active');
+            }
+        });
+
     </script>
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
     <script src="{{ asset('/')}}public/parsely1.js"></script>
     <script>
         $(document).ready(function() {
-            $('#summernote').summernote();
+            // This condition is to avoid re-initializing on pages that already do it.
+            if ($('.note-editor').length === 0) {
+                 $('#summernote').summernote();
+            }
         });
     </script>
 

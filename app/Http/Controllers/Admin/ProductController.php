@@ -225,10 +225,10 @@ try {
             }
              if ($request->has('extra_category_ids')) {
                 foreach ($request->extra_category_ids as $id) {
-                    $category = ExtraCategory::find($id);
-                    if ($category) {
+                    $categoryone = ExtraCategory::find($id);
+                    if ($categoryone) {
                         $product->assigns()->create([
-                            'category_id' => $id, 'category_name' => $category->name, 'type' => 'other'
+                            'category_id' => $id, 'category_name' => $categoryone->slug, 'type' => 'other'
                         ]);
                     }
                 }
@@ -425,6 +425,7 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
                 foreach ($finalCategoryIds as $catId) {
                     $product->assigns()->create([
                         'category_id' => $catId,
+                        'category_name' => 'cat',
                         'type' => 'product_category'
                     ]);
                 }
@@ -445,10 +446,10 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
             }
               if ($request->has('extra_category_ids')) {
                 foreach ($request->extra_category_ids as $id) {
-                    $category = ExtraCategory::find($id);
-                    if ($category) {
+                    $categoryone = ExtraCategory::find($id);
+                    if ($categoryone) {
                         $product->assigns()->create([
-                            'category_id' => $id, 'category_name' => $category->name, 'type' => 'other'
+                            'category_id' => $id, 'category_name' => $categoryone->slug, 'type' => 'other'
                         ]);
                     }
                 }
