@@ -13,6 +13,7 @@ class Coupon extends Model
         'code',
         'type',
         'value',
+         'start_date',
         'min_amount',
         'user_type',
         'product_ids',
@@ -26,6 +27,7 @@ class Coupon extends Model
     protected $casts = [
         'product_ids' => 'array',
         'category_ids' => 'array',
+        'start_date' => 'date',
         'expires_at' => 'date',
         'status' => 'boolean',
     ];

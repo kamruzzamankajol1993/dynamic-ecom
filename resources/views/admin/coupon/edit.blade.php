@@ -74,7 +74,7 @@ Coupon Management | {{ $ins_name }}
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="expires_at" class="form-label">Expires At (Optional)</label>
-                        <input type="date" class="form-control" id="expires_at" name="expires_at" value="{{ old('expires_at', $coupon->expires_at ? $coupon->expires_at->format('Y-m-d') : '') }}">
+                        <input type="date" class="form-control" id="expires_at" name="expires_at" value="{{ old('expires_at', $coupon->expires_at ? $coupon->expires_at->format('Y-m-d') : '') }}" required readonly>
                     </div>
                 </div>
                  <div class="row">

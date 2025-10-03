@@ -63,7 +63,8 @@ public function show(Coupon $coupon)
             'value' => 'required|numeric|min:0',
             'min_amount' => 'nullable|numeric|min:0',
             'usage_limit' => 'nullable|integer|min:1',
-            'expires_at' => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'expires_at' => 'nullable|date|after_or_equal:start_date',
         ]);
 
         if ($validator->fails()) {
@@ -93,7 +94,8 @@ public function show(Coupon $coupon)
             'value' => 'required|numeric|min:0',
             'min_amount' => 'nullable|numeric|min:0',
             'usage_limit' => 'nullable|integer|min:1',
-            'expires_at' => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'expires_at' => 'nullable|date|after_or_equal:start_date',
         ]);
 
         if ($validator->fails()) {

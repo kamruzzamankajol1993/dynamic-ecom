@@ -53,8 +53,8 @@ Coupon Management | {{ $ins_name }}
                         <input type="number" step="0.01" class="form-control" id="discount_value" name="discount_value" value="{{ old('discount_value') }}" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="expires_at" class="form-label">Expires At (Optional)</label>
-                        <input type="date" class="form-control" id="expires_at" name="expires_at" value="{{ old('expires_at') }}">
+                        <label for="expires_at" class="form-label">Expires At</label>
+                        <input type="date" class="form-control" id="expires_at" name="expires_at" value="{{ old('expires_at') }}" required readonly>
                     </div>
                 </div>
                 <div class="row">

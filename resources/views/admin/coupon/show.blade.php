@@ -75,6 +75,10 @@
                                 <span class="value">{{ $coupon->times_used }} / {{ $coupon->usage_limit ?? 'Unlimited' }} times</span>
                             </li>
                             <li>
+                                <span class="label">Starts At</span>
+                                <span class="value">{{ $coupon->start_date ? $coupon->start_date->format('d F, Y') : 'Immediately' }}</span>
+                            </li>
+                            <li>
                                 <span class="label">Expires At</span>
                                 <span class="value">{{ $coupon->expires_at ? $coupon->expires_at->format('d F, Y') : 'Never expires' }}</span>
                             </li>

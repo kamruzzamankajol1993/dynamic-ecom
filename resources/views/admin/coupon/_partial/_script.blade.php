@@ -9,7 +9,7 @@ $(document).ready(function() {
     $('.select2-edit').select2({ dropdownParent: $('#editModal') });
 
     // Initialize date pickers
-    $("#add_expires_at, #edit_expires_at").datepicker({
+    $("#add_expires_at, #edit_expires_at, #add_start_date, #edit_start_date").datepicker({
         dateFormat: 'yy-mm-dd',
         changeMonth: true,
         changeYear: true,
@@ -47,7 +47,7 @@ $(document).ready(function() {
             },
             error: function() {
                 spinner.hide();
-                tableBody.html('<tr><td colspan="8" class="text-center text-danger">Failed to load data.</td></tr>');
+                tableBody.html('<tr><td colspan="9" class="text-center text-danger">Failed to load data.</td></tr>');
                 paginationInfo.text('');
             }
         });
@@ -56,7 +56,7 @@ $(document).ready(function() {
     function renderTable(response) {
         const coupons = response.data;
         if (coupons.length === 0) {
-            tableBody.html('<tr><td colspan="8" class="text-center">No coupons found.</td></tr>');
+            tableBody.html('<tr><td colspan="9" class="text-center">No coupons found.</td></tr>');
             return;
         }
 
@@ -67,8 +67,9 @@ $(document).ready(function() {
             const statusBadge = coupon.status ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
             const value = coupon.type === 'percent' ? `${coupon.value}%` : new Intl.NumberFormat().format(coupon.value);
             const usage = `${coupon.times_used} / ${coupon.usage_limit || '∞'}`;
+            const startDate = coupon.start_date ? new Date(coupon.start_date).toLocaleDateString('en-GB') : 'N/A';
             const expiresAt = coupon.expires_at ? new Date(coupon.expires_at).toLocaleDateString('en-GB') : 'Never';
- // Define the showUrl for the new button
+ 
             let showUrl = "{{ route('coupon.show', ':id') }}";
             showUrl = showUrl.replace(':id', coupon.id);
             const row = `
@@ -78,6 +79,7 @@ $(document).ready(function() {
                     <td>${coupon.type.charAt(0).toUpperCase() + coupon.type.slice(1)}</td>
                     <td>${value}</td>
                     <td>${usage}</td>
+                    <td>${startDate}</td>
                     <td>${expiresAt}</td>
                     <td>${statusBadge}</td>
                     <td >
@@ -171,6 +173,7 @@ $(document).ready(function() {
             $('#edit_value').val(data.value);
             $('#edit_min_amount').val(data.min_amount);
             $('#edit_usage_limit').val(data.usage_limit);
+            $('#edit_start_date').val(data.start_date ? data.start_date.split('T')[0] : '');
             $('#edit_expires_at').val(data.expires_at ? data.expires_at.split('T')[0] : '');
             $('#edit_user_type').val(data.user_type);
             $('#edit_status').val(data.status ? 1 : 0);
@@ -204,9 +207,8 @@ $(document).ready(function() {
     });
 
     // Delete Button Click
-    // UPDATED DELETE BUTTON CLICK HANDLER
     $(document).on('click', '.btn-delete', function () {
-        const deleteButton = $(this); // Reference to the button
+        const deleteButton = $(this); 
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -217,7 +219,6 @@ $(document).ready(function() {
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Find the closest form and submit it
                 deleteButton.closest('form').submit();
             }
         });

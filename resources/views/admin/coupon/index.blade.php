@@ -72,7 +72,9 @@
                                 <th>Type</th>
                                 <th>Value</th>
                                 <th>Usage</th>
+                                                                <th>Start Date</th>
                                 <th>Expires At</th>
+
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>

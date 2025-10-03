@@ -15,7 +15,7 @@
                 <h6 class="card-subtitle mb-3 text-muted">Part of: {{ $offerProduct->bundleOffer->name }}</h6>
                 <hr>
                 <div class="row">
-                    <div class="col-md-4"><strong>Discount Price:</strong> {{ $offerProduct->discount_price ? '$' . number_format($offerProduct->discount_price, 2) : 'N/A' }}</div>
+                    <div class="col-md-4"><strong>Discount Price:</strong> {{ $offerProduct->discount_price ? '৳' . number_format($offerProduct->discount_price, 2) : 'N/A' }}</div>
                     <div class="col-md-4"><strong>Buy Quantity:</strong> {{ $offerProduct->buy_quantity }}</div>
                     <div class="col-md-4"><strong>Get Quantity:</strong> {{ $offerProduct->get_quantity }}</div>
                 </div>
