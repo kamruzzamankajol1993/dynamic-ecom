@@ -157,46 +157,50 @@
                     <div class="card-body">
                         <h5 class="card-title mb-4">Media</h5>
                         <div>
-    {{-- Thumbnail Images Section --}}
-    <div class="mb-3">
-        <h6 class="mb-2">Thumbnail Images</h6>
-        <div class="d-flex flex-wrap gap-2">
-            @if(!empty($product->thumbnail_image) && is_array($product->thumbnail_image))
-                @foreach($product->thumbnail_image as $image)
-                    <img src="{{ asset('public/uploads/'.$image) }}" class="img-thumbnail" style="height: 80px; width: 80px; object-fit: cover;" alt="Thumbnail">
-                @endforeach
-            @else
-                <p class="text-muted">No thumbnail images found.</p>
-            @endif
-        </div>
-    </div>
+                            {{-- Thumbnail Images Section --}}
+                            <div class="mb-3">
+                                <h6 class="mb-2">Thumbnail Images</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @if(!empty($product->thumbnail_image) && is_array($product->thumbnail_image))
+                                        @foreach($product->thumbnail_image as $image)
+                                            <img src="{{ asset('public/uploads/'.$image) }}" class="img-thumbnail" style="height: 80px; width: 80px; object-fit: cover;" alt="Thumbnail">
+                                        @endforeach
+                                    @else
+                                        <p class="text-muted">No thumbnail images found.</p>
+                                    @endif
+                                </div>
+                            </div>
 
-    {{-- Main Images Section --}}
-    <div>
-        <h6 class="mb-2">Main Images</h6>
-        <div class="d-flex flex-wrap gap-2">
-            @if(!empty($product->main_image) && is_array($product->main_image))
-                @foreach($product->main_image as $image)
-                    <img src="{{ asset('public/uploads/'.$image) }}" class="img-thumbnail" style="height: 80px; width: 80px; object-fit: cover;" alt="Main Image">
-                @endforeach
-            @else
-                <p class="text-muted">No main images found.</p>
-            @endif
-        </div>
-    </div>
+                            {{-- Main Images Section --}}
+                            <div class="mb-3">
+                                <h6 class="mb-2">Main Images</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @if(!empty($product->main_image) && is_array($product->main_image))
+                                        @foreach($product->main_image as $image)
+                                            <img src="{{ asset('public/uploads/'.$image) }}" class="img-thumbnail" style="height: 80px; width: 80px; object-fit: cover;" alt="Main Image">
+                                        @endforeach
+                                    @else
+                                        <p class="text-muted">No main images found.</p>
+                                    @endif
+                                </div>
+                            </div>
 
-     {{-- Real Images Section --}}
+                             {{-- Real Images Section --}}
                             <div>
                                 <h6 class="mb-2">Real Images</h6>
                                 <div class="d-flex flex-wrap gap-2">
-                                    @forelse($product->real_image as $image)
-                                        <img src="{{ asset('public/uploads/'.$image) }}" class="img-thumbnail" style="height: 80px; width: 80px; object-fit: cover;" alt="Real Image">
-                                    @empty
+                                    {{-- ▼▼▼ THIS SECTION HAS BEEN UPDATED ▼▼▼ --}}
+                                    @if(!empty($product->real_image) && is_array($product->real_image))
+                                        @foreach($product->real_image as $image)
+                                            <img src="{{ asset('public/uploads/'.$image) }}" class="img-thumbnail" style="height: 80px; width: 80px; object-fit: cover;" alt="Real Image">
+                                        @endforeach
+                                    @else
                                         <p class="text-muted">No real images found.</p>
-                                    @endforelse
+                                    @endif
+                                    {{-- ▲▲▲ THIS SECTION HAS BEEN UPDATED ▲▲▲ --}}
                                 </div>
                             </div>
-</div>
+                        </div>
                         <hr>
                         <h5 class="card-title mb-3">Pricing & Organization</h5>
                         <ul class="list-group list-group-flush">
