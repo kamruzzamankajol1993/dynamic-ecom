@@ -377,6 +377,7 @@ $(document).ready(function() {
 
     $(document).on('click', '.page-link', function (e) { e.preventDefault(); if(!$(this).parent().hasClass('disabled')) { currentPage = $(this).data('page'); fetchData(); } });
     
+    // UPDATED: Single delete handler (no AJAX)
     $(document).on('click', '.btn-delete', function () {
         const id = $(this).data('id');
         Swal.fire({
@@ -387,15 +388,28 @@ $(document).ready(function() {
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
-                    url: routes.destroy(id),
-                    method: 'DELETE',
-                    data: { _token: routes.csrf },
-                    success: function() {
-                        Swal.fire('Deleted!', 'The order has been deleted.', 'success');
-                        fetchData();
-                    }
-                });
+                // Create a form dynamically
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = routes.destroy(id);
+
+                // Add CSRF token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = routes.csrf;
+                form.appendChild(csrfInput);
+
+                // Add method spoofing for DELETE
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+
+                // Append to body and submit
+                document.body.appendChild(form);
+                form.submit();
             }
         });
     });
@@ -438,16 +452,35 @@ $(document).ready(function() {
             let itemsHtml = '';
             if (data.order_details && data.order_details.length > 0) {
                 data.order_details.forEach(item => {
-                    const imageUrl = item.product.thumbnail_image && Array.isArray(item.product.thumbnail_image) && item.product.thumbnail_image.length > 0
-                        ? `{{ asset('public/uploads') }}/${item.product.thumbnail_image[0]}`
-                        : 'https://placehold.co/50x50';
-                    itemsHtml += `
-                        <tr>
-                            <td><img src="${imageUrl}" width="40" class="img-thumbnail"></td>
-                            <td>${item.product.name}<div class="text-muted">${item.unit_price} x ${item.quantity}</div></td>
-                            <td class="text-end">${item.subtotal}</td>
-                        </tr>`;
-                });
+    const imageUrl = item.product.thumbnail_image && Array.isArray(item.product.thumbnail_image) && item.product.thumbnail_image.length > 0
+        ? `{{ asset('public/uploads') }}/${item.product.thumbnail_image[0]}`
+        : 'https://placehold.co/50x50';
+
+    // --- START: Added logic to display color and size ---
+    let variantDetails = '';
+    if (item.color || item.size) {
+        variantDetails += '<div class="mt-1" style="font-size: 0.8em;">';
+        if (item.color && item.color !== 'null') {
+            variantDetails += `<span class="badge bg-light text-dark me-1">Color: ${item.color}</span>`;
+        }
+        if (item.size && item.size !== 'null') {
+            variantDetails += `<span class="badge bg-light text-dark">Size: ${item.size}</span>`;
+        }
+        variantDetails += '</div>';
+    }
+    // --- END: Added logic ---
+
+    itemsHtml += `
+        <tr>
+            <td><img src="${imageUrl}" width="40" class="img-thumbnail"></td>
+            <td>
+                ${item.product.name}
+                ${variantDetails}  {{-- This line is new --}}
+                <div class="text-muted">${item.unit_price} x ${item.quantity}</div>
+            </td>
+            <td class="text-end">${item.subtotal}</td>
+        </tr>`;
+});
             }
             const detailsHtml = `
                 <div class="invoice-details mb-4">
@@ -501,6 +534,7 @@ $(document).ready(function() {
     $(document).on('change', '.row-checkbox', function() {
         updateBulkActionUI();
     });
+    // UPDATED: Bulk delete handler
     $('#deleteAllBtn').on('click', function() {
         const selectedIds = $('.row-checkbox:checked').map((_, el) => el.value).get();
         Swal.fire({
@@ -515,10 +549,24 @@ $(document).ready(function() {
                     url: routes.destroyMultiple,
                     method: 'get',
                     data: { ids: selectedIds, _token: routes.csrf },
-                    success: function() {
-                        Swal.fire('Deleted!', 'The selected orders have been deleted.', 'success');
+                    // 1. Receive the full 'response' object
+                    success: function(response) { 
+                        Swal.fire('Deleted!', response.message, 'success');
+
+                        // 2. Add the logic to update tab counts
+                        if (response.statusCounts) {
+                            $('#orderStatusTabs .nav-link').each(function() {
+                                const statusKey = $(this).data('status');
+                                const count = response.statusCounts[statusKey] || 0;
+                                const currentText = $(this).text().replace(/\(\d+\)/, '').trim();
+                                $(this).text(`${currentText} (${count})`);
+                            });
+                        }
+                        
+                        // 3. Continue with existing logic
                         fetchData();
                         $('#deleteAllBtn').hide();
+                        $('#bulkActionContainer').hide(); // Hide the whole container
                         $('#selectAllCheckbox').prop('checked', false);
                     }
                 });

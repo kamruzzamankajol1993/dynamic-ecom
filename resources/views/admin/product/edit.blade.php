@@ -89,6 +89,21 @@
                                 </div>
                             </div>
                             <div class="mb-3">
+                                <label class="form-label">Real Images</label>
+                                <input type="file" accept="image/*" name="real_image[]" class="form-control" id="realImageInput" multiple>
+                                <div id="real-image-preview-container" class="mt-2 d-flex flex-wrap gap-2">
+                                    @if(is_array($product->real_image))
+                                        @foreach($product->real_image as $image)
+                                        <div class="existing-real-image-wrapper" style="position: relative;">
+                                            <img src="{{ asset('public/uploads/'.$image) }}" class="img-thumbnail" style="height: 80px; width: 80px; object-fit: cover;">
+                                            <button type="button" class="btn btn-danger btn-sm delete-real-image-btn" style="position: absolute; top: 0; right: 0; padding: 2px 5px;">&times;</button>
+                                            <input type="hidden" name="delete_real_images[]" value="{{ $image }}" disabled>
+                                        </div>
+                                        @endforeach
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Product Name</label>
                                 <input type="text" name="name" class="form-control" value="{{ old('name', $product->name) }}" required>
                             </div>
@@ -544,105 +559,76 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Corrected Multiple Thumbnail Image Preview Logic ---
-const thumbnailInput = document.getElementById('thumbnailInput');
-const previewContainer = document.getElementById('thumbnail-preview-container');
-// Use a DataTransfer object to manage the file list
-const dataTransfer = new DataTransfer();
 
-function renderPreviews() {
-    // 1. IMPORTANT: Instead of clearing the whole container,
-    //    we only remove the wrappers for the *new* images we added previously.
-    const newImageWrappers = previewContainer.querySelectorAll('.new-thumbnail-wrapper');
-    newImageWrappers.forEach(wrapper => wrapper.remove());
+  // --- Generic Image Preview & Delete Handler ---
+    function setupImageManager(inputId, containerId, deleteBtnClass, existingWrapperClass, newWrapperClass, removePreviewBtnClass) {
+        const inputElement = document.getElementById(inputId);
+        const previewContainer = document.getElementById(containerId);
+        const dataTransfer = new DataTransfer();
 
-    // 2. Get the latest file list from our DataTransfer object
-    const files = Array.from(dataTransfer.files);
+        function renderPreviews() {
+            const newImageWrappers = previewContainer.querySelectorAll('.' + newWrapperClass);
+            newImageWrappers.forEach(wrapper => wrapper.remove());
 
-    // 3. Loop through the files and create the new previews
-    files.forEach((file, index) => {
-        if (!file.type.startsWith('image/')) { return; }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const wrapper = document.createElement('div');
-            // Add a specific class to identify these as NEW previews
-            wrapper.classList.add('new-thumbnail-wrapper');
-            wrapper.style.position = 'relative';
-
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.classList.add('img-thumbnail');
-            img.style.height = '80px';
-            img.style.width = '80px';
-            img.style.objectFit = 'cover';
-
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.innerHTML = '&times;';
-            removeBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'remove-preview-btn');
-            removeBtn.dataset.index = index; // Use index for removal
-            removeBtn.style.position = 'absolute';
-            removeBtn.style.top = '0';
-            removeBtn.style.right = '0';
-            removeBtn.style.padding = '0px 5px';
-            removeBtn.style.lineHeight = '1';
-
-            wrapper.appendChild(img);
-            wrapper.appendChild(removeBtn);
-            // Append the new wrapper to the end of the container
-            previewContainer.appendChild(wrapper);
-        };
-        reader.readAsDataURL(file);
-    });
-
-    // Finally, update the actual file input's file list
-    thumbnailInput.files = dataTransfer.files;
-}
-
-thumbnailInput.addEventListener('change', function() {
-    // Add the newly selected files to our DataTransfer object
-    for (const file of this.files) {
-        dataTransfer.items.add(file);
-    }
-    // Re-render the previews
-    renderPreviews();
-});
-
-previewContainer.addEventListener('click', function(e) {
-    // Handle removing a NEW image preview
-    if (e.target && e.target.classList.contains('remove-preview-btn')) {
-        const indexToRemove = parseInt(e.target.dataset.index, 10);
-        
-        // Create a new DataTransfer object without the removed file
-        const newFiles = new DataTransfer();
-        const currentFiles = Array.from(dataTransfer.files);
-        currentFiles.forEach((file, index) => {
-            if (index !== indexToRemove) {
-                newFiles.items.add(file);
-            }
-        });
-        
-        // Replace the old DataTransfer object with the new one
-        dataTransfer.items.clear();
-        for (const file of newFiles.files) {
-            dataTransfer.items.add(file);
+            const files = Array.from(dataTransfer.files);
+            files.forEach((file, index) => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const wrapper = document.createElement('div');
+                    wrapper.classList.add(newWrapperClass);
+                    wrapper.style.position = 'relative';
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('img-thumbnail');
+                    img.style.cssText = 'height: 80px; width: 80px; object-fit: cover;';
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.classList.add('btn', 'btn-danger', 'btn-sm', removePreviewBtnClass);
+                    removeBtn.dataset.index = index;
+                    removeBtn.style.cssText = 'position: absolute; top: 0; right: 0; padding: 0px 5px; line-height: 1;';
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(removeBtn);
+                    previewContainer.appendChild(wrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+            inputElement.files = dataTransfer.files;
         }
 
-        // Re-render the previews with the updated file list
-        renderPreviews();
-    }
+        inputElement.addEventListener('change', function() {
+            for (const file of this.files) dataTransfer.items.add(file);
+            renderPreviews();
+        });
 
-    // This part handles the existing images from the server and is unchanged
-    if (e.target && e.target.classList.contains('delete-image-btn')) {
-         const wrapper = e.target.closest('.existing-image-wrapper');
-            if (wrapper) {
-                wrapper.style.display = 'none';
-                const hiddenInput = wrapper.querySelector('input[name="delete_images[]"]');
-                if (hiddenInput) {
-                    hiddenInput.disabled = false;
+        previewContainer.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains(removePreviewBtnClass)) {
+                const indexToRemove = parseInt(e.target.dataset.index, 10);
+                const newFiles = new DataTransfer();
+                const currentFiles = Array.from(dataTransfer.files);
+                currentFiles.forEach((file, index) => {
+                    if (index !== indexToRemove) newFiles.items.add(file);
+                });
+                dataTransfer.items.clear();
+                for (const file of newFiles.files) dataTransfer.items.add(file);
+                renderPreviews();
+            }
+
+            if (e.target && e.target.classList.contains(deleteBtnClass)) {
+                const wrapper = e.target.closest('.' + existingWrapperClass);
+                if (wrapper) {
+                    wrapper.style.display = 'none';
+                    const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+                    if (hiddenInput) hiddenInput.disabled = false;
                 }
             }
+        });
     }
-});
+
+    // Initialize for both thumbnail and real images
+    setupImageManager('thumbnailInput', 'thumbnail-preview-container', 'delete-image-btn', 'existing-image-wrapper', 'new-thumbnail-wrapper', 'remove-preview-btn');
+    setupImageManager('realImageInput', 'real-image-preview-container', 'delete-real-image-btn', 'existing-real-image-wrapper', 'new-real-image-wrapper', 'remove-real-preview-btn');
 });
 </script>
  <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>

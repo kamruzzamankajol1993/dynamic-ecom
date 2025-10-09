@@ -184,6 +184,18 @@
             @endif
         </div>
     </div>
+
+     {{-- Real Images Section --}}
+                            <div>
+                                <h6 class="mb-2">Real Images</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @forelse($product->real_image as $image)
+                                        <img src="{{ asset('public/uploads/'.$image) }}" class="img-thumbnail" style="height: 80px; width: 80px; object-fit: cover;" alt="Real Image">
+                                    @empty
+                                        <p class="text-muted">No real images found.</p>
+                                    @endforelse
+                                </div>
+                            </div>
 </div>
                         <hr>
                         <h5 class="card-title mb-3">Pricing & Organization</h5>

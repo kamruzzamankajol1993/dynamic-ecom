@@ -28,6 +28,7 @@ return new class extends Migration
             $table->decimal('purchase_price', 10, 2);
             $table->json('main_image')->nullable();
             $table->json('thumbnail_image')->nullable();
+            $table->json('real_image')->nullable();
             $table->boolean('status')->default(1);
             $table->softDeletes();
             $table->timestamps();

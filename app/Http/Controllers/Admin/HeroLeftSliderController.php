@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\File;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Support\Str;
 use App\Models\Product;  // <<< 1. IMPORT PRODUCT MODEL
-use App\Models\Category; 
+use App\Models\Category;
+use App\Models\BundleOffer;
 class HeroLeftSliderController extends Controller
 {
     public function index()
@@ -18,31 +19,46 @@ class HeroLeftSliderController extends Controller
         return view('admin.hero_left_slider.index', compact('sliders'));
     }
 
-     public function create()
+      public function create()
     {
-        // <<< 3. FETCH PRODUCTS AND CATEGORIES FOR THE DROPDOWN >>>
         $products = Product::where('status', 1)->orderBy('name')->get(['name', 'id']);
         $categories = Category::where('status', 1)->orderBy('name')->get(['name', 'id']);
-        return view('admin.hero_left_slider.create', compact('products', 'categories'));
+        $bundleOffers = BundleOffer::where('status', 1)->orderBy('name')->get(['name', 'id']); // <<< FETCH BUNDLE OFFERS
+        return view('admin.hero_left_slider.create', compact('products', 'categories', 'bundleOffers')); // <<< PASS TO VIEW
     }
 
     public function store(Request $request)
     {
-        // <<< MODIFIED: New, more robust validation logic >>>
         $request->validate([
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
             'image' => 'required|image|mimes:jpeg,png,jpg,webp',
-            'link_type' => 'required|in:category,product',
+            'link_type' => 'required|in:category,product,bundle_offer', // <<< ADD BUNDLE_OFFER TO VALIDATION
             'category_id' => 'nullable|required_if:link_type,category|exists:categories,id',
-    'product_id' => 'nullable|required_if:link_type,product|exists:products,id',
+            'product_id' => 'nullable|required_if:link_type,product|exists:products,id',
+            'bundle_offer_id' => 'nullable|required_if:link_type,bundle_offer|exists:bundle_offers,id', // <<< VALIDATE BUNDLE_OFFER_ID
         ]);
 
         $path = $this->uploadImage($request->file('image'));
         
-        // <<< MODIFIED: Determine linkable_id and linkable_type on the server >>>
-        $linkId = $request->link_type === 'product' ? $request->product_id : $request->category_id;
-        $linkableType = $request->link_type === 'product' ? Product::class : Category::class;
+        $linkId = null;
+        $linkableType = null;
+
+        // <<< LOGIC TO HANDLE ALL LINK TYPES >>>
+        switch ($request->link_type) {
+            case 'product':
+                $linkId = $request->product_id;
+                $linkableType = Product::class;
+                break;
+            case 'category':
+                $linkId = $request->category_id;
+                $linkableType = Category::class;
+                break;
+            case 'bundle_offer':
+                $linkId = $request->bundle_offer_id;
+                $linkableType = BundleOffer::class;
+                break;
+        }
 
         HeroLeftSlider::create([
             'title' => $request->title,
@@ -55,16 +71,25 @@ class HeroLeftSliderController extends Controller
         return redirect()->route('hero-left-slider.index')->with('success', 'Slider created successfully.');
     }
 
+    public function edit(HeroLeftSlider $heroLeftSlider)
+    {
+        $products = Product::where('status', 1)->orderBy('name')->get(['name', 'id']);
+        $categories = Category::where('status', 1)->orderBy('name')->get(['name', 'id']);
+        $bundleOffers = BundleOffer::where('status', 1)->orderBy('name')->get(['name', 'id']); // <<< FETCH BUNDLE OFFERS
+        return view('admin.hero_left_slider.edit', compact('heroLeftSlider', 'products', 'categories', 'bundleOffers')); // <<< PASS TO VIEW
+    }
+
     public function update(Request $request, HeroLeftSlider $heroLeftSlider)
     {
-        // <<< MODIFIED: New, more robust validation logic >>>
         $request->validate([
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp',
-            'link_type' => 'required|in:category,product',
-           'category_id' => 'nullable|required_if:link_type,category|exists:categories,id',
-    'product_id' => 'nullable|required_if:link_type,product|exists:products,id',
+            'link_type' => 'required|in:category,product,bundle_offer', // <<< ADD BUNDLE_OFFER TO VALIDATION
+            'category_id' => 'nullable|required_if:link_type,category|exists:categories,id',
+            'product_id' => 'nullable|required_if:link_type,product|exists:products,id',
+            'bundle_offer_id' => 'nullable|required_if:link_type,bundle_offer|exists:bundle_offers,id', // <<< VALIDATE BUNDLE_OFFER_ID
+            'status' => 'required|boolean',
         ]);
 
         $path = $heroLeftSlider->image;
@@ -73,9 +98,24 @@ class HeroLeftSliderController extends Controller
             $path = $this->uploadImage($request->file('image'));
         }
         
-        // <<< MODIFIED: Determine linkable_id and linkable_type on the server >>>
-        $linkId = $request->link_type === 'product' ? $request->product_id : $request->category_id;
-        $linkableType = $request->link_type === 'product' ? Product::class : Category::class;
+        $linkId = null;
+        $linkableType = null;
+        
+        // <<< LOGIC TO HANDLE ALL LINK TYPES >>>
+        switch ($request->link_type) {
+            case 'product':
+                $linkId = $request->product_id;
+                $linkableType = Product::class;
+                break;
+            case 'category':
+                $linkId = $request->category_id;
+                $linkableType = Category::class;
+                break;
+            case 'bundle_offer':
+                $linkId = $request->bundle_offer_id;
+                $linkableType = BundleOffer::class;
+                break;
+        }
 
         $heroLeftSlider->update([
             'title' => $request->title,
@@ -90,13 +130,7 @@ class HeroLeftSliderController extends Controller
     }
     
 
-    public function edit(HeroLeftSlider $heroLeftSlider)
-    {
-        // <<< 4. FETCH PRODUCTS AND CATEGORIES FOR THE DROPDOWN >>>
-        $products = Product::where('status', 1)->orderBy('name')->get(['name', 'id']);
-        $categories = Category::where('status', 1)->orderBy('name')->get(['name', 'id']);
-        return view('admin.hero_left_slider.edit', compact('heroLeftSlider', 'products', 'categories'));
-    }
+    
 
   
 

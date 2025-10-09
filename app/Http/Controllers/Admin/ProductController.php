@@ -159,6 +159,7 @@ try {
             'base_price' => 'required|numeric|min:0',
             'purchase_price' => 'required|numeric|min:0',
             'thumbnail_image.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'real_image.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'size_chart_id' => 'nullable|exists:size_charts,id',
             'chart_entries' => 'nullable|array',
         ]);
@@ -176,6 +177,13 @@ try {
 
                  foreach ($request->file('thumbnail_image') as $image) {
                     $mainPaths[] = $this->uploadImage($image, 'products/thumbnails');
+                }
+            }
+
+            $realImagePaths = [];
+            if ($request->hasFile('real_image')) {
+                foreach ($request->file('real_image') as $image) {
+                    $realImagePaths[] = $this->uploadRealImage($image, 'products/reals');
                 }
             }
 
@@ -197,6 +205,7 @@ try {
                 'discount_price' => $request->discount_price,
                 'thumbnail_image' => $thumbnailPaths,
                 'main_image' => $mainPaths,
+                'real_image' => $realImagePaths,
                 'status' => $request->status ?? 1,
             ]);
 
@@ -336,8 +345,10 @@ try {
             'purchase_price' => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|lt:base_price',
             'thumbnail_image.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'variants' => 'nullable|array',
-            'delete_images' => 'nullable|array',
+            'real_image.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+                'variants' => 'nullable|array',
+                'delete_images' => 'nullable|array',
+                'delete_real_images' => 'nullable|array',
         ]);
 
         //dd($request->all());
@@ -398,6 +409,22 @@ try {
             }
             
             // --- END OF REVISED IMAGE HANDLING LOGIC ---
+             // --- Real Image Handling ---
+                $existingReals = $product->real_image ?? [];
+                if ($request->has('delete_real_images')) {
+                    foreach ($request->input('delete_real_images') as $pathToDelete) {
+                        $this->deleteImage($pathToDelete);
+                        if (($key = array_search($pathToDelete, $existingReals)) !== false) {
+                            unset($existingReals[$key]);
+                        }
+                    }
+                }
+                $finalReals = array_values($existingReals);
+                if ($request->hasFile('real_image')) {
+                    foreach ($request->file('real_image') as $image) {
+                        $finalReals[] = $this->uploadRealImage($image, 'products/reals');
+                    }
+                }
 $primaryCategoryId = $request->category_ids[0] ?? null;
             $product->update([
                 'name' => $request->name,
@@ -415,6 +442,7 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
                 'discount_price' => $request->discount_price,
                 'thumbnail_image' => $finalThumbnails, // Save the updated array of thumbnails
                 'main_image' => $finalMains, 
+                'real_image' => $finalReals,
                 'status' => $request->status ?? 1,
             ]);
 
@@ -516,6 +544,15 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
             Log::error('Error updating product: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Something went wrong while updating the product.')->withInput();
         }
+    }
+
+     private function uploadRealImage($image, $directory)
+    {
+        $imageName = Str::uuid() . '.webp';
+        $destinationPath = public_path('uploads/' . $directory);
+        if (!File::isDirectory($destinationPath)) File::makeDirectory($destinationPath, 0777, true, true);
+        Image::read($image->getRealPath())->save($destinationPath . '/' . $imageName, 100);
+        return $directory . '/' . $imageName;
     }
  private function getAllCategoryIdsWithParents(array $selectedIds): array
     {
@@ -649,6 +686,30 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
         } catch (\Exception $e) {
             Log::error('Error deleting image: ' . $e->getMessage());
             // We don't re-throw here because a failed image deletion might not be a critical error.
+        }
+    }
+
+    public function bulkStatusUpdate(Request $request)
+    {
+        try {
+            $request->validate([
+                'ids' => 'required|array',
+                'ids.*' => 'integer|exists:products,id',
+                'status' => 'required|boolean',
+            ]);
+
+            $productIds = $request->input('ids');
+            $status = $request->input('status');
+
+            Product::whereIn('id', $productIds)->update(['status' => $status]);
+
+            return response()->json(['message' => 'Product statuses updated successfully.']);
+
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'Invalid data provided.'], 422);
+        } catch (\Exception $e) {
+            Log::error('Error in bulk status update: ' . $e->getMessage());
+            return response()->json(['message' => 'An error occurred.'], 500);
         }
     }
     

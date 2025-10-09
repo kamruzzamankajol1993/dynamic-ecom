@@ -442,7 +442,8 @@ $(document).ready(function() {
         const variant = productData.variants.find(v => v.color_name === selectedColor);
         if (variant && variant.sizes) {
             variant.sizes.forEach(size => {
-                sizeSelect.append(`<option value="${size.name}" data-price="${size.additional_price || 0}">${size.name}</option>`);
+                // **MODIFIED**: Added data-quantity to store available stock
+                sizeSelect.append(`<option value="${size.name}" data-price="${size.additional_price || 0}" data-quantity="${size.quantity || 0}">${size.name} (${size.quantity} pcs)</option>`);
             });
         }
         sizeSelect.trigger('change');
@@ -450,11 +451,33 @@ $(document).ready(function() {
 
     $('#product-rows-container').on('change', '.size-select', function() {
         const row = $(this).closest('tr');
-        const productId = row.find('input[name$="[product_id]"]').val();
-        const productData = productsCache[productId];
-        const additionalPrice = parseFloat($(this).find('option:selected').data('price')) || 0;
-        const basePrice = parseFloat(productData.base_price);
-        row.find('.unit-price').val((basePrice + additionalPrice).toFixed(2)).trigger('input');
+        const quantityInput = row.find('.quantity');
+
+        if ($(this).val()) { // Check if a valid size is selected
+            const selectedOption = $(this).find('option:selected');
+            const productId = row.find('input[name$="[product_id]"]').val();
+            const productData = productsCache[productId];
+            const additionalPrice = parseFloat(selectedOption.data('price')) || 0;
+            const availableQuantity = parseInt(selectedOption.data('quantity')) || 0;
+            const basePrice = parseFloat(productData.base_price);
+
+            row.find('.unit-price').val((basePrice + additionalPrice).toFixed(2));
+
+            // **NEW**: Set max attribute and placeholder for quantity
+            quantityInput.attr('max', availableQuantity);
+            quantityInput.attr('placeholder', `Max: ${availableQuantity}`);
+            
+            // **NEW**: Reset quantity if it exceeds the new max
+            if (parseInt(quantityInput.val()) > availableQuantity) {
+                quantityInput.val(1);
+            }
+        } else {
+            // **NEW**: Reset if "Select Size" is chosen
+            row.find('.unit-price').val('');
+            quantityInput.removeAttr('max').attr('placeholder', '');
+        }
+
+        quantityInput.trigger('input'); // Trigger calculation
     });
 
     function calculateFinalTotals() {

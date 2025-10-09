@@ -20,26 +20,23 @@
                     <div class="mb-3"><label for="title" class="form-label">Title*</label><input type="text" name="title" id="title" class="form-control" value="{{ $heroLeftSlider->title }}" required></div>
                     <div class="mb-3"><label for="subtitle" class="form-label">Subtitle</label><input type="text" name="subtitle" id="subtitle" class="form-control" value="{{ $heroLeftSlider->subtitle }}"></div>
                     <div class="mb-3">
-    <label for="image" class="form-label">Image</label>
-    <input type="file" name="image" accept="image/webp" id="image" class="form-control" accept="image/*">
-    <small class="form-text text-muted">Recommended dimensions: 680px width and 695px height. (Only upload to change)</small>
-    
-    {{-- Current Image Display --}}
-    <div class="mt-2">
-        <p class="mb-1">Current Image:</p>
-        <img src="{{ asset('public/'.$heroLeftSlider->image) }}" alt="Current Image" class="img-thumbnail" style="max-height: 100px;">
-    </div>
-
-    {{-- New Image Preview Container --}}
-    <div class="mt-2" id="image-preview-div" style="display: none;">
-        <p class="mb-1">New Image Preview:</p>
-        <img id="image-preview" src="#" alt="New Image Preview" class="img-thumbnail" style="max-height: 150px;">
-    </div>
-</div>
+                        <label for="image" class="form-label">Image</label>
+                        <input type="file" name="image" accept="image/webp" id="image" class="form-control" accept="image/*">
+                        <small class="form-text text-muted">Recommended dimensions: 680px width and 695px height. (Only upload to change)</small>
+                        <div class="mt-2">
+                            <p class="mb-1">Current Image:</p>
+                            <img src="{{ asset('public/'.$heroLeftSlider->image) }}" alt="Current Image" class="img-thumbnail" style="max-height: 100px;">
+                        </div>
+                        <div class="mt-2" id="image-preview-div" style="display: none;">
+                            <p class="mb-1">New Image Preview:</p>
+                            <img id="image-preview" src="#" alt="New Image Preview" class="img-thumbnail" style="max-height: 150px;">
+                        </div>
+                    </div>
                     
                     @php
                         $isProduct = $heroLeftSlider->linkable_type === App\Models\Product::class;
                         $isCategory = $heroLeftSlider->linkable_type === App\Models\Category::class;
+                        $isBundleOffer = $heroLeftSlider->linkable_type === App\Models\BundleOffer::class;
                     @endphp
 
                     <div class="mb-3">
@@ -52,8 +49,12 @@
                             <input class="form-check-input" type="radio" name="link_type" id="type_product" value="product" @if($isProduct) checked @endif>
                             <label class="form-check-label" for="type_product">Product</label>
                         </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="link_type" id="type_bundle" value="bundle_offer" @if($isBundleOffer) checked @endif>
+                            <label class="form-check-label" for="type_bundle">Bundle Offer</label>
+                        </div>
                     </div>
-                    {{-- <<< FIXED: Added name="category_id" >>> --}}
+
                     <div id="category-select-div" class="mb-3" style="{{ $isCategory ? '' : 'display:none;' }}">
                         <label for="category_id" class="form-label d-block">Select Category</label>
                         <select name="category_id" id="category_id" class="form-control select2" style="width: 100%">
@@ -62,12 +63,21 @@
                         </select>
                     </div>
 
-                    {{-- <<< FIXED: Added name="product_id" >>> --}}
                     <div id="product-select-div" class="mb-3" style="{{ $isProduct ? '' : 'display:none;' }}">
                         <label for="product_id" class="form-label d-block">Select Product</label>
                         <select name="product_id" id="product_id" class="form-control select2" style="width: 100%">
                             <option value="">Select a product...</option>
                             @foreach($products as $product)<option value="{{ $product->id }}" @if($isProduct && $heroLeftSlider->linkable_id == $product->id) selected @endif>{{ $product->name }}</option>@endforeach
+                        </select>
+                    </div>
+
+                    <div id="bundle-select-div" class="mb-3" style="{{ $isBundleOffer ? '' : 'display:none;' }}">
+                        <label for="bundle_offer_id" class="form-label d-block">Select Bundle Offer</label>
+                        <select name="bundle_offer_id" id="bundle_offer_id" class="form-control select2" style="width: 100%">
+                            <option value="">Select a bundle offer...</option>
+                            @foreach($bundleOffers as $bundle)
+                                <option value="{{ $bundle->id }}" @if($isBundleOffer && $heroLeftSlider->linkable_id == $bundle->id) selected @endif>{{ $bundle->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     
@@ -84,21 +94,22 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
-    // Initialize Select2
     $('.select2').select2();
 
-    // Show/hide dropdowns based on link type
     $('input[name="link_type"]').on('change', function() {
+        $('#category-select-div').hide();
+        $('#product-select-div').hide();
+        $('#bundle-select-div').hide();
+
         if ($(this).val() === 'category') {
             $('#category-select-div').show();
-            $('#product-select-div').hide();
-        } else {
+        } else if ($(this).val() === 'product') {
             $('#product-select-div').show();
-            $('#category-select-div').hide();
+        } else if ($(this).val() === 'bundle_offer') {
+            $('#bundle-select-div').show();
         }
     });
 
-    // --- SCRIPT FOR IMAGE PREVIEW ---
     $('#image').on('change', function() {
         const file = this.files[0];
         if (file) {

@@ -387,6 +387,7 @@ Route::resource('unit', UnitController::class);
 
 
 // Product Routes
+Route::post('products/bulk-status-update', [App\Http\Controllers\Admin\ProductController::class, 'bulkStatusUpdate'])->name('ajax.product.bulk-status-update');
     Route::get('ajax_products', [ProductController::class, 'data'])->name('ajax.product.data');
         Route::get('get_subcategories/{categoryId}', [ProductController::class, 'getSubcategories'])->name('get_subcategories');
     Route::get('get-sub-subcategories/{subcategoryId}', [ProductController::class, 'getSubSubcategories'])->name('get.sub-subcategories');

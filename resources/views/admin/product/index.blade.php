@@ -80,10 +80,24 @@
         <div class="card">
             <div class="card-body">
                 @include('flash_message')
+                <div class="mb-3">
+                    <div class="d-inline-block" style="display: none;" id="bulkActionContainer">
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle btn-sm" type="button" id="bulkActions" data-bs-toggle="dropdown" aria-expanded="false">
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActions">
+                                <li><a class="dropdown-item bulk-action-btn" href="#" data-status="1">Set to Active</a></li>
+                                <li><a class="dropdown-item bulk-action-btn" href="#" data-status="0">Set to Inactive</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered">
                         <thead>
                             <tr>
+                                  <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
                                 <th>Sl</th>
                                 <th>Image</th>
                                 <th class="sortable" data-column="name">Name</th>
@@ -141,6 +155,7 @@ $(document).ready(function() {
     var routes = {
         fetch: "{{ route('ajax.product.data') }}",
         destroy:"{{ route('ajax_products_delete') }}",
+        bulk_status_update: "{{ route('ajax.product.bulk-status-update') }}",
         csrf: "{{ csrf_token() }}"
     };
     
@@ -215,6 +230,7 @@ $(document).ready(function() {
                     });
 
                     rows += `<tr>
+                         <td><input class="form-check-input product-checkbox" type="checkbox" value="${product.id}"></td>
                         <td>${(res.current_page - 1) * 10 + i + 1}</td>
                         <td><img src="${imageUrl}" alt="${product.name}" width="50" class="img-thumbnail"></td>
                         <td>${product.name}</td>
@@ -309,6 +325,59 @@ $(document).ready(function() {
         $('#productCodeFilter').val('');
         $('#categoryFilter').val('');
         applyFiltersAndFetch();
+    });
+
+     // --- Bulk Action Logic ---
+    function updateBulkActionVisibility() {
+        const checkedCount = $('.product-checkbox:checked').length;
+        if (checkedCount > 0) {
+            $('#bulkActionContainer').show();
+        } else {
+            $('#bulkActionContainer').hide();
+        }
+    }
+
+    $('#selectAllCheckbox').on('click', function() {
+        $('.product-checkbox').prop('checked', $(this).prop('checked'));
+        updateBulkActionVisibility();
+    });
+
+    $(document).on('click', '.product-checkbox', function() {
+        $('#selectAllCheckbox').prop('checked', $('.product-checkbox:checked').length === $('.product-checkbox').length);
+        updateBulkActionVisibility();
+    });
+
+    $('.bulk-action-btn').on('click', function(e) {
+        e.preventDefault();
+        const status = $(this).data('status');
+        const selectedIds = $('.product-checkbox:checked').map((_, el) => $(el).val()).get();
+
+        if (selectedIds.length === 0) {
+            Swal.fire('No selection', 'Please select at least one product.', 'info');
+            return;
+        }
+
+        const statusText = status == 1 ? 'Active' : 'Inactive';
+        Swal.fire({
+            title: `Update ${selectedIds.length} products?`,
+            text: `Set status to "${statusText}" for all selected products.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, update!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: routes.bulk_status_update,
+                    method: 'POST',
+                    data: { _token: routes.csrf, ids: selectedIds, status: status },
+                    success: (response) => {
+                        Swal.fire('Success!', response.message, 'success');
+                        fetchData();
+                    },
+                    error: () => Swal.fire('Error!', 'Something went wrong.', 'error')
+                });
+            }
+        });
     });
 
     // Other event handlers

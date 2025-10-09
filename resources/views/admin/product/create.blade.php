@@ -78,6 +78,12 @@
                                 <input type="file" accept="image/webp" name="thumbnail_image[]" class="form-control" id="thumbnailInput" multiple>
                                 <div id="thumbnail-preview-container" class="mt-2 d-flex flex-wrap gap-2"></div>
                             </div>
+
+                             <div class="mb-3">
+                                <label class="form-label">Real Images</label>
+                                <input type="file" accept="image/*" name="real_image[]" class="form-control" id="realImageInput" multiple>
+                                <div id="real-image-preview-container" class="mt-2 d-flex flex-wrap gap-2"></div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label">Product Name</label>
                                 <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
@@ -428,76 +434,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- Multiple Thumbnail Image Preview Logic ---
-    const thumbnailInput = document.getElementById('thumbnailInput');
-    const previewContainer = document.getElementById('thumbnail-preview-container');
-    const dataTransfer = new DataTransfer();
+     // --- Generic Image Preview Logic ---
+    function createImagePreviewer(inputId, containerId) {
+        const inputElement = document.getElementById(inputId);
+        const previewContainer = document.getElementById(containerId);
+        const dataTransfer = new DataTransfer();
 
-    function renderPreviews() {
-        previewContainer.innerHTML = '';
-        const files = Array.from(thumbnailInput.files);
+        function renderPreviews() {
+            previewContainer.innerHTML = '';
+            const files = Array.from(inputElement.files);
 
-        files.forEach((file, index) => {
-            if (!file.type.startsWith('image/')) { return; }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const wrapper = document.createElement('div');
-                wrapper.classList.add('thumbnail-wrapper');
-                wrapper.style.position = 'relative';
+            files.forEach((file, index) => {
+                if (!file.type.startsWith('image/')) { return; }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.position = 'relative';
+                    
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('img-thumbnail');
+                    img.style.height = '80px';
+                    img.style.width = '80px';
+                    img.style.objectFit = 'cover';
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'remove-preview-btn');
+                    removeBtn.dataset.index = index;
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.top = '0';
+                    removeBtn.style.right = '0';
+                    removeBtn.style.padding = '0px 5px';
+                    removeBtn.style.lineHeight = '1';
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(removeBtn);
+                    previewContainer.appendChild(wrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        inputElement.addEventListener('change', function() {
+            for (const file of this.files) {
+                dataTransfer.items.add(file);
+            }
+            this.files = dataTransfer.files;
+            renderPreviews();
+        });
+
+        previewContainer.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('remove-preview-btn')) {
+                const indexToRemove = parseInt(e.target.dataset.index, 10);
+                const newFiles = new DataTransfer();
+                const currentFiles = Array.from(inputElement.files);
                 
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.classList.add('img-thumbnail');
-                img.style.height = '80px';
-                img.style.width = '80px';
-                img.style.objectFit = 'cover';
+                currentFiles.forEach((file, index) => {
+                    if (index !== indexToRemove) {
+                        newFiles.items.add(file);
+                    }
+                });
 
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.innerHTML = '&times;';
-                removeBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'remove-preview-btn');
-                removeBtn.dataset.index = index;
-                removeBtn.style.position = 'absolute';
-                removeBtn.style.top = '0';
-                removeBtn.style.right = '0';
-                removeBtn.style.padding = '0px 5px';
-                removeBtn.style.lineHeight = '1';
+                dataTransfer.items.clear();
+                Array.from(newFiles.files).forEach(file => dataTransfer.items.add(file));
+                inputElement.files = newFiles.files;
 
-                wrapper.appendChild(img);
-                wrapper.appendChild(removeBtn);
-                previewContainer.appendChild(wrapper);
-            };
-            reader.readAsDataURL(file);
+                renderPreviews();
+            }
         });
     }
 
-    thumbnailInput.addEventListener('change', function() {
-        for (const file of this.files) {
-            dataTransfer.items.add(file);
-        }
-        this.files = dataTransfer.files;
-        renderPreviews();
-    });
-
-    previewContainer.addEventListener('click', function(e) {
-        if (e.target && e.target.classList.contains('remove-preview-btn')) {
-            const indexToRemove = parseInt(e.target.dataset.index, 10);
-            const newFiles = new DataTransfer();
-            const currentFiles = Array.from(thumbnailInput.files);
-            
-            currentFiles.forEach((file, index) => {
-                if (index !== indexToRemove) {
-                    newFiles.items.add(file);
-                }
-            });
-
-            dataTransfer.items.clear();
-            Array.from(newFiles.files).forEach(file => dataTransfer.items.add(file));
-            thumbnailInput.files = newFiles.files;
-
-            renderPreviews();
-        }
-    });
+    // Initialize previewers for both inputs
+    createImagePreviewer('thumbnailInput', 'thumbnail-preview-container');
+    createImagePreviewer('realImageInput', 'real-image-preview-container');
 });
 </script>
  <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>

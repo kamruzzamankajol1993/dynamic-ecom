@@ -18,19 +18,16 @@
                     @csrf
                     <div class="mb-3"><label for="title" class="form-label">Title*</label><input type="text" name="title" id="title" class="form-control" required></div>
                     <div class="mb-3"><label for="subtitle" class="form-label">Subtitle</label><input type="text" name="subtitle" id="subtitle" class="form-control"></div>
-                  <div class="mb-3">
-    <label for="image" class="form-label">Image*</label>
-    <input type="file" accept="image/webp" name="image" id="image" class="form-control" required accept="image/*">
-    <small class="form-text text-muted">Recommended dimensions: 680px width and 695px height.</small>
-    
-    {{-- New Image Preview Container --}}
-    <div class="mt-2" id="image-preview-div" style="display: none;">
-        <p class="mb-1">Image Preview:</p>
-        <img id="image-preview" src="#" alt="Image Preview" class="img-thumbnail" style="max-height: 150px;">
-    </div>
-</div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Image*</label>
+                        <input type="file" accept="image/webp" name="image" id="image" class="form-control" required accept="image/*">
+                        <small class="form-text text-muted">Recommended dimensions: 680px width and 695px height.</small>
+                        <div class="mt-2" id="image-preview-div" style="display: none;">
+                            <p class="mb-1">Image Preview:</p>
+                            <img id="image-preview" src="#" alt="Image Preview" class="img-thumbnail" style="max-height: 150px;">
+                        </div>
+                    </div>
                     
-                    {{-- NEW DYNAMIC LINK SECTION --}}
                     <div class="mb-3">
                         <label class="form-label d-block">Link Type*</label>
                         <div class="form-check form-check-inline">
@@ -41,8 +38,12 @@
                             <input class="form-check-input" type="radio" name="link_type" id="type_product" value="product">
                             <label class="form-check-label" for="type_product">Product</label>
                         </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="link_type" id="type_bundle" value="bundle_offer">
+                            <label class="form-check-label" for="type_bundle">Bundle Offer</label>
+                        </div>
                     </div>
-                    {{-- <<< FIXED: Added name="category_id" >>> --}}
+
                     <div id="category-select-div" class="mb-3" style="display:none;">
                         <label for="category_id" class="form-label d-block">Select Category</label>
                         <select name="category_id" id="category_id" class="form-control select2" style="width: 100%">
@@ -51,12 +52,21 @@
                         </select>
                     </div>
                     
-                    {{-- <<< FIXED: Added name="product_id" >>> --}}
                     <div id="product-select-div" class="mb-3" style="display:none;">
                         <label for="product_id" class="form-label d-block">Select Product</label>
                         <select name="product_id" id="product_id" class="form-control select2" style="width: 100%">
                             <option value="">Select a product...</option>
                             @foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach
+                        </select>
+                    </div>
+
+                    <div id="bundle-select-div" class="mb-3" style="display:none;">
+                        <label for="bundle_offer_id" class="form-label d-block">Select Bundle Offer</label>
+                        <select name="bundle_offer_id" id="bundle_offer_id" class="form-control select2" style="width: 100%">
+                            <option value="">Select a bundle offer...</option>
+                            @foreach($bundleOffers as $bundle)
+                                <option value="{{ $bundle->id }}">{{ $bundle->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     
@@ -72,40 +82,32 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
-    // Initialize Select2
     $('.select2').select2();
 
-    // Show/hide dropdowns based on link type
     $('input[name="link_type"]').on('change', function() {
+        $('#category-select-div').hide();
+        $('#product-select-div').hide();
+        $('#bundle-select-div').hide();
+
         if ($(this).val() === 'category') {
             $('#category-select-div').show();
-            $('#product-select-div').hide();
-        } else {
+        } else if ($(this).val() === 'product') {
             $('#product-select-div').show();
-            $('#category-select-div').hide();
+        } else if ($(this).val() === 'bundle_offer') {
+            $('#bundle-select-div').show();
         }
     });
 
-    // --- NEW SCRIPT FOR IMAGE PREVIEW ---
     $('#image').on('change', function() {
-        // Get the selected file
         const file = this.files[0];
         if (file) {
-            // Create a new FileReader instance
             const reader = new FileReader();
-            
-            // Set the image source once the file is loaded
             reader.onload = function(e) {
                 $('#image-preview').attr('src', e.target.result);
             }
-            
-            // Display the preview container
             $('#image-preview-div').show();
-            
-            // Read the file as a Data URL
             reader.readAsDataURL(file);
         } else {
-            // Hide the preview if no file is selected
             $('#image-preview-div').hide();
         }
     });
