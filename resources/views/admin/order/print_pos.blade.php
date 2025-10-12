@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,13 +8,6 @@
             color: #333639;
             font-family: Arial, Helvetica, sans-serif;
         }
-
-        /* .body_size
-        {
-            width: 75mm;
-            height: 100mm;
-            padding: 3px;
-        } */
 
         @page  {
       size: 75mm 100mm;
@@ -122,33 +114,28 @@
     </style>
 </head>
 <body>
-
-
-
-            <table class="first_table">
+    {{-- The top part of the receipt is unchanged --}}
+    <table class="first_table">
         <tr>
             <td>
-                <!--<img src="{{ asset('public/new_admin/assets/images/rqr.jpg') }}" height="50" alt="">-->
             </td>
             <td>
                  @if($companyInfo && $companyInfo->logo)
-                    <img src="{{ asset('/') }}public/black.png" alt="Logo">
+                    <img src="{{ asset('/') }}{{$front_logo_name}}" style="height: 30px;" alt="Logo">
                 @endif
-                <p style="font-weight: bold;">Merchant No: {{ $companyInfo->phone ?? '' }}</p>
+                <p style="font-weight: bold;">Merchant No: {{ $front_ins_phone ?? '' }}</p>
+                <p style="font-weight: bold;">{{ $front_ins_email ?? '' }}</p>
                 <h4>spotlightattires.com</h4>
             </td>
         </tr>
     </table>
-
     <hr>
-
     <table class="second_table">
         <tr>
             <td>Customer Name</td>
             <td>:{{ $order->customer->name }}</td>
         </tr>
         <tr>
-
             <td>Mobile Number</td>
             <td>:{{ $order->customer->phone }}</td>
         </tr>
@@ -156,100 +143,72 @@
             <td>Address</td>
             <td>:{{ $order->shipping_address }}</td>
         </tr>
-        
-       
     </table>
     
-
-
-
-<table class="third_table">
-
-    <thead>
-    <tr>
-       <th style="width:5%">#</th>
-                <th style="width:55%">Item</th>
-                <th style="width:15%">Rate</th>
-                <th style="width:5%">Q.T</th>
-                <th style="width:20%">Amount</th>
-    </tr>
-    </thead>
-    <tbody>
-        @foreach($order->orderDetails as $detail)
+    {{-- --- TABLE UPDATED --- --}}
+    <table class="third_table">
+        <thead>
         <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $detail->product->name }} ({{ $detail->size }})</td>
-                            <td>{{ number_format($detail->unit_price, 2) }}</td>
-                            <td>{{ $detail->quantity }}</td>
-
-                            <td>{{ number_format($detail->subtotal, 2) }}</td>
-                        </tr>
-
-
-        @endforeach
-
-    </tbody>
-</table>
-
-<table class="forth_table">
-
-
-    <tr>
-    <td>
-                <h4>COD Charge:{{ number_format($order->cod, 2) }}
-                
-               
-                
-                
-                
-                
-                <br> <span style="font-size:8px;">Powered By ResNova Tech Limited</span>
-                </h4>
-            </td>
-    <td>
-      <table class="inner-table">
-        <tr>
-          <td>Sub Total</td>
-          <td>{{ number_format($order->subtotal, 2) }}</td>
+           <th style="width:5%; text-align: center;">#</th>
+           <th style="width:55%">Item</th>
+           <th style="width:15%; text-align: center;">Rate</th>
+           <th style="width:5%; text-align: center;">Q.T</th>
+           <th style="width:20%; text-align: center;">Amount</th>
         </tr>
-        <tr>
-          <td>Ship.Charge</td>
-          <td>{{ number_format($order->shipping_cost, 2) }}</td>
-        </tr>
-        @if($order->discount  == 0 )
-
-        @else
-        <tr>
-            <td>Discount</td>
-            <td>{{ number_format($order->discount, 2) }}</td>
-          </tr>
-          @endif
-        <tr style="font-weight:bold">
-          <td>Total</td>
-          <td>{{ number_format($order->total_amount, 2) }}</td>
-        </tr>
-
-
-
-      </table>
-    </td>
-  </tr>
-</table>
- @if(!empty($order->notes))
- <table class="second_table">
-       
-      
-          
-
+        </thead>
+        <tbody>
+            @foreach($order->orderDetails as $detail)
             <tr>
+                <td style="text-align: center;">{{ $loop->iteration }}</td>
+                <td>{{ $detail->product->name }} ({{ $detail->size }})</td>
+                <td style="text-align: center;">{{ number_format($detail->unit_price, 2) }}</td>
+                <td style="text-align: center;">{{ $detail->quantity }}</td>
+                <td style="text-align: center;">{{ number_format($detail->subtotal, 2) }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    {{-- --- END OF UPDATE --- --}}
 
+    <table class="forth_table">
+        <tr>
+        <td>
+            <h4>COD Charge:{{ number_format($order->cod, 2) }}
+            <br> <span style="font-size:8px;">Powered By ResNova Tech Limited</span>
+            </h4>
+        </td>
+        <td>
+          <table class="inner-table">
+            <tr>
+              <td>Sub Total</td>
+              <td>{{ number_format($order->subtotal, 2) }}</td>
+            </tr>
+            <tr>
+              <td>Ship.Charge</td>
+              <td>{{ number_format($order->shipping_cost, 2) }}</td>
+            </tr>
+            @if($order->discount  == 0 )
+    
+            @else
+            <tr>
+                <td>Discount</td>
+                <td>{{ number_format($order->discount, 2) }}</td>
+              </tr>
+              @endif
+            <tr style="font-weight:bold">
+              <td>Total</td>
+              <td>{{ number_format($order->total_amount, 2) }}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+     @if(!empty($order->notes))
+     <table class="second_table">
+        <tr>
             <td><b>Note:</b> {{ $order->notes }}</td>
         </tr>
-      
     </table>
-      @endif
+    @endif
 </body>
 </html>
-
-
-   

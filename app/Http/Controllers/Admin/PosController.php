@@ -51,11 +51,13 @@ class PosController extends Controller
      */
     public function store(Request $request)
     {
+           // --- UPDATED VALIDATION RULES ---
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
+            'phone' => 'required|string|max:20|unique:customers,phone',
+            'address' => 'required|string|max:255',
         ]);
+        // --- END OF UPDATE ---
 
         $customer = Customer::create($validated);
 
@@ -68,7 +70,7 @@ class PosController extends Controller
     public function getProducts(Request $request)
     {
         $query = Product::with('category')
-            ->where('status', true)
+            //->where('status', true)
             ->latest();
 
         // Handle search query
@@ -177,7 +179,7 @@ class PosController extends Controller
          /**
      * Store the POS order.
      */
-    public function storeOrder(Request $request)
+     public function storeOrder(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'customer_id' => 'required|exists:customers,id',
@@ -210,7 +212,7 @@ class PosController extends Controller
 
             $order = Order::create([
                 'customer_id' => $request->customer_id,
-                'invoice_no' => 'INV-' . time() . mt_rand(100, 999),
+                'invoice_no' => 'pos-' .mt_rand(1000, 9999),
                 'subtotal' => $request->subtotal,
                 'shipping_address' => $customer->address ?? 'N/A',
                 'billing_address' => $customer->address ?? 'N/A',
@@ -223,7 +225,7 @@ class PosController extends Controller
                 'due' => $request->due,
                 'payment_method' => $request->payment_method,
                 'payment_status' => $request->due > 0 ? 'unpaid' : 'paid',
-                'status' => 'pending',
+                'status' => 'pending', // Status is already correctly set to pending
                 'order_from' => 'pos',
                 'notes' => $request->notes,
             ]);
@@ -241,7 +243,8 @@ class PosController extends Controller
                         'subtotal' => $item['price'] * $item['quantity'],
                     ]);
 
-                    // Decrement stock for single product
+                    // --- STOCK DEDUCTION DISABLED ---
+                    /*
                     $variant = ProductVariant::find($item['variantId']);
                     if ($variant) {
                         $sizes = $variant->sizes;
@@ -258,10 +261,10 @@ class PosController extends Controller
                         $variant->sizes = $sizes;
                         $variant->save();
                     }
+                    */
+                    // --- END OF DISABLED BLOCK ---
+
                 }
-                // ==========================================================
-                // ========= UPDATED BUNDLE SAVING LOGIC STARTS HERE ========
-                // ==========================================================
                 elseif ($item['type'] === 'bundle') {
                     $isFirstBundleItem = true;
 
@@ -269,7 +272,6 @@ class PosController extends Controller
                     foreach ($item['products'] as $bundleProduct) {
                         $priceForThisItem = 0;
 
-                        // Assign the total bundle price to the first item, and 0 to the rest
                         if ($isFirstBundleItem) {
                             $priceForThisItem = $item['price'];
                             $isFirstBundleItem = false;
@@ -281,18 +283,19 @@ class PosController extends Controller
                             'product_variant_id' => $bundleProduct['variantId'],
                             'color' => $bundleProduct['colorName'],
                             'size' => $bundleProduct['sizeName'],
-                            'quantity' => 1, // Quantity for each item in a bundle is 1
+                            'quantity' => 1,
                             'unit_price' => $priceForThisItem,
                             'subtotal' => $priceForThisItem,
                         ]);
-
-                        // Decrement stock for each item in the bundle
+                        
+                        // --- STOCK DEDUCTION DISABLED FOR BUNDLES ---
+                        /*
                         $variant = ProductVariant::find($bundleProduct['variantId']);
                         if ($variant) {
                            $sizes = $variant->sizes;
                            foreach ($sizes as $key => $sizeInfo) {
                                if ($sizeInfo['size_id'] == $bundleProduct['sizeId']) {
-                                   $sizes[$key]['quantity'] -= 1; // Quantity is 1 for each bundle item
+                                   $sizes[$key]['quantity'] -= 1;
                                    if ($sizes[$key]['quantity'] < 0) {
                                        throw new \Exception('Not enough stock for bundle item ' . $bundleProduct['productName']);
                                    }
@@ -302,11 +305,10 @@ class PosController extends Controller
                            $variant->sizes = $sizes;
                            $variant->save();
                        }
+                       */
+                       // --- END OF DISABLED BLOCK ---
                     }
                 }
-                // ========================================================
-                // ========= UPDATED BUNDLE SAVING LOGIC ENDS HERE ==========
-                // ========================================================
             }
             
             DB::commit();

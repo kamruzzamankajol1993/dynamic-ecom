@@ -104,7 +104,7 @@ class ProductController extends Controller
         try {
         $query = Product::with(['category', 'variants.color']);
 
-        // --- NEW: Advanced Filtering Logic ---
+         // --- NEW: Advanced Filtering Logic ---
         if ($request->filled('product_name')) {
             $query->where('name', 'like',$request->product_name . '%');
         }
@@ -114,7 +114,10 @@ class ProductController extends Controller
         }
 
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+            // UPDATED: Filter based on the 'assigns' relationship instead of the direct column
+            $query->whereHas('assigns', function ($subQuery) use ($request) {
+                $subQuery->where('category_id', $request->category_id);
+            });
         }
         // --- END: Advanced Filtering Logic ---
 

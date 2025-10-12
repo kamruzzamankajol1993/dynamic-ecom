@@ -1,41 +1,5 @@
 @extends('admin.master.master')
 @section('title', 'Edit Customer')
-@section('css')
-<style>
-     /* --- Font & Layout Adjustments --- */
-    .main-content {
-        font-size: 0.9rem; /* Reduced base font size */
-    }
-    .main-content h2 { font-size: 1.6rem; }
-    .main-content h5 { font-size: 1.1rem; }
-
-    /* Forms & Buttons */
-    .form-control, .form-select, .btn {
-        font-size: 0.875rem; /* Consistent font size for form elements */
-    }
-    .form-label {
-        font-size: 0.85rem;
-        font-weight: 500;
-        margin-bottom: 0.3rem;
-    }
-    /* Cards */
-    .card-body, .card-header, .card-footer {
-        padding: 1rem;
-    }
-
-    /* Tables */
-    .table {
-        font-size: 0.875rem;
-    }
-    .table th, .table td {
-        padding: 0.6rem 0.5rem; /* Reduce padding for a tighter look */
-        vertical-align: middle;
-    }
-    .pagination {
-        font-size: 0.875rem;
-    }
-    </style>
-@endsection
 @section('body')
 <main class="main-content">
     <div class="container-fluid">
@@ -62,8 +26,10 @@
                             <input type="text" name="name" class="form-control" value="{{ old('name', $customer->name) }}" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Phone</label>
-                            <input type="text" name="phone" class="form-control" value="{{ old('phone', $customer->phone) }}" required>
+                            <label class="form-label">Mobile</label>
+                            <input type="number" name="phone" class="form-control" value="{{ old('phone', $customer->phone) }}" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value.length > 11) this.value = this.value.slice(0, 11);" 
+                                   pattern="[0-9]{11}" title="Please enter an 11-digit mobile number" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Type</label>
@@ -88,11 +54,21 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">New Password</label>
-                                <input type="password" name="password" class="form-control">
+                                <div class="input-group">
+                                    <input type="password" name="password" id="password" class="form-control">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#password">
+                                        <i class="fa fa-eye-slash"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Confirm New Password</label>
-                                <input type="password" name="password_confirmation" class="form-control">
+                                <div class="input-group">
+                                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#password_confirmation">
+                                        <i class="fa fa-eye-slash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     @else
@@ -102,7 +78,7 @@
                             <label class="form-check-label" for="createLoginAccount">Create Login Account for this Customer</label>
                         </div>
                         <div id="loginFields" style="display: none;">
-                            <div class="row">
+                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Email</label>
                                     <input type="email" name="email" class="form-control" value="{{ old('email') }}">
@@ -111,22 +87,34 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Password</label>
-                                    <input type="password" name="password" class="form-control">
+                                    <div class="input-group">
+                                        <input type="password" name="password" id="password" class="form-control">
+                                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#password">
+                                            <i class="fa fa-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                        <div id="passwordHelp" class="form-text">Password must be at least 8 characters long.</div>
+                    
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Confirm Password</label>
-                                    <input type="password" name="password_confirmation" class="form-control">
+                                    <div class="input-group">
+                                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#password_confirmation">
+                                            <i class="fa fa-eye-slash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     @endif
                     
                     <hr>
-                    <h5>Addresses</h5>
+                    <h5>Addresses <span class="text-danger">*</span></h5>
                     <div id="address-container">
-                        @foreach($customer->addresses as $index => $address)
+                        @forelse($customer->addresses as $index => $address)
                         <div class="row align-items-center mb-2 address-row">
-                            <div class="col-md-8">
+                            <div class="col-md-7">
                                 <input type="text" name="addresses[{{$index}}][address]" class="form-control" value="{{ $address->address }}" required>
                             </div>
                             <div class="col-md-3">
@@ -136,13 +124,33 @@
                                     <option value="Other" @selected($address->address_type == 'Other')>Other</option>
                                 </select>
                             </div>
+                            <div class="col-md-1 text-center">
+                                <label class="form-check-label" for="default_address_{{$index}}">Default</label>
+                                <input type="radio" name="default_address_index" value="{{$index}}" id="default_address_{{$index}}" class="form-check-input" @checked($address->is_default) required title="Select a default address">
+                            </div>
                             <div class="col-md-1">
+                                @if(!$loop->first)
                                 <button type="button" class="btn btn-danger btn-sm remove-address-btn">&times;</button>
+                                @endif
                             </div>
                         </div>
-                        @endforeach
+                        @empty
+                         <div class="row align-items-center mb-2 address-row">
+                            <div class="col-md-7"><input type="text" name="addresses[0][address]" class="form-control" placeholder="Enter full address" required></div>
+                            <div class="col-md-3">
+                                <select name="addresses[0][address_type]" class="form-select">
+                                    <option value="Home">Home</option><option value="Office">Office</option><option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1 text-center">
+                                <label class="form-check-label" for="default_address_0">Default</label>
+                                <input type="radio" name="default_address_index" value="0" id="default_address_0" class="form-check-input" checked required title="Select a default address">
+                            </div>
+                            <div class="col-md-1"></div>
+                        </div>
+                        @endforelse
                     </div>
-                    <button type="button" id="add-address-btn" class="btn btn-sm btn-success mt-2"><i class="fa fa-plus me-1"></i>Add Address</button>
+                    <button type="button" id="add-address-btn" class="btn btn-sm btn-success mt-2"><i class="fa fa-plus me-1"></i>Add Another Address</button>
                     
                     <div class="mt-4">
                         <button type="submit" class="btn btn-primary">Update Customer</button>
@@ -156,32 +164,28 @@
 @section('script')
 <script>
 $(document).ready(function() {
-    // Login fields toggle
     $('#createLoginAccount').on('change', function() {
         const loginFields = $('#loginFields');
         const isChecked = $(this).is(':checked');
         loginFields.toggle(isChecked);
-        loginFields.find('input').prop('required', isChecked);
+        loginFields.find('input[name="email"], input[name="password"]').prop('required', isChecked);
     }).trigger('change');
 
-    // Dynamic address fields
-    let addressIndex = {{ $customer->addresses->count() }};
+    let addressIndex = {{ $customer->addresses->count() > 0 ? $customer->addresses->count() : 1 }};
     $('#add-address-btn').on('click', function() {
         const addressHtml = `
             <div class="row align-items-center mb-2 address-row">
-                <div class="col-md-8">
-                    <input type="text" name="addresses[${addressIndex}][address]" class="form-control" placeholder="Enter full address" required>
-                </div>
+                <div class="col-md-7"><input type="text" name="addresses[${addressIndex}][address]" class="form-control" placeholder="Enter full address" required></div>
                 <div class="col-md-3">
                     <select name="addresses[${addressIndex}][address_type]" class="form-select">
-                        <option value="Home">Home</option>
-                        <option value="Office">Office</option>
-                        <option value="Other">Other</option>
+                        <option value="Home">Home</option><option value="Office">Office</option><option value="Other">Other</option>
                     </select>
                 </div>
-                <div class="col-md-1">
-                    <button type="button" class="btn btn-danger btn-sm remove-address-btn">&times;</button>
+                <div class="col-md-1 text-center">
+                    <label class="form-check-label" for="default_address_${addressIndex}">Default</label>
+                    <input type="radio" name="default_address_index" value="${addressIndex}" id="default_address_${addressIndex}" class="form-check-input" required title="Select a default address">
                 </div>
+                <div class="col-md-1"><button type="button" class="btn btn-danger btn-sm remove-address-btn">&times;</button></div>
             </div>`;
         $('#address-container').append(addressHtml);
         addressIndex++;
@@ -189,6 +193,38 @@ $(document).ready(function() {
 
     $('#address-container').on('click', '.remove-address-btn', function() {
         $(this).closest('.address-row').remove();
+    });
+
+    function validatePasswords() {
+        const password = $('#password');
+        const confirmPassword = $('#password_confirmation');
+        if (confirmPassword.val().length > 0 || password.val().length > 0) {
+            if (password.val() === confirmPassword.val()) {
+                password.removeClass('is-invalid').addClass('is-valid');
+                confirmPassword.removeClass('is-invalid').addClass('is-valid');
+            } else {
+                password.removeClass('is-valid').addClass('is-invalid');
+                confirmPassword.removeClass('is-valid').addClass('is-invalid');
+            }
+        } else {
+            password.removeClass('is-valid is-invalid');
+            confirmPassword.removeClass('is-valid is-invalid');
+        }
+    }
+
+    $('#password, #password_confirmation').on('keyup', validatePasswords);
+    
+    // Show/Hide Password functionality
+    $('form').on('click', '.toggle-password', function() {
+        const target = $($(this).data('target'));
+        const icon = $(this).find('i');
+        if (target.attr('type') === 'password') {
+            target.attr('type', 'text');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        } else {
+            target.attr('type', 'password');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        }
     });
 });
 </script>

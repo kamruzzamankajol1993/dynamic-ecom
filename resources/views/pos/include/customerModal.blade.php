@@ -8,7 +8,9 @@
           <div class="modal-body">
             <form id="addCustomerForm">
               <div class="mb-3"><label for="customer-name" class="col-form-label">Customer Name:</label><input type="text" class="form-control" id="customer-name-modal" required></div>
-              <div class="mb-3"><label for="customer-phone" class="col-form-label">Phone Number:</label><input type="text" class="form-control" id="customer-phone-modal"></div>
+             {{-- --- UPDATED LINE --- --}}
+              <div class="mb-3"><label for="customer-phone" class="col-form-label">Mobile Number:</label><input type="number" class="form-control" id="customer-phone-modal" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '');"></div>
+              {{-- --- END UPDATE --- --}}
               <div class="mb-3"><label for="customer-address" class="col-form-label">Address:</label><textarea class="form-control" id="customer-address-modal"></textarea></div>
             </form>
           </div>

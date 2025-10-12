@@ -169,6 +169,7 @@
                                 <th>Total Pay</th>
                                 <th>COD</th>
                                 <th>Pay Status</th>
+                                  <th>Payment Method</th>
                                 <th>Delivery Status</th>
                                 <th>Order From</th>
                                 <th>Details</th>
@@ -224,10 +225,16 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="detailsModalBody"></div>
+             {{-- --- MODAL FOOTER UPDATED --- --}}
             <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa fa-times me-1"></i> Close</button>
-    <a href="#" id="printOrderBtn" target="_blank" class="btn btn-primary"><i class="fa fa-print me-1"></i> Print</a>
-</div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa fa-times me-1"></i> Close</button>
+                <div class="btn-group">
+                    <a href="#" id="printOrderBtnA4" target="_blank" class="btn btn-primary"><i class="fa fa-print me-1"></i> A4</a>
+                    <a href="#" id="printOrderBtnA5" target="_blank" class="btn btn-secondary"><i class="fa fa-print me-1"></i> A5</a>
+                    <a href="#" id="printOrderBtnPOS" target="_blank" class="btn btn-success"><i class="fa fa-receipt me-1"></i> POS</a>
+                </div>
+            </div>
+            {{-- --- END OF UPDATE --- --}}
         </div>
     </div>
 </div>
@@ -290,7 +297,7 @@ $(document).ready(function() {
                     } else {
                         payStatusBadge = order.payment_status === 'paid' ? `<span class="badge bg-success">Paid</span>` : `<span class="badge bg-danger">Unpaid</span>`;
                     }
-
+const paymentMethod = order.payment_method ? order.payment_method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A';
                     const statusKey = order.status.replace(' ', ' ');
                       const deliveryStatusButton = `<button class="btn btn-sm btn-${statusColors[statusKey]} btn-update-status" data-id="${order.id}" data-status="${order.status}">${order.status.replace(/_/g, ' ').toUpperCase()}</button>`;
                     const detailsButton = `<button class="btn btn-sm btn-primary btn-details" data-id="${order.id}"><i class="fa fa-eye me-1"></i></button>`;
@@ -306,6 +313,7 @@ $(document).ready(function() {
                         <td>${order.total_pay}</td>
                         <td>${order.cod}</td>
                         <td>${payStatusBadge}</td>
+                        <td>${paymentMethod}</td>
                         <td>${deliveryStatusButton}</td>
                         <td>${orderFromBadge}</td>
                         <td>${detailsButton}</td>
@@ -452,41 +460,39 @@ $(document).ready(function() {
             let itemsHtml = '';
             if (data.order_details && data.order_details.length > 0) {
                 data.order_details.forEach(item => {
-    const imageUrl = item.product.thumbnail_image && Array.isArray(item.product.thumbnail_image) && item.product.thumbnail_image.length > 0
-        ? `{{ asset('public/uploads') }}/${item.product.thumbnail_image[0]}`
-        : 'https://placehold.co/50x50';
+                    const imageUrl = item.product.thumbnail_image && Array.isArray(item.product.thumbnail_image) && item.product.thumbnail_image.length > 0
+                        ? `{{ asset('public/uploads') }}/${item.product.thumbnail_image[0]}`
+                        : 'https://placehold.co/50x50';
 
-    // --- START: Added logic to display color and size ---
-    let variantDetails = '';
-    if (item.color || item.size) {
-        variantDetails += '<div class="mt-1" style="font-size: 0.8em;">';
-        if (item.color && item.color !== 'null') {
-            variantDetails += `<span class="badge bg-light text-dark me-1">Color: ${item.color}</span>`;
-        }
-        if (item.size && item.size !== 'null') {
-            variantDetails += `<span class="badge bg-light text-dark">Size: ${item.size}</span>`;
-        }
-        variantDetails += '</div>';
-    }
-    // --- END: Added logic ---
+                    let variantDetails = '';
+                    if (item.color || item.size) {
+                        variantDetails += '<div class="mt-1" style="font-size: 0.8em;">';
+                        if (item.color && item.color !== 'null') {
+                            variantDetails += `<span class="badge bg-light text-dark me-1">Color: ${item.color}</span>`;
+                        }
+                        if (item.size && item.size !== 'null') {
+                            variantDetails += `<span class="badge bg-light text-dark">Size: ${item.size}</span>`;
+                        }
+                        variantDetails += '</div>';
+                    }
 
-    itemsHtml += `
-        <tr>
-            <td><img src="${imageUrl}" width="40" class="img-thumbnail"></td>
-            <td>
-                ${item.product.name}
-                ${variantDetails}  {{-- This line is new --}}
-                <div class="text-muted">${item.unit_price} x ${item.quantity}</div>
-            </td>
-            <td class="text-end">${item.subtotal}</td>
-        </tr>`;
-});
+                    itemsHtml += `
+                        <tr>
+                            <td><img src="${imageUrl}" width="40" class="img-thumbnail"></td>
+                            <td>
+                                ${item.product.name}
+                                ${variantDetails}
+                                <div class="text-muted">${item.unit_price} x ${item.quantity}</div>
+                            </td>
+                            <td class="text-end">${item.subtotal}</td>
+                        </tr>`;
+                });
             }
             const detailsHtml = `
                 <div class="invoice-details mb-4">
                     <p><strong>Invoice id:</strong> <a href="#">${data.invoice_no}</a></p>
                     <p><strong>Billing Name:</strong> ${data.customer ? data.customer.name : 'N/A'} - ${data.customer ? data.customer.phone : 'N/A'}</p>
-                    <p><strong>Customer Type:</strong> <span class="badge bg-warning-soft text-warning">${data.customer ? data.customer.type : ''}</span></p>
+                    <p><strong>Customer Type:</strong> <span class="badge bg-success">${data.customer ? data.customer.type : ''}</span></p>
                     <p>${data.shipping_address}</p>
                 </div>
                 <table class="table invoice-items-table">
@@ -517,10 +523,17 @@ $(document).ready(function() {
                 <p><strong>Notes:</strong> ${data.notes || 'No notes for this order.'}</p>
             `;
             $('#detailsModalBody').html(detailsHtml);
-              $('#printOrderBtn').attr('href', `{{ url('order-print-pos') }}/${orderId}`);
+            
+            // --- JAVASCRIPT LOGIC UPDATED ---
+            $('#printOrderBtnA4').attr('href', `{{ url('order-print-a4') }}/${orderId}`);
+            $('#printOrderBtnA5').attr('href', `{{ url('order-print-a5') }}/${orderId}`);
+            $('#printOrderBtnPOS').attr('href', `{{ url('order-print-pos') }}/${orderId}`);
+            // --- END OF UPDATE ---
+
             detailsModal.show();
         });
     });
+
 
     function updateBulkActionUI() {
     const selectedCount = $('.row-checkbox:checked').length;
@@ -565,8 +578,7 @@ $(document).ready(function() {
                         
                         // 3. Continue with existing logic
                         fetchData();
-                        $('#deleteAllBtn').hide();
-                        $('#bulkActionContainer').hide(); // Hide the whole container
+                         updateBulkActionUI();
                         $('#selectAllCheckbox').prop('checked', false);
                     }
                 });
@@ -605,7 +617,7 @@ $('#applyBulkStatusBtn').on('click', function() {
                 }
 
                 fetchData();
-                $('#bulkActionContainer').hide();
+                  updateBulkActionUI();
                 $('#selectAllCheckbox').prop('checked', false);
                 $('#bulkStatusSelect').val(''); // Reset dropdown
             }).fail(function() {

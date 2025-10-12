@@ -16,6 +16,7 @@ class Customer extends Authenticatable
         'reward_points',
         'user_id',
         'slug',
+        'source',
         'type',
         'name',
         'email',
@@ -58,5 +59,30 @@ public function orders()
         if ($value) {
             $this->attributes['password'] = Hash::make($value);
         }
+    }
+
+     public function getAddressAttribute($value)
+    {
+        // If the 'address' column in the customers table has a value, return it first.
+        if ($value) {
+            return $value;
+        }
+
+        // Otherwise, try to find the default address from the related addresses table.
+        $defaultAddress = $this->addresses()->where('is_default', true)->first();
+
+        // If a default address is found, return its 'address' field.
+        if ($defaultAddress) {
+            return $defaultAddress->address;
+        }
+        
+        // As a final fallback, return the first available address if no default is set.
+        $firstAddress = $this->addresses()->first();
+        if ($firstAddress) {
+            return $firstAddress->address;
+        }
+
+        // If no address is found at all, return null.
+        return null;
     }
 }

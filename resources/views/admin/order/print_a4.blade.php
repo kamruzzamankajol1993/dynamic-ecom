@@ -6,12 +6,7 @@
     <style>
         body { font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-size: 12px; color: #333; }
         .invoice-box { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, .15); }
-        .header { display: table; width: 100%; margin-bottom: 20px; }
-        .header-left, .header-right { display: table-cell; vertical-align: top; }
-        .header-left { width: 60%; }
-        .header-right { text-align: right; }
-        .header-left img { max-height: 80px; max-width: 200px; }
-       .address-table { width: 100%; margin-bottom: 30px; }
+        .address-table { width: 100%; margin-bottom: 30px; }
         .items-table { width: 100%; line-height: inherit; text-align: left; border-collapse: collapse; }
         .items-table th { background: #eee; border-bottom: 1px solid #ddd; font-weight: bold; padding: 8px; }
         .items-table td { padding: 8px; border-bottom: 1px solid #eee; }
@@ -26,40 +21,46 @@
 </head>
 <body>
     <div class="invoice-box">
-        <div class="header">
-            <div class="header-left">
-                @if($companyInfo && $companyInfo->logo)
-                    <img src="{{ asset('/') }}public/black.png" alt="Company Logo">
-                @endif
-                <address>
-                    <strong>{{ $companyInfo->ins_name ?? '' }}</strong><br>
-                    {{ $companyInfo->address ?? '' }}<br>
-                    Phone: {{ $companyInfo->phone ?? '' }}
-                </address>
-            </div>
-            <div class="header-right">
-                <h2>INVOICE</h2>
-                <strong>Invoice #:</strong> {{ $order->invoice_no }}<br>
-                <strong>Date:</strong> {{ \Carbon\Carbon::parse($order->order_date)->format('d M, Y') }}<br>
-                <strong>Status:</strong> {{ strtoupper($order->status) }}
-            </div>
-        </div>
+        {{-- --- HEADER SECTION UPDATED TO USE A TABLE --- --}}
+        <table style="width: 100%; vertical-align: top; margin-bottom: 20px;">
+            <tr>
+                <td style="width: 50%; vertical-align: top;">
+                    @if($companyInfo && $companyInfo->logo)
+                        <img src="{{ asset('/') }}{{$front_logo_name}}" style="height: 30px; margin-bottom: 10px;" alt="Company Logo">
+                    @endif
+                    <address style="margin: 0; line-height: 1.5;">
+                        <strong>{{ $front_ins_name ?? '' }}</strong><br>
+                        {{ $front_ins_add ?? '' }}<br>
+                        Phone: {{ $front_ins_phone ?? '' }}<br>
+                        Email: {{ $front_ins_email ?? '' }}<br>
+                        Website: spotlightattires.com
+                    </address>
+                </td>
+                <td style="width: 50%; vertical-align: top; text-align: right; line-height: 1.5;">
+                    <h2 style="margin: 0 0 10px 0;">INVOICE</h2>
+                    <strong>Invoice #:</strong> {{ $order->invoice_no }}<br>
+                    <strong>Date:</strong> {{ \Carbon\Carbon::parse($order->order_date)->format('d M, Y') }}<br>
+                    <strong>Status:</strong> {{ strtoupper($order->status) }}
+                </td>
+            </tr>
+        </table>
+        {{-- --- END OF HEADER UPDATE --- --}}
 
         <table class="address-table">
-    <tr>
-        <td style="width: 50%; vertical-align: top;">
-            <strong>Billed To:</strong><br>
-            {{ $order->customer->name }}<br>
-            {{ $order->customer->address }}<br>
-            {{ $order->customer->phone }}
-        </td>
-        <td style="width: 50%; vertical-align: top; text-align: right;">
-            <strong>Shipped To:</strong><br>
-            {{ $order->customer->name }}<br>
-            {{ $order->shipping_address }}
-        </td>
-    </tr>
-</table>
+            <tr>
+                <td style="width: 50%; vertical-align: top;">
+                    <strong>Billed To:</strong><br>
+                    {{ $order->customer->name }}<br>
+                    {{ $order->customer->address }}<br>
+                    {{ $order->customer->phone }}
+                </td>
+                <td style="width: 50%; vertical-align: top; text-align: right;">
+                    <strong>Shipped To:</strong><br>
+                    {{ $order->customer->name }}<br>
+                    {{ $order->shipping_address }}
+                </td>
+            </tr>
+        </table>
 
         <table class="items-table">
             <thead>
@@ -90,10 +91,9 @@
                     <tr><td>Shipping:</td><td style="text-align: right;">{{ number_format($order->shipping_cost, 2) }}</td></tr>
                     <tr class="grand-total"><td>Grand Total:</td><td style="text-align: right;">{{ number_format($order->total_amount, 2) }}</td></tr>
                     <tr><td>Paid:</td><td style="text-align: right;">{{ number_format($order->total_pay, 2) }}</td></tr>
-                     {{-- COD Amount Added Here --}}
-            @if($order->cod > 0)
-                <tr><td>COD Amount:</td><td style="text-align: right;">{{ number_format($order->cod, 2) }}</td></tr>
-            @endif
+                    @if($order->cod > 0)
+                        <tr><td>COD Amount:</td><td style="text-align: right;">{{ number_format($order->cod, 2) }}</td></tr>
+                    @endif
                     <tr class="grand-total"><td>Due:</td><td style="text-align: right;">{{ number_format($order->due, 2) }}</td></tr>
                 </table>
             </div>

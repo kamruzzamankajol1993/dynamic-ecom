@@ -57,7 +57,7 @@
             };
             
             const setDefaultCustomer = () => {
-                customerSearchInput.value = 'Walk in customer';
+                customerSearchInput.value = '';
                 selectedCustomerIdInput.value = '1'; 
             };
             setDefaultCustomer();
@@ -65,7 +65,7 @@
 
             customerSearchInput.addEventListener('keyup', async () => {
                 const query = customerSearchInput.value;
-                if (query.length < 2) { 
+                if (query.length < 1) { 
                     customerResultsContainer.style.display = 'none';
                     return;
                 }
@@ -106,16 +106,23 @@
                 }
             });
 
+                 // --- SCRIPT UPDATE STARTS HERE ---
             saveCustomerBtn.addEventListener('click', async () => {
-                const name = document.getElementById('customer-name-modal').value;
-                const phone = document.getElementById('customer-phone-modal').value;
-                const address = document.getElementById('customer-address-modal').value;
+                const name = document.getElementById('customer-name-modal').value.trim();
+                const phone = document.getElementById('customer-phone-modal').value.trim();
+                const address = document.getElementById('customer-address-modal').value.trim();
 
-                if (name.trim() === '') {
+                // 1. Client-side validation for all required fields
+                let errors = [];
+                if (name === '') errors.push('Customer name is required.');
+                if (phone === '') errors.push('Phone number is required.');
+                if (address === '') errors.push('Address is required.');
+
+                if (errors.length > 0) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Validation Error',
-                        text: 'Customer name is required.',
+                        html: errors.join('<br>'),
                     });
                     return;
                 }
@@ -129,10 +136,21 @@
                         },
                         body: JSON.stringify({ name, phone, address })
                     });
+                    
+                    // 2. Specific handling for server-side validation errors (e.g., unique phone)
+                    if (response.status === 422) { // Unprocessable Entity
+                        const errorData = await response.json();
+                        const errorMessages = Object.values(errorData.errors).flat();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Failed',
+                            html: errorMessages.join('<br>'),
+                        });
+                        return; 
+                    }
 
                     if (!response.ok) {
-                        // You can add more specific error handling here based on response status
-                        throw new Error('Failed to save customer');
+                        throw new Error(`Server responded with status: ${response.status}`);
                     }
 
                     const newCustomer = await response.json();
@@ -154,10 +172,11 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Creation Failed',
-                        text: 'Could not save the customer. Please check the console for details.',
+                        text: 'An unexpected error occurred. Please try again.',
                     });
                 }
             });
+            // --- SCRIPT UPDATE ENDS HERE ---
 
 
             // --- Original Calculator Script ---

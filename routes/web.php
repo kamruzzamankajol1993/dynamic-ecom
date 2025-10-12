@@ -75,6 +75,7 @@ use App\Http\Controllers\Admin\ExtraCategoryController;
 use App\Http\Controllers\Admin\HeroLeftSliderController;
 use App\Http\Controllers\Admin\HeroRightSliderController;
 use App\Http\Controllers\Admin\FooterBannerController;
+use App\Http\Controllers\Admin\AreaWisePriceController;
 // Route::get('/', function () {
 //     return view('welcome');
 // });
@@ -141,6 +142,8 @@ Route::controller(AuthController::class)->group(function () {
 
 
 Route::group(['middleware' => ['auth']], function() {
+   Route::get('area-wise-price/data', [AreaWisePriceController::class, 'data'])->name('area-wise-price.data'); // ADD THIS LINE
+     Route::resource('area-wise-price', AreaWisePriceController::class);
 
     Route::get('footer-banner', [FooterBannerController::class, 'index'])->name('footer-banner.index');
 Route::post('footer-banner', [FooterBannerController::class, 'update'])->name('footer-banner.update');

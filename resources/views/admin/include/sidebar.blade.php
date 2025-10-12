@@ -433,7 +433,14 @@
                         <span>SMS Setting</span>
                     </a>
                 </li>
-
+{{-- NEW AREA WISE PRICE LINK --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ Route::is('area-wise-price.*')  ? 'active' : '' }}" href="{{ route('area-wise-price.index') }}">
+                        <i data-feather="map-pin"></i>
+                        <span>Area Wise Price(Text)</span>
+                    </a>
+                </li>
+                {{-- END NEW LINK --}}
                 <li class="nav-item">
                     <a class="nav-link" href="#accountSettingsSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="accountSettingsSubmenu">
                         <i data-feather="user"></i>

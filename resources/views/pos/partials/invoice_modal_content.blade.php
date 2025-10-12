@@ -1,9 +1,14 @@
 <div class="invoice-box">
-    <h4 class="text-center">Your Company Name</h4>
-    <p class="text-center small">123 Main Street, Dhaka<br>Phone: 0123456789</p>
+    <h4 class="text-center">{{$front_ins_name}}</h4>
+    <p class="text-center small">{{$front_ins_add}}<br>
+        Phone: {{$front_ins_phone}}<br>
+        Email: {{$front_ins_email}}<br>
+        Website: spotlightattires.com
+    </p>
+
     <hr>
     <p><strong>Invoice #:</strong> {{ $order->invoice_no }}<br>
-       <strong>Date:</strong> {{ $order->created_at->format('d/m/Y h:i A') }}<br>
+       <strong>Date:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
        <strong>Customer:</strong> {{ $order->customer->name }}</p>
     <hr>
     <table class="table table-sm">

@@ -128,7 +128,7 @@ class OrderController extends Controller
     {
         try {
         // Generate a unique invoice number
-        $newInvoiceId = 'INV-' . strtoupper(uniqid());
+        $newInvoiceId = 'INV-' .mt_rand(1000, 9999);
         
         // Fetch customers for the dropdown
         $customers = Customer::where('status', 1)->get(['id', 'name', 'phone']);

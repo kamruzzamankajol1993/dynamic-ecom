@@ -77,9 +77,7 @@
 <main class="main-content">
     <div class="container-fluid">
         <div class="row">
-            <!-- Main Content Column -->
             <div class="col-lg-8">
-                <!-- Invoice Header -->
                 <div class="card">
                     <div class="card-body">
                         <div class="invoice-header">
@@ -122,7 +120,6 @@
                     </div>
                 </div>
 
-                <!-- Order Items -->
                 <div class="card">
                     <div class="card-header">Order Items</div>
                     <div class="card-body p-0">
@@ -153,7 +150,29 @@
                     </div>
                 </div>
 
-                <!-- Payment History -->
+                <div class="card">
+                    <div class="card-header">Payment Details</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="section-title">Payment Information</h6>
+                                <p class="mb-2"><strong>Method:</strong> {{ $order->payment_method ? Str::title(str_replace('_', ' ', $order->payment_method)) : 'N/A' }}</p>
+                                <p class="mb-2"><strong>Status:</strong> <span class="badge bg-{{ $order->payment_status == 'paid' ? 'success' : 'warning' }}">{{ ucfirst($order->payment_status ?? 'unpaid') }}</span></p>
+                                <p class="mb-0"><strong>Term:</strong> {{ $order->payment_term ? Str::title(str_replace('_', ' ', $order->payment_term)) : 'N/A' }}</p>
+                            </div>
+
+                            @if($order->payment_method == 'bkash')
+                            <div class="col-md-6">
+                                 <h6 class="section-title">bKash Transaction Details</h6>
+                                 <p class="mb-2"><strong>Transaction ID:</strong> {{ $order->trxID ?? 'N/A' }}</p>
+                                 <p class="mb-0"><strong>Status Message:</strong> <span class="badge bg-info text-dark">{{ $order->statusMessage ?? 'N/A' }}</span></p>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+
                 <div class="card">
                     <div class="card-header">Payment History</div>
                     <div class="card-body">
@@ -187,7 +206,6 @@
                 </div>
             </div>
 
-            <!-- Sidebar Column -->
             <div class="col-lg-4">
                 <div class="card summary-card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -237,7 +255,6 @@
     </div>
 </main>
 
-<!-- Make Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">

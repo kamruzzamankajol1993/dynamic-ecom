@@ -10,38 +10,6 @@
         height: 1.5rem;
         border-width: .2em;
     }
-     /* --- Font & Layout Adjustments --- */
-    .main-content {
-        font-size: 0.9rem; /* Reduced base font size */
-    }
-    .main-content h2 { font-size: 1.6rem; }
-    .main-content h5 { font-size: 1.1rem; }
-
-    /* Forms & Buttons */
-    .form-control, .form-select, .btn {
-        font-size: 0.875rem; /* Consistent font size for form elements */
-    }
-    .form-label {
-        font-size: 0.85rem;
-        font-weight: 500;
-        margin-bottom: 0.3rem;
-    }
-    /* Cards */
-    .card-body, .card-header, .card-footer {
-        padding: 1rem;
-    }
-
-    /* Tables */
-    .table {
-        font-size: 0.875rem;
-    }
-    .table th, .table td {
-        padding: 0.6rem 0.5rem; /* Reduce padding for a tighter look */
-        vertical-align: middle;
-    }
-    .pagination {
-        font-size: 0.875rem;
-    }
 </style>
 @endsection
 @section('body')
@@ -70,6 +38,7 @@
                                 <th>Total Buy</th>
                                 <th class="sortable" data-column="type">Type</th>
                                 <th class="sortable" data-column="status">Status</th>
+                                 <th>Source</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -102,7 +71,7 @@ $(document).ready(function() {
 
     const loaderRow = `
         <tr class="loader-row">
-            <td colspan="8">
+            <td colspan="9">
                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
@@ -118,7 +87,7 @@ $(document).ready(function() {
         }, function (res) {
             let rows = '';
             if (res.data.length === 0) {
-                rows = '<tr><td colspan="8" class="text-center">No customers found.</td></tr>';
+                rows = '<tr><td colspan="9" class="text-center">No customers found.</td></tr>';
             } else {
                 res.data.forEach((customer, i) => {
                     const statusBadge = customer.status == 1 ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
@@ -136,6 +105,15 @@ $(document).ready(function() {
                         addressHtml = customer.addresses[0].address;
                     }
 
+                     // --- NEW LOGIC FOR SOURCE BADGE ---
+                    let sourceBadge = '';
+                    if (customer.source === 'admin') {
+                        sourceBadge = '<span class="badge bg-info">Admin</span>';
+                    } else {
+                        sourceBadge = '<span class="badge bg-secondary">Website</span>';
+                    }
+                    // --- END OF NEW LOGIC ---
+
                     // Format the total buy amount
                     const totalBuy = customer.orders_sum_total_amount ? parseFloat(customer.orders_sum_total_amount).toFixed(2) : '0.00';
 
@@ -147,6 +125,7 @@ $(document).ready(function() {
                         <td>৳${totalBuy}</td>
                         <td>${typeText}</td>
                         <td>${statusBadge}</td>
+                        <td>${sourceBadge}</td>
                         <td class="d-flex gap-2">
                             <a href="${showUrl}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
                             <a href="${editUrl}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
