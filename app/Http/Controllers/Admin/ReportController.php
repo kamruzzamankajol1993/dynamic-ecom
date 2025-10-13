@@ -399,7 +399,7 @@ class ReportController extends Controller
      */
     public function salesReportData(Request $request)
     {
-        $query = Order::query();
+        $query = Order::query()->where('status', 'delivered');
 
         // Set date range based on the filter
         $startDate = Carbon::now()->startOfDay();
@@ -433,6 +433,7 @@ class ReportController extends Controller
 
         // Fetch summary data for the cards
         $summary = DB::table('orders')
+            ->where('status', 'delivered')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->select(
                 DB::raw('COUNT(id) as total_orders'),
@@ -443,6 +444,7 @@ class ReportController extends Controller
         
         // Fetch data for the chart
         $chartDataQuery = DB::table('orders')
+            ->where('status', 'delivered')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->select(
                 DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d') as date"),
@@ -504,6 +506,7 @@ class ReportController extends Controller
 
         $query = Customer::join('orders', 'customers.id', '=', 'orders.customer_id')
             ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->where('orders.status', 'delivered')
             ->select(
                 'customers.id',
                 'customers.name',
@@ -569,6 +572,7 @@ class ReportController extends Controller
             ->join('order_details', 'products.id', '=', 'order_details.product_id')
             ->join('orders', 'order_details.order_id', '=', 'orders.id')
             ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->where('orders.status', 'delivered')
             ->select(
                 'categories.name as category_name',
                 DB::raw('SUM(order_details.quantity) as total_products_sold'),
@@ -603,7 +607,7 @@ class ReportController extends Controller
         $year = $request->input('year', Carbon::now()->year);
         $month = $request->input('month', Carbon::now()->month);
         
-        $revenueQuery = Order::query();
+        $revenueQuery = Order::query()->where('status', 'delivered');
         $expenseQuery = Expense::query();
 
         if ($filter === 'monthly') {
@@ -681,6 +685,7 @@ class ReportController extends Controller
                 DB::raw('SUM(total_amount) as selling_price'),
                 DB::raw('SUM(shipping_cost) as delivery_charge')
             )
+            ->where('status', 'delivered')
             ->groupBy('month')
             ->get()
             ->keyBy('month');
@@ -690,6 +695,7 @@ class ReportController extends Controller
             ->join('orders', 'order_details.order_id', '=', 'orders.id')
             ->join('products', 'order_details.product_id', '=', 'products.id')
             ->whereYear('orders.created_at', $queryYear)
+            ->where('orders.status', 'delivered')
             ->select(
                 DB::raw("DATE_FORMAT(orders.created_at, '%Y-%m') as month"),
                 DB::raw('SUM(order_details.quantity * products.purchase_price) as production_cost')
