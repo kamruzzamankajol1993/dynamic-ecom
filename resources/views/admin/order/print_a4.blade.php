@@ -94,7 +94,7 @@
                     @if($order->cod > 0)
                         <tr><td>COD Amount:</td><td style="text-align: right;">{{ number_format($order->cod, 2) }}</td></tr>
                     @endif
-                    <tr class="grand-total"><td>Due:</td><td style="text-align: right;">{{ number_format($order->due, 2) }}</td></tr>
+                    {{-- <tr class="grand-total"><td>Due:</td><td style="text-align: right;">{{ number_format($order->due, 2) }}</td></tr> --}}
                 </table>
             </div>
         </div>

@@ -67,6 +67,9 @@ class PosController extends Controller
      /**
      * Fetch products for the POS grid via AJAX.
      */
+     /**
+     * Fetch products for the POS grid via AJAX.
+     */
     public function getProducts(Request $request)
     {
         $query = Product::with('category')
@@ -82,9 +85,12 @@ class PosController extends Controller
             });
         }
 
-        // Handle category filter
+        // --- UPDATED: Handle category filter based on AssignCategory ---
         if ($request->has('category_id') && $request->category_id != '') {
-            $query->where('category_id', $request->category_id);
+            $categoryId = $request->category_id;
+            $query->whereHas('assigns', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId);
+            });
         }
 
            // It checks for a boolean flag from the frontend.
@@ -112,7 +118,7 @@ class PosController extends Controller
         // Eager load variants and their associated color.
         // The 'detailed_sizes' accessor on ProductVariant will be automatically
         // appended to the JSON response thanks to the $appends property.
-        $product->load('variants.color');
+        $product->load('variants.color', 'assigns.category');
 
         return response()->json($product);
     }

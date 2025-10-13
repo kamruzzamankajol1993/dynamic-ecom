@@ -9,6 +9,7 @@ use App\Models\OrderDetail;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+
 class HomeController extends Controller
 {
     /**
@@ -55,7 +56,7 @@ class HomeController extends Controller
                 break;
         }
 
-        $totalSales = $totalSalesQuery->sum('total_amount');
+        $totalSales = $totalSalesQuery->sum(DB::raw('subtotal - IFNULL(discount, 0)')); // <-- UPDATED
         $newOrdersCount = $newOrdersQuery->count();
         $newCustomersCount = $newCustomersQuery->count();
         $totalProducts = Product::count(); // This is always a total
@@ -66,8 +67,9 @@ class HomeController extends Controller
         // --- Sales Overview Chart Data ---
         $salesQuery = Order::select(
             DB::raw("DATE_FORMAT(created_at, '%b') as month"),
-            DB::raw("SUM(total_amount) as total")
+            DB::raw("SUM(subtotal - IFNULL(discount, 0)) as total") // <-- UPDATED
         )->where('created_at', '>=', Carbon::now()->subMonths(5)->startOfMonth())
+        ->where('status', 'delivered')
          ->groupBy('month')->orderByRaw("MONTH(created_at) DESC");
 
         $salesData = $salesQuery->get();

@@ -191,6 +191,9 @@
                     <div class="col-md-7">
                         <h4 id="modal-product-name"></h4>
                         <p class="fs-5 fw-bold text-primary" id="modal-product-price"></p>
+                         {{-- /// START: ADD THIS LINE /// --}}
+                        <p id="modal-product-categories" class="mb-2"></p>
+                        {{-- /// END: ADD THIS LINE /// --}}
                         <hr>
                         
                         <div class="mb-3">
@@ -875,7 +878,22 @@ let isCartLocked = false;
         } else {
             priceContainer.text(`৳${parseFloat(product.base_price).toLocaleString()}`);
         }
-
+   // /// START: JAVASCRIPT UPDATE ///
+        const categoriesContainer = $('#modal-product-categories');
+        // Check if the product has assigned categories and the array is not empty
+        if (product.assigns && product.assigns.length > 0) {
+            // Access the first assignment and its category name.
+            // Fallback to category_name if the category relation isn't loaded for some reason.
+            const firstCategoryName = product.assigns[0].category 
+                ? product.assigns[0].category.name 
+                : product.assigns[0].category_name;
+            
+            categoriesContainer.html(`<small class="text-muted"><strong>Category:</strong> ${firstCategoryName}</small>`);
+            categoriesContainer.show(); // Make sure the element is visible
+        } else {
+            categoriesContainer.hide(); // Hide if no categories are assigned
+        }
+        // /// END: JAVASCRIPT UPDATE ///
         const imageUrl = product.main_image && product.main_image.length > 0 
             ? `{{ asset('public/uploads') }}/${product.main_image[0]}`
             : 'https://via.placeholder.com/400';
