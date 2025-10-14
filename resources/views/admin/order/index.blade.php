@@ -297,7 +297,10 @@ $(document).ready(function() {
                     } else {
                         payStatusBadge = order.payment_status === 'paid' ? `<span class="badge bg-success">Paid</span>` : `<span class="badge bg-danger">Unpaid</span>`;
                     }
-const paymentMethod = order.payment_method ? order.payment_method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A';
+ // -- UPDATED LOGIC --
+                    const paymentSource = order.payment_method || order.payment_term;
+                    const paymentMethod = paymentSource ? paymentSource.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A';
+                    // -- END OF UPDATE --
                     const statusKey = order.status.replace(' ', ' ');
                       const deliveryStatusButton = `<button class="btn btn-sm btn-${statusColors[statusKey]} btn-update-status" data-id="${order.id}" data-status="${order.status}">${order.status.replace(/_/g, ' ').toUpperCase()}</button>`;
                     const detailsButton = `<button class="btn btn-sm btn-primary btn-details" data-id="${order.id}"><i class="fa fa-eye me-1"></i></button>`;

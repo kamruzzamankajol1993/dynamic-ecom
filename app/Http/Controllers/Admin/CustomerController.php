@@ -34,7 +34,8 @@ class CustomerController extends Controller
             if ($request->filled('search')) {
                 $query->where('name', 'like', $request->search . '%')
                       ->orWhere('email', 'like', $request->search . '%')
-                      ->orWhere('phone', 'like', $request->search . '%');
+                      ->orWhere('phone', 'like', $request->search . '%')
+                      ->orWhere('secondary_phone', 'like', $request->search . '%'); // Added search for secondary phone
             }
 
             $query->orderBy($request->get('sort', 'id'), $request->get('direction', 'desc'));
@@ -67,6 +68,7 @@ class CustomerController extends Controller
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:255', 'unique:customers'],
+            'secondary_phone' => ['nullable', 'string', 'digits:11', 'unique:customers', 'unique:users'],
             'type' => ['required', 'string', 'in:normal,silver,platinum'],
             'addresses' => ['required', 'array', 'min:1'],
             'addresses.*.address' => ['required', 'string', 'max:255'],
@@ -75,7 +77,6 @@ class CustomerController extends Controller
 
         if ($request->boolean('create_login_account')) {
             $rules['email'] = ['required', 'string', 'email', 'max:255', 'unique:users'];
-            // --- UPDATED VALIDATION RULE ---
             $rules['password'] = ['required', 'confirmed', Rules\Password::min(8)];
         } else {
             $rules['email'] = ['nullable', 'string', 'email', 'max:255', 'unique:customers'];
@@ -91,6 +92,7 @@ class CustomerController extends Controller
                         'name' => $request->name,
                         'email' => $request->email,
                         'phone' => $request->phone,
+                        'secondary_phone' => $request->secondary_phone,
                         'user_type' => 1,
                         'status' => 1,
                         'password' => $request->password,
@@ -103,8 +105,9 @@ class CustomerController extends Controller
                     'name' => $request->name,
                     'email' => $request->email,
                     'phone' => $request->phone,
+                    'secondary_phone' => $request->secondary_phone,
                     'type' => $request->type,
-                    'source' => 'admin', // Customers created here are from admin
+                    'source' => 'admin',
                 ]);
 
                  if ($request->boolean('create_login_account')) {
@@ -175,12 +178,13 @@ class CustomerController extends Controller
         }
     }
 
-    // --- UPDATED UPDATE FUNCTION ---
     public function update(Request $request, Customer $customer)
     {
+        $userId = $customer->user_id ?? 'NULL';
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:255', 'unique:customers,phone,' . $customer->id],
+            'secondary_phone' => ['nullable', 'string', 'digits:11', 'unique:customers,secondary_phone,' . $customer->id, 'unique:users,secondary_phone,' . $userId],
             'type' => ['required', 'string', 'in:normal,silver,platinum'],
             'addresses' => ['required', 'array', 'min:1'],
             'addresses.*.address' => ['required', 'string', 'max:255'],
@@ -188,7 +192,6 @@ class CustomerController extends Controller
         ];
 
         if ($customer->user_id || $request->boolean('create_login_account')) {
-            $userId = $customer->user_id ?? 'NULL';
             $rules['email'] = ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $userId];
             $rules['password'] = ['nullable', 'confirmed', Rules\Password::min(8)];
         } else {
@@ -201,20 +204,19 @@ class CustomerController extends Controller
             DB::transaction(function () use ($request, $customer) {
                 $userId = $customer->user_id;
 
-                // Case 1: Customer has no login, but we are creating one now.
                 if (!$userId && $request->boolean('create_login_account')) {
                     $user = User::create([
                         'name' => $request->name,
                         'email' => $request->email,
                         'phone' => $request->phone,
+                        'secondary_phone' => $request->secondary_phone,
                         'user_type' => 1,
                         'status' => 1,
                         'password' => $request->password,
-                        'customer_id' => $customer->id, // <-- The key change!
+                        'customer_id' => $customer->id,
                     ]);
                     $userId = $user->id;
                 } 
-                // Case 2: Customer already has a login, so we update it.
                 else if ($userId) {
                     $user = User::find($userId);
                     if ($user) {
@@ -222,6 +224,7 @@ class CustomerController extends Controller
                             'name' => $request->name,
                             'email' => $request->email,
                             'phone' => $request->phone,
+                            'secondary_phone' => $request->secondary_phone,
                         ];
                         if ($request->filled('password')) {
                             $userData['password'] = $request->password;
@@ -230,16 +233,15 @@ class CustomerController extends Controller
                     }
                 }
 
-                // Update the customer with the latest info, including the new user_id if created.
                 $customer->update([
                     'user_id' => $userId,
                     'name' => $request->name,
                     'email' => $request->email,
                     'phone' => $request->phone,
+                    'secondary_phone' => $request->secondary_phone,
                     'type' => $request->type,
                 ]);
 
-                // Re-sync addresses
                 $customer->addresses()->delete();
                 if ($request->has('addresses')) {
                     $defaultIndex = $request->default_address_index;
@@ -263,7 +265,6 @@ class CustomerController extends Controller
     public function destroy(Customer $customer)
     {
         try {
-            // Deleting a customer might also delete their associated user account
             if ($customer->user_id) {
                 User::find($customer->user_id)->delete();
             }

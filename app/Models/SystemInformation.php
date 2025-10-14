@@ -21,6 +21,8 @@ class SystemInformation extends Model
             'address',
             'email',
             'phone',11,
+            'email_one',
+            'phone_one',11,
             'main_url',
             'front_url',
             'tax',

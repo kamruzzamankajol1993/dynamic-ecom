@@ -24,27 +24,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
- Paginator::useBootstrapFive();
+        Paginator::useBootstrapFive();
 
     
-// Add this code block
-    Relation::morphMap([
-        'offer' => 'App\Models\Offer',
-        'service' => 'App\Models\Service',
-    ]);
+        // Add this code block
+        Relation::morphMap([
+            'offer' => 'App\Models\Offer',
+            'service' => 'App\Models\Service',
+        ]);
         ///new code start
 
         view()->composer('*', function ($view)
         {
-
-
-            //global social link code start
-
-           
-            
-
             //provider code for frontend
-
             $frontEndData = DB::table('system_information')->first();
 
             if ($frontEndData) {
@@ -53,13 +45,14 @@ class AppServiceProvider extends ServiceProvider
                 $front_logo_name = $frontEndData->logo;
                 $front_ins_name = $frontEndData->ins_name;
                 $front_ins_add = $frontEndData->address;
-                
                 $front_ins_email = $frontEndData->email;
-
                 $front_ins_phone = $frontEndData->phone;
+                
+                // Added the secondary phone number
+                $front_ins_phone_one = $frontEndData->phone_one;
+
                 $front_ins_k = $frontEndData->keyword;
                 $front_ins_d = $frontEndData->description;
-
                 $front_develop_by = $frontEndData->develop_by;
 
             } else {
@@ -68,10 +61,12 @@ class AppServiceProvider extends ServiceProvider
                 $front_logo_name = '';
                 $front_ins_name = '';
                 $front_ins_add = '';
-               
                 $front_ins_email = '';
-
                 $front_ins_phone = '';
+
+                // Added default for secondary phone
+                $front_ins_phone_one = '';
+
                 $front_ins_k = '';
                 $front_ins_d = '';
                 $front_develop_by = '';
@@ -83,6 +78,10 @@ class AppServiceProvider extends ServiceProvider
               view()->share('front_ins_add', $front_ins_add);
               view()->share('front_ins_email', $front_ins_email);
               view()->share('front_ins_phone', $front_ins_phone);
+
+              // Shared the new variable
+              view()->share('front_ins_phone_one', $front_ins_phone_one);
+
               view()->share('front_ins_k', $front_ins_k);
               view()->share('front_ins_d', $front_ins_d);
               view()->share('front_develop_by', $front_develop_by);
@@ -92,83 +91,66 @@ class AppServiceProvider extends ServiceProvider
             if (Auth::check()) {
 
                 //auth check code start
+                $data = DB::table('system_information')->where('branch_id',Auth::user()->branch_id)->first();
+                if (!$data) {
+                    $icon_name = '';
+                    $logo_name ='';
+                    $ins_name = '';
+                    $ins_add = '';
+                    $ins_url = '';
+                    $ins_email = '';
+                    $ins_phone = '';
+                    $ins_k = '';
+                    $ins_d = '';
+                    $develop_by = '';
+                    $tax = '';
+                    $charge = '';
 
+                    view()->share('tax', $tax);
+                    view()->share('charge', $charge);
+                    view()->share('develop_by', $develop_by);
+                    view()->share('ins_name', $ins_name);
+                    view()->share('logo',  $logo_name);
+                    view()->share('icon', $icon_name);
+                    view()->share('ins_add', $ins_add);
+                    view()->share('ins_phone', $ins_phone);
+                    view()->share('ins_email', $ins_email);
+                    view()->share('ins_url', $ins_url);
+                    view()->share('keyword', $ins_k);
+                    view()->share('description', $ins_d);
 
-            $data = DB::table('system_information')->where('branch_id',Auth::user()->branch_id)->first();
-        if (!$data) {
-            $icon_name = '';
-            $logo_name ='';
-            $ins_name = '';
-            $ins_add = '';
-            $ins_url = '';
-            $ins_email = '';
-
-            $ins_phone = '';
-            $ins_k = '';
-            $ins_d = '';
-            $develop_by = '';
-            $category_prefix = '';
-            $product_prefix = '';
-
-            $tax = '';
-            $charge = '';
-
-            view()->share('tax', $tax);
-            view()->share('charge', $charge);
-
-      
-            view()->share('develop_by', $develop_by);
-            view()->share('ins_name', $ins_name);
-            view()->share('logo',  $logo_name);
-            view()->share('icon', $icon_name);
-            view()->share('ins_add', $ins_add);
-            view()->share('ins_phone', $ins_phone);
-            view()->share('ins_email', $ins_email);
-            view()->share('ins_url', $ins_url);
-            view()->share('keyword', $ins_k);
-            view()->share('description', $ins_d);
-
-        }else{
-            view()->share('tax', $data->tax);
-            view()->share('charge', $data->charge);
-            view()->share('develop_by', $data->develop_by);
-            view()->share('ins_name', $data->ins_name);
-            view()->share('logo',  $data->logo);
-            view()->share('icon', $data->icon);
-            view()->share('ins_add', $data->address);
-            view()->share('ins_phone', $data->phone);
-            view()->share('ins_email', $data->email);
-            view()->share('ins_url', $data->front_url);
-            view()->share('keyword', $data->keyword);
-            view()->share('description', $data->description);
-
-        }
-
-
+                } else {
+                    view()->share('tax', $data->tax);
+                    view()->share('charge', $data->charge);
+                    view()->share('develop_by', $data->develop_by);
+                    view()->share('ins_name', $data->ins_name);
+                    view()->share('logo',  $data->logo);
+                    view()->share('icon', $data->icon);
+                    view()->share('ins_add', $data->address);
+                    view()->share('ins_phone', $data->phone);
+                    view()->share('ins_email', $data->email);
+                    view()->share('ins_url', $data->front_url);
+                    view()->share('keyword', $data->keyword);
+                    view()->share('description', $data->description);
+                }
                 //auth check code end
 
-            }else{
-
+            } else {
                 $icon_name = '';
                 $logo_name ='';
                 $ins_name = '';
                 $ins_add = '';
                 $ins_url = '';
                 $ins_email = '';
-
                 $ins_phone = '';
                 $ins_k = '';
                 $ins_d = '';
                 $develop_by = '';
-              
-
                 $tax = '';
-            $charge = '';
+                $charge = '';
 
-            view()->share('tax', $tax);
-            view()->share('charge', $charge);
-
-              
+                view()->share('tax', $tax);
+                view()->share('charge', $charge);
                 view()->share('develop_by', $develop_by);
                 view()->share('ins_name', $ins_name);
                 view()->share('logo',  $logo_name);
@@ -179,13 +161,8 @@ class AppServiceProvider extends ServiceProvider
                 view()->share('ins_url', $ins_url);
                 view()->share('keyword', $ins_k);
                 view()->share('description', $ins_d);
-
-
             }
         });
-
-
         ///new code end
-
     }
 }

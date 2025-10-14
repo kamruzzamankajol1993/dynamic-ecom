@@ -27,6 +27,7 @@ class User extends Authenticatable
         'status',
         'old_id',
         'phone',
+        'secondary_phone',
         'address',
         'email',
         'type',

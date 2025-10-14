@@ -21,7 +21,6 @@
 </head>
 <body>
     <div class="invoice-box">
-        {{-- --- HEADER SECTION UPDATED TO USE A TABLE --- --}}
         <table style="width: 100%; vertical-align: top; margin-bottom: 20px;">
             <tr>
                 <td style="width: 50%; vertical-align: top;">
@@ -31,7 +30,12 @@
                     <address style="margin: 0; line-height: 1.5;">
                         <strong>{{ $front_ins_name ?? '' }}</strong><br>
                         {{ $front_ins_add ?? '' }}<br>
-                        Phone: {{ $front_ins_phone ?? '' }}<br>
+                        Phone: {{ $front_ins_phone ?? '' }}
+                        {{-- Conditionally display the secondary phone number --}}
+                        @if(!empty($front_ins_phone_one))
+                            / {{ $front_ins_phone_one }}
+                        @endif
+                        <br>
                         Email: {{ $front_ins_email ?? '' }}<br>
                         Website: spotlightattires.com
                     </address>
@@ -44,7 +48,6 @@
                 </td>
             </tr>
         </table>
-        {{-- --- END OF HEADER UPDATE --- --}}
 
         <table class="address-table">
             <tr>
@@ -53,6 +56,9 @@
                     {{ $order->customer->name }}<br>
                     {{ $order->customer->address }}<br>
                     {{ $order->customer->phone }}
+                     @if($order->customer->secondary_phone)
+                        <br>{{ $order->customer->secondary_phone }} (Secondary)
+                    @endif
                 </td>
                 <td style="width: 50%; vertical-align: top; text-align: right;">
                     <strong>Shipped To:</strong><br>
@@ -94,7 +100,6 @@
                     @if($order->cod > 0)
                         <tr><td>COD Amount:</td><td style="text-align: right;">{{ number_format($order->cod, 2) }}</td></tr>
                     @endif
-                    {{-- <tr class="grand-total"><td>Due:</td><td style="text-align: right;">{{ number_format($order->due, 2) }}</td></tr> --}}
                 </table>
             </div>
         </div>

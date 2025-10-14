@@ -22,6 +22,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('email')->nullable();
             $table->string('phone',11)->nullable();
+            $table->string('email_one')->nullable();
+            $table->string('phone_one',11)->nullable();
             $table->string('main_url')->nullable();
             $table->string('front_url')->nullable();
             $table->string('tax')->nullable();

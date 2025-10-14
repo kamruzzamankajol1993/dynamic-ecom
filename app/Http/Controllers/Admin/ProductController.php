@@ -106,18 +106,20 @@ class ProductController extends Controller
 
          // --- NEW: Advanced Filtering Logic ---
         if ($request->filled('product_name')) {
-            $query->where('name', 'like',$request->product_name . '%');
+            $query->where('name', 'like', '%' . $request->product_name . '%');
         }
 
         if ($request->filled('product_code')) {
-            $query->where('product_code', 'like',$request->product_code . '%');
+            $query->where('product_code', 'like', '%' . $request->product_code . '%');
         }
 
         if ($request->filled('category_id')) {
             // UPDATED: Filter based on the 'assigns' relationship instead of the direct column
-            $query->whereHas('assigns', function ($subQuery) use ($request) {
-                $subQuery->where('category_id', $request->category_id);
-            });
+            // UPDATED: First, get all product IDs that belong to the selected category.
+            $productIds = AssignCategory::where('category_id', $request->category_id)->where('type', 'product_category')->pluck('product_id');
+            
+            // Then, filter the products using the retrieved IDs.
+            $query->whereIn('id', $productIds);
         }
         // --- END: Advanced Filtering Logic ---
 

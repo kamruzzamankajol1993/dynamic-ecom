@@ -139,6 +139,12 @@
             <td>Mobile Number</td>
             <td>:{{ $order->customer->phone }}</td>
         </tr>
+         @if($order->customer->secondary_phone)
+        <tr>
+            <td>Secondary Mobile</td>
+            <td>:{{ $order->customer->secondary_phone }}</td>
+        </tr>
+        @endif
         <tr>
             <td>Address</td>
             <td>:{{ $order->shipping_address }}</td>

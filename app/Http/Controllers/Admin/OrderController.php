@@ -43,8 +43,8 @@ class OrderController extends Controller
 {
     try {
     $term = $request->get('term');
-    $customers = Customer::where('name', 'LIKE', $term . '%')
-                       ->orWhere('phone', 'LIKE', $term . '%')
+    $customers = Customer::where('name', 'LIKE', '%' . $term . '%')
+                       ->orWhere('phone', 'LIKE', '%' . $term . '%')
                        ->limit(10)
                        ->get();
     return response()->json($customers);
@@ -162,9 +162,9 @@ class OrderController extends Controller
 {
     try {
     $term = $request->get('term');
-    
-    $products = Product::where('name', 'LIKE', $term . '%')
-        ->orWhere('product_code', 'LIKE', $term . '%')
+
+    $products = Product::where('name', 'LIKE','%' . $term . '%')
+        ->orWhere('product_code', 'LIKE', '%' . $term . '%')
         ->limit(10)
         ->get();
 

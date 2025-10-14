@@ -32,6 +32,12 @@
                                    pattern="[0-9]{11}" title="Please enter an 11-digit mobile number" required>
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label class="form-label">Secondary Mobile (Optional)</label>
+                            <input type="number" name="secondary_phone" class="form-control" value="{{ old('secondary_phone', $customer->secondary_phone) }}" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value.length > 11) this.value = this.value.slice(0, 11);" 
+                                   pattern="[0-9]{11}" title="Please enter an 11-digit mobile number">
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Type</label>
                             <select name="type" class="form-select" required>
                                 <option value="normal" @selected(old('type', $customer->type) == 'normal')>Normal</option>

@@ -8,7 +8,6 @@
             <a href="{{ route('customer.index') }}" class="btn btn-secondary">Back to List</a>
         </div>
 
-        <!-- Summary Cards -->
         <div class="row g-4 mb-4">
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm border-0">
@@ -104,6 +103,7 @@
                             <li class="list-group-item"><strong>Name:</strong> {{ $customer->name }}</li>
                             <li class="list-group-item"><strong>Email:</strong> {{ $user->email ?? $customer->email ?? 'N/A' }}</li>
                             <li class="list-group-item"><strong>Phone:</strong> {{ $customer->phone }}</li>
+                            <li class="list-group-item"><strong>Secondary Phone:</strong> {{ $customer->secondary_phone ?? 'N/A' }}</li>
                             <li class="list-group-item"><strong>Type:</strong> <span class="badge bg-info">{{ ucfirst($customer->type) }}</span></li>
                             <li class="list-group-item"><strong>Status:</strong>
                                 @if($customer->status)
@@ -135,7 +135,6 @@
 @endsection
 
 @section('script')
-<!-- Google Charts Loader -->
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
     google.charts.load('current', {'packages':['corechart']});
