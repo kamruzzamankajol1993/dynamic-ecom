@@ -499,17 +499,54 @@ class OrderController extends Controller
  * Show the form for editing the specified order.
  */
 public function edit(Order $order)
-{
-    try {
-    // Eager load the relationships to prevent too many database queries in the view
-    $order->load('customer', 'orderDetails.product');
+    {
+        try {
+            // Eager load the relationships to prevent too many database queries in the view
+            $order->load('customer', 'orderDetails.product');
 
-    return view('admin.order.edit', compact('order'));
-    } catch (\Exception $e) {
+            // --- START: MODIFICATION ---
+            // Prepare product variation details for JavaScript initialization
+            $productDetailsJs = [];
+            foreach ($order->orderDetails as $detail) {
+                $product = $detail->product;
+                if ($product) {
+                    // Eager load variants for this specific product to be efficient
+                    $product->load('variants.color');
+
+                    $variantsData = $product->variants->map(function ($variant) {
+                        $sizes = collect($variant->sizes)->map(function ($sizeInfo) {
+                            $sizeModel = Size::find($sizeInfo['size_id']);
+                            return [
+                                'id' => $sizeInfo['size_id'],
+                                'name' => $sizeModel ? $sizeModel->name : 'N/A',
+                                'additional_price' => $sizeInfo['additional_price'] ?? 0,
+                                'quantity' => $sizeInfo['quantity'] ?? 0,
+                            ];
+                        });
+
+                        return [
+                            'variant_id' => $variant->id,
+                            'color_id' => $variant->color->id,
+                            'color_name' => $variant->color->name,
+                            'sizes' => $sizes,
+                        ];
+                    });
+
+                    $productDetailsJs[$product->id] = [
+                        'base_price' => $product->discount_price ?? $product->base_price,
+                        'variants' => $variantsData,
+                    ];
+                }
+            }
+            // --- END: MODIFICATION ---
+
+            return view('admin.order.edit', compact('order', 'productDetailsJs'));
+
+        } catch (\Exception $e) {
             Log::error('Error loading edit order page: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Could not load the order for editing.');
         }
-}
+    }
 
 /**
  * Update the specified order in storage.

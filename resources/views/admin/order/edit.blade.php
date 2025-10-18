@@ -64,10 +64,9 @@
             </nav>
         </div>
         
-        {{-- The form now points to the update route --}}
         <form action="{{ route('order.update', $order->id) }}" method="POST">
             @csrf
-            @method('PUT') {{-- This is crucial for update operations --}}
+            @method('PUT') 
 
             <div class="row">
                 {{-- Left Side: Client Info --}}
@@ -87,7 +86,6 @@
                                     <label class="form-label">Shipping Address</label>
                                     <div class="input-group">
                                         <select name="shipping_address_select" id="shippingAddressSelect" class="form-select">
-                                            {{-- This will be populated by JS --}}
                                             <option value="">Choose...</option>
                                         </select>
                                         <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#newAddressModal">Add New</button>
@@ -133,7 +131,7 @@
                              <div class="mb-3">
                                 <label class="form-label">Warehouse*</label>
                                 <select name="warehouse" class="form-select" required>
-                                    <option>SpotLightAttires</option> {{-- Assuming this is static --}}
+                                    <option>SpotLightAttires</option>
                                 </select>
                             </div>
                              <div class="mb-3">
@@ -172,15 +170,19 @@
                                         </tr>
                                     </thead>
                                     <tbody id="product-rows-container">
-                                        {{-- Loop through existing order details to populate rows --}}
+                                        {{-- START: MODIFICATION - Updated loop to create selects and add data attributes --}}
                                         @foreach($order->orderDetails as $index => $detail)
-                                        <tr class="product-row" data-index="{{ $index }}">
+                                        <tr class="product-row" 
+                                            data-index="{{ $index }}"
+                                            data-product-id="{{ $detail->product_id }}"
+                                            data-selected-color="{{ $detail->color }}"
+                                            data-selected-size="{{ $detail->size }}">
                                             <td>
                                                 <input type="text" class="form-control product-search" placeholder="Search product..." value="{{ $detail->product->name ?? 'N/A' }}">
                                                 <input type="hidden" name="items[{{ $index }}][product_id]" value="{{ $detail->product_id }}">
                                             </td>
-                                            <td><input type="text" class="form-control" name="items[{{ $index }}][color]" value="{{ $detail->color }}"></td>
-                                            <td><input type="text" class="form-control" name="items[{{ $index }}][size]" value="{{ $detail->size }}"></td>
+                                            <td><select class="form-select color-select" name="items[{{ $index }}][color]"></select></td>
+                                            <td><select class="form-select size-select" name="items[{{ $index }}][size]"></select></td>
                                             <td><input type="number" name="items[{{ $index }}][quantity]" class="form-control quantity" value="{{ $detail->quantity }}" min="1"></td>
                                             <td><input type="number" name="items[{{ $index }}][unit_price]" class="form-control unit-price" value="{{ $detail->unit_price }}" step="0.01"></td>
                                             <td><input type="text" class="form-control amount" readonly></td>
@@ -189,6 +191,7 @@
                                             <td><button type="button" class="btn btn-danger btn-sm remove-product-btn">&times;</button></td>
                                         </tr>
                                         @endforeach
+                                        {{-- END: MODIFICATION --}}
                                     </tbody>
                                 </table>
                             </div>
@@ -259,7 +262,6 @@
         </form>
     </div>
 </main>
-<!-- Add New Address Modal -->
 <div class="modal fade" id="newAddressModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -287,29 +289,83 @@
 @endsection
 
 @section('script')
-{{-- The JavaScript is nearly identical to the create page --}}
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 <script>
 $(document).ready(function() {
+    // --- START: MODIFICATION ---
+    // Data for existing products passed from controller
+    let initialProductDetails = @json($productDetailsJs);
+    // Initialize the product cache with this data
+    let productsCache = initialProductDetails;
+    // --- END: MODIFICATION ---
+
     // Initialize the date picker
     $("#orderDate").datepicker({
         dateFormat: 'dd-mm-yy'
     });
 
-    // --- IMPORTANT: Initialize all existing product search inputs ---
+    // --- START: MODIFICATION ---
+    // New function to populate dropdowns for existing product rows on page load
+    function initializeExistingRows() {
+        $('#product-rows-container .product-row').each(function() {
+            const row = $(this);
+            const productId = row.data('product-id');
+            const selectedColor = row.data('selected-color');
+            const selectedSize = row.data('selected-size');
+            
+            if (productId && productsCache[productId]) {
+                const productData = productsCache[productId];
+                const colorSelect = row.find('.color-select');
+                
+                // 1. Populate Colors and select the correct one
+                colorSelect.empty().append('<option value="">Select Color</option>');
+                if (productData.variants) {
+                    productData.variants.forEach(variant => {
+                        const isSelected = variant.color_name === selectedColor ? 'selected' : '';
+                        colorSelect.append(`<option value="${variant.color_name}" ${isSelected}>${variant.color_name}</option>`);
+                    });
+                }
+
+                // 2. Populate Sizes based on the selected color and select the correct one
+                const sizeSelect = row.find('.size-select');
+                sizeSelect.empty().append('<option value="">Select Size</option>');
+                
+                const selectedVariant = productData.variants.find(v => v.color_name === selectedColor);
+                if (selectedVariant && selectedVariant.sizes) {
+                    selectedVariant.sizes.forEach(size => {
+                        const isSelected = size.name === selectedSize ? 'selected' : '';
+                        sizeSelect.append(`<option value="${size.name}" data-price="${size.additional_price || 0}" data-quantity="${size.quantity || 0}" ${isSelected}>${size.name} (${size.quantity} pcs)</option>`);
+                    });
+                }
+
+                // 3. Set max quantity attribute based on the selected size
+                const selectedSizeOption = sizeSelect.find('option:selected');
+                if (selectedSizeOption.length) {
+                    const availableQuantity = parseInt(selectedSizeOption.data('quantity')) || 0;
+                    const quantityInput = row.find('.quantity');
+                    quantityInput.attr('max', availableQuantity);
+                    quantityInput.attr('placeholder', `Max: ${availableQuantity}`);
+                }
+            }
+        });
+    }
+    // --- END: MODIFICATION ---
+
+
+    // --- MODIFIED: Call initialization functions in order ---
+    initializeExistingRows();
     $('.product-search').each(function() {
         initializeProductSearch(this);
     });
-
-    // --- IMPORTANT: Calculate totals on page load ---
     calculateFinalTotals();
+    // --- END: MODIFICATION ---
 
     var newAddressModal = new bootstrap.Modal(document.getElementById('newAddressModal'));
 
     // --- Client Search & Address Logic ---
     $("#customerSearch").autocomplete({
         source: "{{ route('order.search-customers') }}",
-        minLength: 2,
+        minLength: 1,
         select: function(event, ui) {
             const customer = ui.item;
             $('#customerSearch').val(`${customer.name} - ${customer.phone}`);
@@ -356,8 +412,7 @@ $(document).ready(function() {
     });
 
     // --- Product Rows & Calculation Logic ---
-    let productRowIndex = {{ $order->orderDetails->count() }}; // Start index from existing items
-    let productsCache = {};
+    let productRowIndex = {{ $order->orderDetails->count() }}; 
 
     function addProductRow() {
         const rowHtml = `
@@ -388,9 +443,7 @@ $(document).ready(function() {
             select: function(event, ui) {
                 const row = $(this).closest('tr');
                 const productId = ui.item.id;
-                row.find('input[name$="[product_id]"]').val(productId);
                 
-                // This part is different for edit. We replace the row content.
                 const index = row.data('index');
                 const newRowContent = `
                     <td>
@@ -407,6 +460,7 @@ $(document).ready(function() {
                     <td><button type="button" class="btn btn-danger btn-sm remove-product-btn">&times;</button></td>
                 `;
                 row.html(newRowContent);
+                 initializeProductSearch(row.find('.product-search'));
 
                 if (productsCache[productId]) {
                     populateVariations(row, productsCache[productId]);
@@ -416,6 +470,7 @@ $(document).ready(function() {
                         populateVariations(row, data);
                     });
                 }
+                 return false; 
             }
         });
     }
@@ -442,7 +497,6 @@ $(document).ready(function() {
         const variant = productData.variants.find(v => v.color_name === selectedColor);
         if (variant && variant.sizes) {
             variant.sizes.forEach(size => {
-                // **MODIFIED**: Added data-quantity to store available stock
                 sizeSelect.append(`<option value="${size.name}" data-price="${size.additional_price || 0}" data-quantity="${size.quantity || 0}">${size.name} (${size.quantity} pcs)</option>`);
             });
         }
@@ -453,7 +507,7 @@ $(document).ready(function() {
         const row = $(this).closest('tr');
         const quantityInput = row.find('.quantity');
 
-        if ($(this).val()) { // Check if a valid size is selected
+        if ($(this).val()) { 
             const selectedOption = $(this).find('option:selected');
             const productId = row.find('input[name$="[product_id]"]').val();
             const productData = productsCache[productId];
@@ -463,25 +517,23 @@ $(document).ready(function() {
 
             row.find('.unit-price').val((basePrice + additionalPrice).toFixed(2));
 
-            // **NEW**: Set max attribute and placeholder for quantity
             quantityInput.attr('max', availableQuantity);
             quantityInput.attr('placeholder', `Max: ${availableQuantity}`);
             
-            // **NEW**: Reset quantity if it exceeds the new max
             if (parseInt(quantityInput.val()) > availableQuantity) {
                 quantityInput.val(1);
             }
         } else {
-            // **NEW**: Reset if "Select Size" is chosen
             row.find('.unit-price').val('');
             quantityInput.removeAttr('max').attr('placeholder', '');
         }
 
-        quantityInput.trigger('input'); // Trigger calculation
+        quantityInput.trigger('input'); 
     });
 
     function calculateFinalTotals() {
         let netPrice = 0;
+        let itemTotalDiscount = 0;
         $('.product-row').each(function() {
             const row = $(this);
             const quantity = parseFloat(row.find('.quantity').val()) || 0;
@@ -492,7 +544,9 @@ $(document).ready(function() {
             row.find('.amount').val(amount.toFixed(2));
             row.find('.after-discount').val(afterDiscount.toFixed(2));
             netPrice += amount;
+            itemTotalDiscount += discount;
         });
+        $('#totalDiscount').val(itemTotalDiscount.toFixed(2));
 
         const totalDiscount = parseFloat($('#totalDiscount').val()) || 0;
         const deliveryCharge = parseFloat($('#deliveryCharge').val()) || 0;
@@ -505,27 +559,13 @@ $(document).ready(function() {
         $('#totalDueText').text(`${cod.toFixed(2)} Taka`);
     }
 
-    // Use event delegation for dynamically added/changed inputs
-    $('#product-rows-container').on('input', '.quantity, .unit-price, .discount', function() {
-        let itemTotalDiscount = 0;
-        $('.product-row .discount').each(function() {
-            itemTotalDiscount += parseFloat($(this).val()) || 0;
-        });
-        $('#totalDiscount').val(itemTotalDiscount.toFixed(2));
-        calculateFinalTotals();
-    });
-
+    $('#product-rows-container').on('input', '.quantity, .unit-price, .discount', calculateFinalTotals);
     $('#deliveryCharge, #totalPay, #totalDiscount').on('input', calculateFinalTotals);
 
     $('#addNewProductBtn').on('click', addProductRow);
     $('#product-rows-container').on('click', '.remove-product-btn', function() { 
         $(this).closest('tr').remove(); 
-        if ($('.product-row').length > 0) {
-            $('.discount').first().trigger('input'); 
-        } else {
-            $('#totalDiscount').val('0.00');
-            calculateFinalTotals();
-        }
+        calculateFinalTotals();
     });
 
 });
