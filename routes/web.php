@@ -298,6 +298,7 @@ Route::get('ajax-expense', [ExpenseController::class, 'data'])->name('expense.da
     Route::get('history/{customer}', [RewardPointController::class, 'customerHistory'])->name('customer.history');
 });
 
+Route::post('/order-customer-quick-store', [OrderController::class, 'quickStoreCustomer'])->name('order.customer.quick-store');
     // Add this to your admin route group
 Route::post('orders/bulk-update-status', [OrderController::class, 'bulkUpdateStatus'])->name('order.bulk-update-status');
     Route::post('order-payment/{order}', [OrderController::class, 'storePayment'])->name('order.payment.store');

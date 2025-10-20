@@ -91,7 +91,7 @@
                                 <select name="addresses[0][address_type]" class="form-select">
                                     <option value="Home">Home</option>
                                     <option value="Office">Office</option>
-                                    <option value="Other">Other</option>
+                                    <option value="Others">Other</option>
                                 </select>
                             </div>
                             <div class="col-md-1 text-center">
@@ -134,7 +134,7 @@ $(document).ready(function() {
                     <select name="addresses[${addressIndex}][address_type]" class="form-select">
                         <option value="Home">Home</option>
                         <option value="Office">Office</option>
-                        <option value="Other">Other</option>
+                        <option value="Others">Other</option>
                     </select>
                 </div>
                 <div class="col-md-1 text-center">

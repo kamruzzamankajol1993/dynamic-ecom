@@ -3,7 +3,7 @@
 
 @section('css')
     <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-    <style>
+   <style>
          /* --- Global Font & Layout Adjustments --- */
         .main-content {
             font-size: 0.9rem; /* Reduced base font size */
@@ -48,6 +48,30 @@
          .ui-autocomplete {
             z-index: 1055 !important; /* Ensure autocomplete appears over modals */
         }
+        
+        /* --- START: MODIFICATION --- */
+        /* Custom styles for product autocomplete */
+        .ui-autocomplete.product-autocomplete-list li {
+            padding: 5px;
+        }
+        .autocomplete-item {
+            display: flex;
+            align-items: center;
+        }
+        .autocomplete-image {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 10px;
+            border: 1px solid #eee;
+        }
+        .autocomplete-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+        /* --- END: MODIFICATION --- */
     </style>
     
 @endsection
@@ -76,10 +100,15 @@
                         <div class="card-body">
                              <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Search Client (Name/Phone)*</label>
-                                    <input type="text" id="customerSearch" class="form-control" placeholder="Start typing to search...">
-                                    <input type="hidden" name="customer_id" id="customerId">
-                                </div>
+    <label class="form-label">Search Client (Name/Phone)*</label>
+    <div class="input-group">
+        <input type="text" id="customerSearch" class="form-control" placeholder="Start typing to search...">
+        <button class="btn btn-outline-success" type="button" id="openQuickCustomerModal" title="Add New Customer" data-bs-toggle="modal" data-bs-target="#quickCustomerModal">
+            <i class="fa fa-user-plus"></i>
+        </button>
+    </div>
+    <input type="hidden" name="customer_id" id="customerId">
+</div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Shipping Address</label>
                                     <div class="input-group">
@@ -234,7 +263,7 @@
                 </div>
             </div>
              <div class="mt-4">
-                 <button type="submit" class="btn btn-primary">Save Order</button>
+                 {{-- <button type="submit" class="btn btn-primary">Save Order</button> --}}
             </div>
         </form>
     </div>
@@ -253,13 +282,53 @@
                     <textarea id="newAddressText" class="form-control" rows="3"></textarea>
                 </div>
                 <div class="mb-3">
-                    <label for="newAddressType" class="form-label">Address Type (Optional)</label>
-                    <input type="text" id="newAddressType" class="form-control" placeholder="e.g., Office, Warehouse">
+                    <label for="newAddressType" class="form-label">Address Type</label>
+                    <select id="newAddressType" class="form-select">
+                        <option value="Home">Home</option>
+                        <option value="Office">Office</option>
+                        <option value="Others">Other</option>
+                    </select>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" id="saveNewAddressBtn" class="btn btn-primary">Add Address</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="quickCustomerModal" tabindex="-1" aria-labelledby="quickCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickCustomerModalLabel">Add New Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickCustomerForm">
+                    <div id="quickCustomerErrors" class="alert alert-danger" style="display: none;">
+                        <ul class="mb-0"></ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="quick_name" class="form-label">Customer Name*</label>
+                        <input type="text" class="form-control" id="quick_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quick_phone" class="form-label">Mobile Number* (11 Digits)</label>
+                        <input type="number" class="form-control" id="quick_phone" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value.length > 11) this.value = this.value.slice(0, 11);" 
+                               pattern="[0-9]{11}" title="Please enter an 11-digit mobile number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quick_address" class="form-label">Address* (Home & Default)</label>
+                        <textarea class="form-control" id="quick_address" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="saveQuickCustomerBtn" class="btn btn-primary">Save Customer</button>
             </div>
         </div>
     </div>
@@ -275,56 +344,220 @@ $(document).ready(function() {
         dateFormat: 'dd-mm-yy'
     });
 
+   
+
     var newAddressModal = new bootstrap.Modal(document.getElementById('newAddressModal'));
 
     // --- Client Search & Address Logic ---
+   // --- START: MODIFICATION (Client Search & Address Logic) ---
+
+    // This function populates the address dropdown
+    function populateCustomerAddresses(customerId, shippingAddressSelect) {
+        $.get(`{{ url('order-get-customer-details') }}/${customerId}`, function(data) {
+            // Set home address
+            let homeAddress = data.main_address;
+            if (!homeAddress && data.addresses.length > 0) {
+                homeAddress = data.addresses[0].address;
+            }
+            $('#clientHomeAddress').val(homeAddress || '');
+
+            // Populate shipping select
+            shippingAddressSelect.empty().append('<option value="">Choose...</option>');
+            
+            // Group 1: Existing Saved Addresses
+            if (data.addresses.length > 0) {
+                shippingAddressSelect.append('<optgroup label="Saved Addresses">');
+                data.addresses.forEach(addr => {
+                    // Show the full address and type
+                    shippingAddressSelect.append(`<option value="${addr.address}" data-type="${addr.address_type}">${addr.address} (${addr.address_type})</option>`);
+                });
+                shippingAddressSelect.append('</optgroup>');
+            }
+
+            // Group 2: Add New Address options
+            shippingAddressSelect.append('<optgroup label="Add New Address">');
+            shippingAddressSelect.append('<option value="add_new_home" data-type-to-add="Home">Add New Home Address...</option>');
+            shippingAddressSelect.append('<option value="add_new_office" data-type-to-add="Office">Add New Office Address...</option>');
+            shippingAddressSelect.append('<option value="add_new_others" data-type-to-add="Others">Add New Other Address...</option>');
+            shippingAddressSelect.append('</optgroup>');
+        });
+    }
+
+    // 1. Initialize customer autocomplete
     $("#customerSearch").autocomplete({
         source: "{{ route('order.search-customers') }}",
-        minLength: 1,
+        minLength: 0,
         select: function(event, ui) {
             const customer = ui.item;
             $('#customerSearch').val(`${customer.name} - ${customer.phone}`);
             $('#customerId').val(customer.id);
-
-            const homeAddressBox = $('#clientHomeAddress');
-            const shippingAddressSelect = $('#shippingAddressSelect');
             
-            $.get(`{{ url('order-get-customer-details') }}/${customer.id}`, function(data) {
-                let homeAddress = data.main_address;
-                if (!homeAddress && data.addresses.length > 0) {
-                    homeAddress = data.addresses[0].address;
-                }
-                homeAddressBox.val(homeAddress || '');
-
-                shippingAddressSelect.empty().append('<option value="">Choose...</option>');
-                data.addresses.forEach(addr => {
-                    shippingAddressSelect.append(`<option value="${addr.address}">${addr.address_type || addr.address}</option>`);
-                });
-            });
+            // Call the new function to populate addresses
+            populateCustomerAddresses(customer.id, $('#shippingAddressSelect'));
 
             return false;
         }
-    }).data("ui-autocomplete")._renderItem = function(ul, item) {
+    }).on('focus', function() {
+        $(this).autocomplete("search", "");
+    });
+
+    // 2. Customize the renderer (no change here)
+    $("#customerSearch").data("ui-autocomplete")._renderItem = function(ul, item) {
         return $("<li>").append(`<div>${item.name} - ${item.phone}</div>`).appendTo(ul);
     };
 
+    // 3. Handle selection from the shipping address dropdown
     $('#shippingAddressSelect').on('change', function() {
-        $('#clientShippingAddress').val($(this).val());
+        const selected = $(this).find('option:selected');
+        const value = $(this).val();
+        const typeToAdd = selected.data('type-to-add');
+
+        if (typeToAdd) {
+            // User selected "Add New..."
+            // Pre-select the type in the modal and open it
+            $('#newAddressType').val(typeToAdd);
+            $('#newAddressText').val(''); // Clear text field
+            newAddressModal.show();
+            
+            // Reset the dropdown
+            $(this).val('');
+        } else {
+            // User selected a saved address
+            $('#clientShippingAddress').val(value);
+        }
     });
 
+    // 4. Handle saving the new address from the modal
     $('#saveNewAddressBtn').on('click', function() {
         const newAddress = $('#newAddressText').val();
         const newType = $('#newAddressType').val();
+        const shippingAddressSelect = $('#shippingAddressSelect');
         
         if (newAddress) {
-            const displayText = newType ? `${newType}: ${newAddress}` : newAddress;
-            $('#shippingAddressSelect').append(`<option value="${newAddress}" selected>${displayText}</option>`);
+            const displayText = `${newAddress} (${newType})`;
+            
+            // Find or create the "Saved Addresses" optgroup
+            let optgroup = shippingAddressSelect.find('optgroup[label="Saved Addresses"]');
+            if (optgroup.length === 0) {
+                // Prepend to keep it at the top
+                shippingAddressSelect.prepend('<optgroup label="Saved Addresses"></optgroup>');
+                optgroup = shippingAddressSelect.find('optgroup[label="Saved Addresses"]');
+            }
+            
+            // Add the new option to the group
+            const newOption = $(`<option value="${newAddress}" data-type="${newType}">${displayText}</option>`);
+            optgroup.append(newOption);
+            
+            // Select the new option
+            newOption.prop('selected', true);
+
+            // Update the main shipping address text area
             $('#clientShippingAddress').val(newAddress);
+            
+            // Clear modal fields and hide
             $('#newAddressText').val('');
-            $('#newAddressType').val('');
+            $('#newAddressType').val('Home'); // Reset to default
             newAddressModal.hide();
         }
     });
+    // --- END: MODIFICATION ---
+
+     // --- START: Quick Customer Modal Logic ---
+    var quickCustomerModal = new bootstrap.Modal(document.getElementById('quickCustomerModal'));
+    var quickCustomerErrors = $('#quickCustomerErrors');
+    var quickCustomerErrorList = quickCustomerErrors.find('ul');
+
+    $('#saveQuickCustomerBtn').on('click', function(e) {
+        e.preventDefault();
+        
+        // Clear previous errors
+        quickCustomerErrors.hide();
+        quickCustomerErrorList.empty();
+
+        // Get data
+        const name = $('#quick_name').val();
+        const phone = $('#quick_phone').val();
+        const address = $('#quick_address').val();
+
+        // Disable button
+        $(this).prop('disabled', true).text('Saving...');
+
+        $.ajax({
+            url: "{{ route('order.customer.quick-store') }}",
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            data: {
+                name: name,
+                phone: phone,
+                address: address
+            },
+           success: function(response) {
+                // 1. Populate customer fields
+                $('#customerId').val(response.customer.id);
+                $('#customerSearch').val(response.customer.name + ' - ' + response.customer.phone);
+
+                // 2. Populate address text boxes
+                $('#clientHomeAddress').val(response.address.address);
+                $('#clientShippingAddress').val(response.address.address);
+
+                // 3. Re-build the entire shipping address dropdown
+                const shippingAddressSelect = $('#shippingAddressSelect');
+                
+                // 3a. Clear old options
+                shippingAddressSelect.empty();
+                shippingAddressSelect.append('<option value="">Choose...</option>');
+
+                // --- START: CORRECTED CODE ---
+                
+                // 3b. Add Group 1: The new saved address
+                // Create the optgroup as a jQuery object first
+                const savedOptgroup = $('<optgroup label="Saved Addresses"></optgroup>');
+                const newAddressOption = $(`<option value="${response.address.address}" data-type="Home">${response.address.address} (Home)</option>`);
+                // Append the option *to the object*
+                savedOptgroup.append(newAddressOption);
+                // Append the *object* to the select
+                shippingAddressSelect.append(savedOptgroup);
+
+                // 3c. Add Group 2: The "Add New..." options
+                // Create the second optgroup as a jQuery object
+                const addNewOptgroup = $('<optgroup label="Add New Address"></optgroup>');
+                // Append options *to the object*
+                addNewOptgroup.append('<option value="add_new_home" data-type-to-add="Home">Add New Home Address...</option>');
+                addNewOptgroup.append('<option value="add_new_office" data-type-to-add="Office">Add New Office Address...</option>');
+                addNewOptgroup.append('<option value="add_new_others" data-type-to-add="Others">Add New Other Address...</option>');
+                // Append the *object* to the select
+                shippingAddressSelect.append(addNewOptgroup);
+                
+                // --- END: CORRECTED CODE ---
+
+                // 3d. Select the new address
+                shippingAddressSelect.val(response.address.address); 
+
+                // 4. Reset form and close modal
+                $('#quickCustomerForm')[0].reset();
+                quickCustomerModal.hide();
+            },
+            error: function(xhr) {
+                if (xhr.status === 422) {
+                    // Validation errors
+                    const errors = xhr.responseJSON.errors;
+                    $.each(errors, function(key, value) {
+                        quickCustomerErrorList.append('<li>' + value[0] + '</li>');
+                    });
+                    quickCustomerErrors.show();
+                } else {
+                    // Server error
+                    quickCustomerErrorList.append('<li>An unexpected error occurred. Please try again.</li>');
+                    quickCustomerErrors.show();
+                }
+            },
+            complete: function() {
+                // Re-enable button
+                $('#saveQuickCustomerBtn').prop('disabled', false).text('Save Customer');
+            }
+        });
+    });
+    // --- END: Quick Customer Modal Logic ---
 
     // --- Product Rows & Calculation Logic ---
     let productRowIndex = 0;
@@ -352,15 +585,19 @@ $(document).ready(function() {
         productRowIndex++;
     }
 
+  // --- START: MODIFICATION ---
     function initializeProductSearch(element) {
         $(element).autocomplete({
             source: "{{ route('order.search-products') }}",
-            minLength: 1,
+            minLength: 1, // Was 1, keeping it
             select: function(event, ui) {
                 const row = $(this).closest('tr');
                 const productId = ui.item.id;
                 row.find('input[name$="[product_id]"]').val(productId);
                 
+                // Set the input text to the product name after selection
+                $(this).val(ui.item.value); 
+
                 if (productsCache[productId]) {
                     populateVariations(row, productsCache[productId]);
                 } else {
@@ -369,9 +606,23 @@ $(document).ready(function() {
                         populateVariations(row, data);
                     });
                 }
+                return false; // Prevent default value replacement
             }
-        });
+        }).data("ui-autocomplete")._renderItem = function(ul, item) {
+            // Add a CSS class to the <ul> for styling
+            ul.addClass('product-autocomplete-list'); 
+
+            return $("<li>")
+                .append(`
+                    <div class="autocomplete-item">
+                        <img src="${item.image_url}" alt="Product" class="autocomplete-image">
+                        <span class="autocomplete-label">${item.label}</span>
+                    </div>
+                `)
+                .appendTo(ul);
+        };
     }
+    // --- END: MODIFICATION ---
 
     function populateVariations(row, productData) {
         const colorSelect = row.find('.color-select');

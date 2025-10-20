@@ -127,7 +127,7 @@
                                 <select name="addresses[{{$index}}][address_type]" class="form-select">
                                     <option value="Home" @selected($address->address_type == 'Home')>Home</option>
                                     <option value="Office" @selected($address->address_type == 'Office')>Office</option>
-                                    <option value="Other" @selected($address->address_type == 'Other')>Other</option>
+                                    <option value="Others" @selected($address->address_type == 'Others')>Other</option>
                                 </select>
                             </div>
                             <div class="col-md-1 text-center">
@@ -145,7 +145,7 @@
                             <div class="col-md-7"><input type="text" name="addresses[0][address]" class="form-control" placeholder="Enter full address" required></div>
                             <div class="col-md-3">
                                 <select name="addresses[0][address_type]" class="form-select">
-                                    <option value="Home">Home</option><option value="Office">Office</option><option value="Other">Other</option>
+                                    <option value="Home">Home</option><option value="Office">Office</option><option value="Others">Other</option>
                                 </select>
                             </div>
                             <div class="col-md-1 text-center">
@@ -184,7 +184,7 @@ $(document).ready(function() {
                 <div class="col-md-7"><input type="text" name="addresses[${addressIndex}][address]" class="form-control" placeholder="Enter full address" required></div>
                 <div class="col-md-3">
                     <select name="addresses[${addressIndex}][address_type]" class="form-select">
-                        <option value="Home">Home</option><option value="Office">Office</option><option value="Other">Other</option>
+                        <option value="Home">Home</option><option value="Office">Office</option><option value="Others">Other</option>
                     </select>
                 </div>
                 <div class="col-md-1 text-center">

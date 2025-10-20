@@ -19,10 +19,63 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Traits\StockManagementTrait;
+use Illuminate\Support\Facades\Validator;
 class OrderController extends Controller
 {
 
      use StockManagementTrait;
+
+
+     /**
+     * Quickly store a new customer via AJAX from the order page.
+     */
+    public function quickStoreCustomer(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|digits:11|unique:customers,phone',
+            'address' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $customer = null;
+            $address = null;
+
+            DB::transaction(function () use ($request, &$customer, &$address) {
+                // Create the customer
+                $customer = Customer::create([
+                    'name' => $request->name,
+                    'phone' => $request->phone,
+                    'type' => 'normal', // Default type
+                    'status' => 1,
+                ]);
+
+                // Create the address
+                $address = $customer->addresses()->create([
+                    'address' => $request->address,
+                    'address_type' => 'Home', // As requested
+                    'is_default' => true,      // As requested
+                ]);
+            });
+
+            // Re-fetch customer to get the `address` accessor populated
+            $customer->load('addresses');
+
+            return response()->json([
+                'message' => 'Customer created successfully!',
+                'customer' => $customer,
+                'address' => $address, // Send the new address
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Error in quickStoreCustomer: ' . $e->getMessage());
+            return response()->json(['errors' => ['server' => 'An internal error occurred. Please try again.']], 500);
+        }
+    }
 
     public function printA5(Order $order)
 {
@@ -39,20 +92,31 @@ class OrderController extends Controller
         }
 }
 
+ // --- START: MODIFICATION ---
     public function searchCustomers(Request $request)
-{
-    try {
-    $term = $request->get('term');
-    $customers = Customer::where('name', 'LIKE', '%' . $term . '%')
-                       ->orWhere('phone', 'LIKE', '%' . $term . '%')
-                       ->limit(10)
-                       ->get();
-    return response()->json($customers);
-     } catch (\Exception $e) {
+    {
+        try {
+            $term = $request->get('term');
+            
+            if (empty($term)) {
+                // If the term is empty, fetch the 5 most recent customers
+                $customers = Customer::latest()->limit(5)->get();
+            } else {
+                // If a term is provided, search by name or phone
+                $customers = Customer::where('name', 'LIKE', '%' . $term . '%')
+                                   ->orWhere('phone', 'LIKE', '%' . $term . '%')
+                                   ->limit(10)
+                                   ->get();
+            }
+            
+            return response()->json($customers);
+
+        } catch (\Exception $e) {
             Log::error('Error searching customers: ' . $e->getMessage());
             return response()->json(['error' => 'An error occurred during search.'], 500);
         }
-}
+    }
+    // --- END: MODIFICATION ---
     public function index()
     {
         try {
@@ -158,7 +222,7 @@ class OrderController extends Controller
 
      // AJAX method for product search
     // AJAX method for product search
-    public function searchProducts(Request $request)
+   public function searchProducts(Request $request)
 {
     try {
     $term = $request->get('term');
@@ -172,10 +236,24 @@ class OrderController extends Controller
     // The frontend expects objects with 'label' and 'value' keys.
     // We also include the 'id' so we can use it when a product is selected.
     $formattedProducts = $products->map(function($product) {
+        
+        // --- START: MODIFICATION ---
+        // Find a valid image URL. Prioritize thumbnail_image.
+        $imageUrl = asset('backend/images/placeholder.jpg'); // Set a default placeholder
+        
+        if (is_array($product->thumbnail_image) && !empty($product->thumbnail_image[0])) {
+            $imageUrl = asset('public/uploads/'.$product->thumbnail_image[0]);
+        } elseif (is_array($product->main_image) && !empty($product->main_image[0])) {
+            $imageUrl = asset('public/uploads/'.$product->main_image[0]); // Fallback to main_image
+        }
+        // --- END: MODIFICATION ---
+
+
         return [
             'id' => $product->id, // We'll need this to fetch details later
             'label' => $product->name . ' (' . $product->product_code . ')', // Text to display in the list
             'value' => $product->name, // Text to place in the input field on select
+            'image_url' => $imageUrl // --- ADDED ---
         ];
     });
 

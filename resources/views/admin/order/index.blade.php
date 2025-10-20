@@ -491,10 +491,19 @@ $(document).ready(function() {
                         </tr>`;
                 });
             }
+            // --- START OF UPDATE ---
+            // 1. Add this line to create the conditional HTML
+            const secondaryPhoneHtml = (data.customer && data.customer.secondary_phone) 
+                ? `<br> ${data.customer.secondary_phone} (secondary)` 
+                : '';
+            // --- END OF UPDATE ---
             const detailsHtml = `
                 <div class="invoice-details mb-4">
                     <p><strong>Invoice id:</strong> <a href="#">${data.invoice_no}</a></p>
-                    <p><strong>Billing Name:</strong> ${data.customer ? data.customer.name : 'N/A'} - ${data.customer ? data.customer.phone : 'N/A'}</p>
+              
+                   
+                    <p><strong>Billing Name:</strong> ${data.customer ? data.customer.name : 'N/A'} - ${data.customer ? data.customer.phone : 'N/A'}${secondaryPhoneHtml}</p>
+                  
                     <p><strong>Customer Type:</strong> <span class="badge bg-success">${data.customer ? data.customer.type : ''}</span></p>
                     <p>${data.shipping_address}</p>
                 </div>
