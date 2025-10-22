@@ -765,9 +765,9 @@ $(document).ready(function() {
         quantityInput.trigger('input'); 
     });
 
-    function calculateFinalTotals() {
+   function calculateFinalTotals() {
         let netPrice = 0;
-        let itemTotalDiscount = 0;
+        // REMOVED: let itemTotalDiscount = 0; 
         $('.product-row').each(function() {
             const row = $(this);
             const quantity = parseFloat(row.find('.quantity').val()) || 0;
@@ -778,10 +778,11 @@ $(document).ready(function() {
             row.find('.amount').val(amount.toFixed(2));
             row.find('.after-discount').val(afterDiscount.toFixed(2));
             netPrice += amount;
-            itemTotalDiscount += discount;
+            // REMOVED: itemTotalDiscount += discount;
         });
-        $('#totalDiscount').val(itemTotalDiscount.toFixed(2));
+        // REMOVED: $('#totalDiscount').val(itemTotalDiscount.toFixed(2));
 
+        // This part now correctly READS the value from the input
         const totalDiscount = parseFloat($('#totalDiscount').val()) || 0;
         const deliveryCharge = parseFloat($('#deliveryCharge').val()) || 0;
         const totalPay = parseFloat($('#totalPay').val()) || 0;
@@ -793,7 +794,17 @@ $(document).ready(function() {
         $('#totalDueText').text(`${cod.toFixed(2)} Taka`);
     }
 
-    $('#product-rows-container').on('input', '.quantity, .unit-price, .discount', calculateFinalTotals);
+   $('#product-rows-container').on('input', '.quantity, .unit-price, .discount', function() {
+        // First, sum up the item discounts and update the summary field
+        let itemTotalDiscount = 0;
+        $('.product-row .discount').each(function() {
+            itemTotalDiscount += parseFloat($(this).val()) || 0;
+        });
+        $('#totalDiscount').val(itemTotalDiscount.toFixed(2));
+        
+        // NOW, call the main calculation function
+        calculateFinalTotals();
+    });
     $('#deliveryCharge, #totalPay, #totalDiscount').on('input', calculateFinalTotals);
 
     $('#addNewProductBtn').on('click', addProductRow);
