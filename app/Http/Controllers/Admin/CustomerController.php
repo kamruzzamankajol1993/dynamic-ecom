@@ -10,6 +10,7 @@ use Illuminate\Validation\Rules;
 use App\Models\User; 
 use Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Exception;
 
 class CustomerController extends Controller
@@ -55,6 +56,108 @@ class CustomerController extends Controller
 
     public function create()
     {
+
+        // --- ADD THIS LINE ---
+        // Set time limit to 0 (unlimited) for this script only
+        // set_time_limit(0); 
+
+        // $apiUrl = 'https://adminpanel.spotlightattires.com/api/clients';
+        // $importedCount = 0;
+        // $skippedCount = 0; // Counts records skipped (no address OR already exist)
+        // $failedCount = 0;  // Counts records that failed (e.g., no phone)
+
+        // try {
+        //     // 1. Fetch data from the API
+        //     $response = Http::get($apiUrl);
+
+        //     if ($response->failed()) {
+        //         Log::error('Failed to fetch from API: ' . $response->body());
+        //         return redirect()->back()->with('error', 'Could not connect to the client API.');
+        //     }
+
+        //     $clients = $response->json()['data'] ?? [];
+
+        //     if (empty($clients)) {
+        //         return redirect()->route('customer.index')->with('success', 'No clients found to import.');
+        //     }
+
+        //     // 2. Process each client within a database transaction
+        //     DB::transaction(function () use ($clients, &$importedCount, &$skippedCount, &$failedCount) {
+                
+        //         foreach ($clients as $client) {
+        //             try {
+                        
+        //                 // --- NEW CHECK ---
+        //                 // 1. Check for valid address first
+        //                 $address = $client['address'] ?? null;
+                        
+        //                 // Skip if address is empty, null, or the string 'no address'
+        //                 if (empty($address) || strtolower(trim($address)) === 'no address') {
+        //                     $skippedCount++;
+        //                     continue;
+        //                 }
+                        
+        //                 // 2. Check for valid phone
+        //                 $phone = $client['phone'] ?? null;
+        //                 if (empty($phone)) {
+        //                     $failedCount++; // Fail if no phone number
+        //                     continue;
+        //                 }
+                        
+        //                 // 3. Check if Customer already exists by phone
+        //                 $existingCustomer = Customer::where('phone', $phone)->first();
+        //                 if ($existingCustomer) {
+        //                     $skippedCount++; // Skip if customer already exists
+        //                     continue;
+        //                 }
+                        
+        //                 // 4. Create the new Customer (since they passed all checks)
+        //                 $customer = Customer::create([
+        //                     'phone' => $phone,
+        //                     'name' => $client['name'],
+        //                     'email' => $client['email'] ?? null,
+        //                     'source' => 'api_import',
+        //                     'type' => 'normal',
+        //                     'user_id' => null,
+        //                 ]);
+
+        //                 // 5. Create the Address
+        //                 // We already know the address is valid from Check #1
+        //                 $customer->addresses()->create([
+        //                     'address' => $address, // Use the checked $address variable
+        //                     'address_type' => 'home',
+        //                     'is_default' => true,
+        //                 ]);
+                        
+        //                 $importedCount++;
+
+        //             } catch (Exception $e) {
+        //                 // Log error for this specific client and continue
+        //                 Log::error("Failed to import client with phone {$client['phone']}: " . $e->getMessage());
+        //                 $failedCount++;
+        //             }
+        //         }
+        //     });
+
+        //     Log::info("Customer import complete. Imported: $importedCount, Skipped: $skippedCount, Failed: $failedCount");
+            
+        //     $message = "Import complete. $importedCount new customers imported (with addresses).";
+        //     if ($skippedCount > 0) {
+        //         $message .= " $skippedCount customers were skipped (either no address or already exist).";
+        //     }
+        //     if ($failedCount > 0) {
+        //         $message .= " $failedCount records failed to import (e.g., no phone number).";
+        //     }
+
+        //     return redirect()->route('customer.index')->with('success', $message);
+
+        // } catch (Exception $e) {
+        //     // Catch errors from the API call or DB transaction
+        //     Log::error('Failed to import customers: ' . $e->getMessage());
+        //     return redirect()->back()->with('error', 'Failed to import customers. Please check logs.');
+        // }
+
+        ///
         try {
             return view('admin.customer.create');
         } catch (Exception $e) {

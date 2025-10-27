@@ -11,7 +11,7 @@
                 <th class="text-end">Selling Price</th>
                 <th class="text-end">Production Cost</th>
                 <th class="text-end">Delivery Charge</th>
-                <th class="text-end">Income (Sales)</th>
+                <th class="text-end">Total Discount</th> <th class="text-end">Income (Sales)</th>
                 <th class="text-end">Monthly Expense</th>
                 <th class="text-end">Net Profit</th>
             </tr>

@@ -381,36 +381,45 @@
                 </li>
                 @endif
 @endif
-  @if ($usr->can('reportAdd'))
+ @if ($usr->can('reportAdd'))
                 <li class="sidebar-title">
                     <span>Report</span>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link" href="#reportSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="reportSubmenu">
-                        <i data-feather="file-text"></i>
-                        <span>Report</span>
+                    <a class="nav-link" href="#accountingReportSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="accountingReportSubmenu">
+                        <i data-feather="book-open"></i> <span>Accounting Report</span>
                         <i data-feather="chevron-down" class="ms-auto"></i>
                     </a>
-                    <ul class="collapse list-unstyled {{Route::is('profit_and_loss.index') || Route::is('trail_balance.index') || Route::is('balance_sheet.index') || Route::is('general_ledger.index') || Route::is('reports.bank_book.index') || Route::is('reports.cash_book.index') || Route::is('report.profit_loss') || Route::is('report.income') || Route::is('report.sales') || Route::is('report.customer') || Route::is('report.category') ? 'show' : '' }}" id="reportSubmenu" data-bs-parent="#sidebar-menu">
+                    <ul class="collapse list-unstyled {{Route::is('profit_and_loss.index') || Route::is('trial_balance.index') || Route::is('balance_sheet.index') || Route::is('general_ledger.index') || Route::is('reports.bank_book.index') || Route::is('reports.cash_book.index') ? 'show' : '' }}" id="accountingReportSubmenu" data-bs-parent="#sidebar-menu">
                          
                        @if ($usr->can('cashbookReportView'))
                          <li><a class="nav-link {{ Route::is('reports.cash_book.index') ? 'active' : '' }}" href="{{ route('reports.cash_book.index') }}">Cash Book</a></li>
-@endif
-          @if ($usr->can('bankbookReportView'))
+                       @endif
+                       @if ($usr->can('bankbookReportView'))
                          <li><a class="nav-link {{ Route::is('reports.bank_book.index') ? 'active' : '' }}" href="{{ route('reports.bank_book.index') }}">Bank Book</a></li>
-@endif
-  @if ($usr->can('generalLedgerView'))
+                       @endif
+                       @if ($usr->can('generalLedgerView'))
                          <li><a class="nav-link {{ Route::is('general_ledger.index') ? 'active' : '' }}" href="{{ route('general_ledger.index') }}">General Ledger</a></li>
-@endif
-  @if ($usr->can('balanceSheetView'))
+                       @endif
+                       @if ($usr->can('balanceSheetView'))
                          <li><a class="nav-link {{ Route::is('balance_sheet.index') ? 'active' : '' }}" href="{{ route('balance_sheet.index') }}">Balance Sheet</a></li>
-@endif
-  @if ($usr->can('trailBalanceView'))
-                         <li><a class="nav-link {{ Route::is('trail_balance.index') ? 'active' : '' }}" href="{{ route('trial_balance.index') }}">Trail Balance</a></li>
-@endif
-  @if ($usr->can('profitlossView'))
+                       @endif
+                       @if ($usr->can('trailBalanceView'))
+                         <li><a class="nav-link {{ Route::is('trial_balance.index') ? 'active' : '' }}" href="{{ route('trial_balance.index') }}">Trail Balance</a></li>
+                       @endif
+                       @if ($usr->can('profitlossView'))
                          <li><a class="nav-link {{ Route::is('profit_and_loss.index') ? 'active' : '' }}" href="{{ route('profit_and_loss.index') }}">Profit & Loss(Accounting)</a></li>
-@endif
+                       @endif
+                    </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#normalReportSubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="normalReportSubmenu">
+                        <i data-feather="file-text"></i> <span>Normal Report</span>
+                        <i data-feather="chevron-down" class="ms-auto"></i>
+                    </a>
+                    <ul class="collapse list-unstyled {{Route::is('report.profit_loss') || Route::is('report.income') || Route::is('report.sales') || Route::is('report.customer') || Route::is('report.category') ? 'show' : '' }}" id="normalReportSubmenu" data-bs-parent="#sidebar-menu">
                         <li><a class="nav-link {{ Route::is('report.sales') ? 'active' : '' }}" href="{{ route('report.sales') }}">Sales Report</a></li>
                         <li><a class="nav-link {{ Route::is('report.customer') ? 'active' : '' }}" href="{{ route('report.customer') }}">Customer Report</a></li>
                         <li><a class="nav-link {{ Route::is('report.category') ? 'active' : '' }}" href="{{ route('report.category') }}">Category Wise Report</a></li>

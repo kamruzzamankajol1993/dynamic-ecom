@@ -397,10 +397,9 @@ class ReportController extends Controller
     /**
      * Fetch sales data for the report via AJAX.
      */
+    // --- START: UPDATED salesReportData METHOD ---
     public function salesReportData(Request $request)
     {
-        $query = Order::query()->where('status', 'delivered');
-
         // Set date range based on the filter
         $startDate = Carbon::now()->startOfDay();
         $endDate = Carbon::now()->endOfDay();
@@ -425,30 +424,60 @@ class ReportController extends Controller
                 }
                 break;
         }
+        
+        // Date range array for whereBetween
+        $dateRange = [$startDate, $endDate];
 
-        $query->whereBetween('created_at', [$startDate, $endDate]);
+        // 1. Fetch paginated data for the table
+        $orders = Order::query()
+            ->where('status', 'delivered')
+            ->whereBetween('created_at', $dateRange)
+            ->with('customer')
+            ->latest()
+            ->paginate(15);
 
-        // Fetch paginated data for the table
-        $orders = $query->with('customer')->latest()->paginate(15);
-
-        // Fetch summary data for the cards
+        // 2. Fetch summary data for the cards
         $summary = DB::table('orders')
             ->where('status', 'delivered')
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', $dateRange)
             ->select(
                 DB::raw('COUNT(id) as total_orders'),
-                DB::raw('SUM(total_amount) as total_sales'),
+                // --- START: MODIFIED total_sales calculation ---
+                DB::raw('SUM(subtotal - IFNULL(discount, 0)) as total_sales'), // Corrected Sales Calculation
+                // --- END: MODIFIED total_sales calculation ---
                 DB::raw('SUM(discount) as total_discount'),
                 DB::raw('SUM(shipping_cost) as total_shipping')
             )->first();
         
-        // Fetch data for the chart
+        // 3. Calculate Total Production Cost
+        $totalProductionCost = DB::table('order_details')
+            ->join('orders', 'order_details.order_id', '=', 'orders.id')
+            ->join('products', 'order_details.product_id', '=', 'products.id')
+            ->where('orders.status', 'delivered')
+            ->whereBetween('orders.created_at', $dateRange)
+            ->sum(DB::raw('IFNULL(products.purchase_price, 0) * order_details.quantity'));
+            
+        // 4. Calculate Total Expense
+        $totalExpense = DB::table('expenses')
+            ->whereBetween('expense_date', $dateRange)
+            ->sum('amount');
+
+        // 5. Add new calculations to summary object
+        $summary->total_sales = $summary->total_sales ?? 0; // Ensure it's not null
+        $summary->totalProductionCost = $totalProductionCost;
+        $summary->totalGrossProfit = $summary->total_sales - $totalProductionCost; // Gross Profit now uses the corrected sales
+        $summary->totalExpense = $totalExpense;
+        $summary->totalNetIncome = $summary->totalGrossProfit - $totalExpense; // Net Income reflects corrected Gross Profit
+        
+        // 6. Fetch data for the chart
         $chartDataQuery = DB::table('orders')
             ->where('status', 'delivered')
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', $dateRange)
             ->select(
                 DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d') as date"),
-                DB::raw('SUM(total_amount) as total')
+                // --- START: MODIFIED chart calculation ---
+                DB::raw('SUM(subtotal - IFNULL(discount, 0)) as total') // Corrected Chart Calculation
+                 // --- END: MODIFIED chart calculation ---
             )
             ->groupBy('date')
             ->orderBy('date', 'asc')
@@ -465,6 +494,7 @@ class ReportController extends Controller
             'chart_data' => $chartData
         ]);
     }
+    // --- END: UPDATED salesReportData METHOD ---
 
     /**
      * Display the customer sales report view.
@@ -541,6 +571,9 @@ class ReportController extends Controller
     /**
      * Fetch category sales data for the report via AJAX.
      */
+    /**
+     * Fetch category sales data for the report via AJAX.
+     */
     public function categoryReportData(Request $request)
     {
         // Set date range based on the filter
@@ -576,7 +609,14 @@ class ReportController extends Controller
             ->select(
                 'categories.name as category_name',
                 DB::raw('SUM(order_details.quantity) as total_products_sold'),
-                DB::raw('SUM(order_details.subtotal) as total_sales_value')
+                // --- START: MODIFIED total_sales_value calculation ---
+                DB::raw("SUM(
+                    CASE 
+                        WHEN orders.subtotal > 0 THEN order_details.subtotal - (order_details.subtotal / orders.subtotal) * IFNULL(orders.discount, 0)
+                        ELSE order_details.subtotal 
+                    END
+                ) as total_sales_value")
+                // --- END: MODIFIED total_sales_value calculation ---
             )
             ->groupBy('categories.name')
             ->orderBy('total_sales_value', 'desc');
@@ -606,57 +646,111 @@ class ReportController extends Controller
         $filter = $request->input('filter', 'monthly');
         $year = $request->input('year', Carbon::now()->year);
         $month = $request->input('month', Carbon::now()->month);
-        
-        $revenueQuery = Order::query()->where('status', 'delivered');
-        $expenseQuery = Expense::query();
+        $startDate = null;
+        $endDate = null;
+        $dateRange = null; // Initialize dateRange
 
+        // --- Determine Date Range ---
         if ($filter === 'monthly') {
-            $revenueQuery->whereYear('created_at', $year)->whereMonth('created_at', $month);
-            $expenseQuery->whereYear('expense_date', $year)->whereMonth('expense_date', $month);
+            $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+            $endDate = Carbon::create($year, $month, 1)->endOfMonth();
         } elseif ($filter === 'yearly') {
-            $revenueQuery->whereYear('created_at', $year);
-            $expenseQuery->whereYear('expense_date', $year);
+            $startDate = Carbon::create($year, 1, 1)->startOfYear();
+            $endDate = Carbon::create($year, 12, 31)->endOfYear();
         } elseif ($filter === 'custom' && $request->has('start_date') && $request->has('end_date')) {
             $startDate = Carbon::parse($request->start_date)->startOfDay();
             $endDate = Carbon::parse($request->end_date)->endOfDay();
-            $revenueQuery->whereBetween('created_at', [$startDate, $endDate]);
-            $expenseQuery->whereBetween('expense_date', [$startDate, $endDate]);
+        } else {
+            // Default to monthly if filter is invalid
+             $startDate = Carbon::now()->startOfMonth();
+             $endDate = Carbon::now()->endOfMonth();
         }
+        $dateRange = [$startDate, $endDate]; // Set the date range array
 
-        $totalRevenue = $revenueQuery->sum('total_amount');
-        $totalExpense = $expenseQuery->sum('amount');
-        $netIncome = $totalRevenue - $totalExpense;
+        // --- Base Queries ---
+        // Base query for Sales and COGS (delivered orders)
+        $orderQuery = Order::query()->where('status', 'delivered')->whereBetween('created_at', $dateRange);
+        // Base query for Expenses
+        $expenseQuery = Expense::query()->whereBetween('expense_date', $dateRange);
 
-        // Data for the table (grouped by date)
-        $revenueByDate = $revenueQuery->select(
+        // --- Calculate Summary Totals ---
+        // 1. Calculate Total Sales
+        $totalSales = (clone $orderQuery)->sum(DB::raw('subtotal - IFNULL(discount, 0)'));
+
+        // 2. Calculate Total Cost of Goods Sold (COGS)
+        $totalCOGS = DB::table('order_details')
+            ->join('orders', 'order_details.order_id', '=', 'orders.id')
+            ->join('products', 'order_details.product_id', '=', 'products.id')
+            ->where('orders.status', 'delivered')
+            ->whereBetween('orders.created_at', $dateRange)
+            ->sum(DB::raw('IFNULL(products.purchase_price, 0) * order_details.quantity'));
+
+        // 3. Calculate Total Revenue (Gross Profit)
+        $totalRevenueGrossProfit = $totalSales - $totalCOGS;
+
+        // 4. Calculate Total Expense
+        $totalExpense = (clone $expenseQuery)->sum('amount');
+
+        // 5. Calculate Net Income
+        $totalNetIncome = $totalRevenueGrossProfit - $totalExpense;
+
+        // --- Calculate Data for Table (Grouped by Date) ---
+        // Sales By Date
+        $salesByDate = (clone $orderQuery)->select(
                 DB::raw("DATE(created_at) as date"),
-                DB::raw('SUM(total_amount) as total')
-            )->groupBy('date')->pluck('total', 'date');
+                DB::raw('SUM(subtotal - IFNULL(discount, 0)) as total_sales')
+            )->groupBy('date')->pluck('total_sales', 'date');
 
-        $expenseByDate = $expenseQuery->select(
+        // COGS By Date
+        $cogsByDate = DB::table('order_details')
+             ->join('orders', 'order_details.order_id', '=', 'orders.id')
+             ->join('products', 'order_details.product_id', '=', 'products.id')
+             ->where('orders.status', 'delivered')
+             ->whereBetween('orders.created_at', $dateRange)
+             ->select(
+                 DB::raw("DATE(orders.created_at) as date"),
+                 DB::raw('SUM(IFNULL(products.purchase_price, 0) * order_details.quantity) as total_cogs')
+             )->groupBy('date')->pluck('total_cogs', 'date');
+
+        // Expense By Date
+        $expenseByDate = (clone $expenseQuery)->select(
                 DB::raw("DATE(expense_date) as date"),
-                DB::raw('SUM(amount) as total')
-            )->groupBy('date')->pluck('total', 'date');
+                DB::raw('SUM(amount) as total_expense')
+            )->groupBy('date')->pluck('total_expense', 'date');
 
-        $dates = $revenueByDate->keys()->merge($expenseByDate->keys())->unique()->sort();
+        // Combine dates from all sources
+        $dates = $salesByDate->keys()
+                ->merge($cogsByDate->keys())
+                ->merge($expenseByDate->keys())
+                ->unique()
+                ->sort();
 
+        // Build the table data array
         $tableData = [];
         foreach ($dates as $date) {
-            $revenue = $revenueByDate->get($date, 0);
+            $sales = $salesByDate->get($date, 0);
+            $cogs = $cogsByDate->get($date, 0);
+            $revenueGrossProfit = $sales - $cogs; // Daily Gross Profit
             $expense = $expenseByDate->get($date, 0);
+            $netIncome = $revenueGrossProfit - $expense; // Daily Net Income
+
             $tableData[] = [
                 'date' => Carbon::parse($date)->format('d M, Y'),
-                'revenue' => $revenue,
+                'revenue' => $revenueGrossProfit, // Use Gross Profit as 'Revenue' for the table
                 'expense' => $expense,
-                'net_income' => $revenue - $expense,
+                'net_income' => $netIncome,
             ];
         }
 
+        // Return JSON response
         return response()->json([
             'summary' => [
-                'total_revenue' => $totalRevenue,
+                'total_revenue' => $totalRevenueGrossProfit, // Send Gross Profit as 'total_revenue'
                 'total_expense' => $totalExpense,
-                'net_income' => $netIncome,
+                'net_income' => $totalNetIncome,
+                // Optionally send other values if needed by the JS
+                'total_sales' => $totalSales,
+                'total_cogs' => $totalCOGS,
             ],
             'table_data' => $tableData,
         ]);
@@ -683,7 +777,8 @@ class ReportController extends Controller
                 DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
                 DB::raw('COUNT(id) as total_orders'),
                 DB::raw('SUM(total_amount) as selling_price'),
-                DB::raw('SUM(shipping_cost) as delivery_charge')
+                DB::raw('SUM(shipping_cost) as delivery_charge'),
+                DB::raw('SUM(IFNULL(discount, 0)) as total_discount') // <<< ADDED THIS
             )
             ->where('status', 'delivered')
             ->groupBy('month')
@@ -728,18 +823,20 @@ class ReportController extends Controller
             $productionCost = $production->production_cost ?? 0;
             $deliveryCharge = $sales->delivery_charge ?? 0;
             $monthlyExpense = $expense->monthly_expense ?? 0;
+            $totalDiscount = $sales->total_discount ?? 0; // <<< ADDED THIS
             
             $incomeFromSales = $sellingPrice - $productionCost - $deliveryCharge;
             $netProfit = $incomeFromSales - $monthlyExpense;
 
             // Add to report only if there is some activity
-            if ($sellingPrice > 0 || $productionCost > 0 || $monthlyExpense > 0) {
+            if ($sellingPrice > 0 || $productionCost > 0 || $monthlyExpense > 0 || $totalDiscount > 0) {
                  $reportData[] = [
                     'month' => $monthName,
                     'orders' => $sales->total_orders ?? 0,
                     'selling_price' => $sellingPrice,
                     'production_cost' => $productionCost,
                     'delivery_charge' => $deliveryCharge,
+                    'total_discount' => $totalDiscount, // <<< ADDED THIS
                     'income_from_sales' => $incomeFromSales,
                     'monthly_expense' => $monthlyExpense,
                     'net_profit' => $netProfit,

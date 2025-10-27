@@ -20,13 +20,15 @@ $(document).ready(function() {
             renderTable(response.data);
         }).fail(() => {
             spinner.hide();
-            tableBody.html('<tr><td colspan="9" class="text-center text-danger">Failed to load data.</td></tr>');
+            // Changed colspan to 10
+            tableBody.html('<tr><td colspan="10" class="text-center text-danger">Failed to load data.</td></tr>');
         });
     }
 
     function renderTable(data) {
         if (data.length === 0) {
-            tableBody.html('<tr><td colspan="9" class="text-center">No data found for this year.</td></tr>');
+            // Changed colspan to 10
+            tableBody.html('<tr><td colspan="10" class="text-center">No data found for this year.</td></tr>');
             return;
         }
         data.forEach((item, index) => {
@@ -39,7 +41,7 @@ $(document).ready(function() {
                     <td class="text-end">${new Intl.NumberFormat().format(item.selling_price)}</td>
                     <td class="text-end">${new Intl.NumberFormat().format(item.production_cost)}</td>
                     <td class="text-end">${new Intl.NumberFormat().format(item.delivery_charge)}</td>
-                    <td class="text-end">${new Intl.NumberFormat().format(item.income_from_sales)}</td>
+                    <td class="text-end">${new Intl.NumberFormat().format(item.total_discount)}</td> <td class="text-end">${new Intl.NumberFormat().format(item.income_from_sales)}</td>
                     <td class="text-end">${new Intl.NumberFormat().format(item.monthly_expense)}</td>
                     <td class="text-end"><strong class="${netProfitClass}">${new Intl.NumberFormat().format(item.net_profit)}</strong></td>
                 </tr>`;

@@ -38,7 +38,9 @@
                                 <th>Total Buy</th>
                                 <th class="sortable" data-column="type">Type</th>
                                 <th class="sortable" data-column="status">Status</th>
-                                 <th>Source</th>
+                                <th>Source</th>
+                                {{-- Added New Column Header --}}
+                                <th class="sortable" data-column="created_at">Created At</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -71,7 +73,8 @@ $(document).ready(function() {
 
     const loaderRow = `
         <tr class="loader-row">
-            <td colspan="9">
+            {{-- Updated colspan from 9 to 10 --}}
+            <td colspan="10">
                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
@@ -87,7 +90,8 @@ $(document).ready(function() {
         }, function (res) {
             let rows = '';
             if (res.data.length === 0) {
-                rows = '<tr><td colspan="9" class="text-center">No customers found.</td></tr>';
+                 {{-- Updated colspan from 9 to 10 --}}
+                rows = '<tr><td colspan="10" class="text-center">No customers found.</td></tr>';
             } else {
                 res.data.forEach((customer, i) => {
                     const statusBadge = customer.status == 1 ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
@@ -105,17 +109,19 @@ $(document).ready(function() {
                         addressHtml = customer.addresses[0].address;
                     }
 
-                     // --- NEW LOGIC FOR SOURCE BADGE ---
                     let sourceBadge = '';
                     if (customer.source === 'admin') {
                         sourceBadge = '<span class="badge bg-info">Admin</span>';
                     } else {
                         sourceBadge = '<span class="badge bg-secondary">Website</span>';
                     }
-                    // --- END OF NEW LOGIC ---
 
-                    // Format the total buy amount
                     const totalBuy = customer.orders_sum_total_amount ? parseFloat(customer.orders_sum_total_amount).toFixed(2) : '0.00';
+                    
+                   // --- UPDATED DATE FORMATTING (d/m/Y) ---
+                    const createdAt = new Date(customer.created_at);
+                    const formattedDate = `${String(createdAt.getDate()).padStart(2, '0')}/${String(createdAt.getMonth() + 1).padStart(2, '0')}/${createdAt.getFullYear()}`;
+                    // --- END OF UPDATE ---
 
                     rows += `<tr>
                         <td>${(res.current_page - 1) * 10 + i + 1}</td>
@@ -126,6 +132,7 @@ $(document).ready(function() {
                         <td>${typeText}</td>
                         <td>${statusBadge}</td>
                         <td>${sourceBadge}</td>
+                        <td>${formattedDate}</td> {{-- Added New Cell --}}
                         <td class="d-flex gap-2">
                             <a href="${showUrl}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
                             <a href="${editUrl}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
@@ -164,9 +171,8 @@ $(document).ready(function() {
     });
     $(document).on('click', '.page-link', function (e) { e.preventDefault(); currentPage = $(this).data('page'); fetchData(); });
 
-    // UPDATED DELETE BUTTON CLICK HANDLER
     $(document).on('click', '.btn-delete', function () {
-        const deleteButton = $(this); // Reference to the button
+        const deleteButton = $(this); 
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -177,7 +183,6 @@ $(document).ready(function() {
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Find the closest form and submit it
                 deleteButton.closest('form').submit();
             }
         });

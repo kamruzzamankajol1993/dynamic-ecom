@@ -461,6 +461,12 @@ $(document).ready(function() {
         $.get(routes.getDetails(orderId), function(data) {
             $('#detailsModalTitle').text(`Invoice`);
             let itemsHtml = '';
+
+            // --- START: MODIFICATION (Calculate totals first) ---
+            let hasLineItemDiscounts = false;
+            let trueOriginalSubtotal = 0;
+            // --- END: MODIFICATION ---
+
             if (data.order_details && data.order_details.length > 0) {
                 data.order_details.forEach(item => {
                     const imageUrl = item.product.thumbnail_image && Array.isArray(item.product.thumbnail_image) && item.product.thumbnail_image.length > 0
@@ -479,31 +485,72 @@ $(document).ready(function() {
                         variantDetails += '</div>';
                     }
 
+                    // --- START: MODIFICATION (Check discount and set totals) ---
+                    let displayUnitPrice = '';
+                    let displaySubtotal = '';
+
+                    if (item.discount && parseFloat(item.discount) > 0) {
+                        hasLineItemDiscounts = true; // Mark that a line-item discount exists
+                        // Calculate price per unit after discount
+                        let discountedUnitPrice = (parseFloat(item.after_discount_price) || 0) / (parseFloat(item.quantity) || 1);
+                        
+                        displayUnitPrice = `
+                            <span style="text-decoration: line-through; color: #999;">${parseFloat(item.unit_price).toFixed(2)}</span><br>
+                            <strong>${discountedUnitPrice.toFixed(2)}</strong>
+                        `;
+                        displaySubtotal = parseFloat(item.after_discount_price).toFixed(2);
+                    } else {
+                        displayUnitPrice = parseFloat(item.unit_price).toFixed(2);
+                        displaySubtotal = parseFloat(item.subtotal).toFixed(2);
+                    }
+                    
+                    // Add to the true original subtotal (using the pre-discount value)
+                    trueOriginalSubtotal += parseFloat(item.after_discount_price) || 0;
+                    // --- END: MODIFICATION ---
+
                     itemsHtml += `
                         <tr>
                             <td><img src="${imageUrl}" width="40" class="img-thumbnail"></td>
                             <td>
                                 ${item.product.name}
                                 ${variantDetails}
-                                <div class="text-muted">${item.unit_price} x ${item.quantity}</div>
+                                <div class="text-muted">${displayUnitPrice} x ${item.quantity}</div>
                             </td>
-                            <td class="text-end">${item.subtotal}</td>
+                            <td class="text-end">${displaySubtotal}</td>
                         </tr>`;
                 });
             }
-            // --- START OF UPDATE ---
-            // 1. Add this line to create the conditional HTML
+            
             const secondaryPhoneHtml = (data.customer && data.customer.secondary_phone) 
                 ? `<br> ${data.customer.secondary_phone} (secondary)` 
                 : '';
-            // --- END OF UPDATE ---
+
+            // --- START: MODIFICATION (Build Summary Table) ---
+            let summaryHtml = '';
+            if (hasLineItemDiscounts) {
+                // If line-item discounts exist, show the *original* subtotal and hide the main discount
+                summaryHtml += `<tr><td>Sub Total:</td><td>${trueOriginalSubtotal.toFixed(2)}</td></tr>`;
+            } else {
+                // Otherwise, use the default behavior
+                summaryHtml += `<tr><td>Sub Total:</td><td>${data.subtotal}</td></tr>`;
+                if (data.discount && parseFloat(data.discount) > 0) {
+                    summaryHtml += `<tr><td>Discount:</td><td>${data.discount}</td></tr>`;
+                }
+            }
+            
+            // Add the rest of the rows
+            summaryHtml += `
+                <tr><td>Shipping:</td><td>${data.shipping_cost}</td></tr>
+                <tr><td><strong>Total:</strong></td><td><strong>${data.total_amount}</strong></td></tr>
+                <tr><td>Total Pay:</td><td>${data.total_pay}</td></tr>
+                <tr><td><strong>Cod:</strong></td><td><strong>${data.cod}</strong></td></tr>
+            `;
+            // --- END: MODIFICATION ---
+
             const detailsHtml = `
                 <div class="invoice-details mb-4">
                     <p><strong>Invoice id:</strong> <a href="#">${data.invoice_no}</a></p>
-              
-                   
                     <p><strong>Billing Name:</strong> ${data.customer ? data.customer.name : 'N/A'} - ${data.customer ? data.customer.phone : 'N/A'}${secondaryPhoneHtml}</p>
-                  
                     <p><strong>Customer Type:</strong> <span class="badge bg-success">${data.customer ? data.customer.type : ''}</span></p>
                     <p>${data.shipping_address}</p>
                 </div>
@@ -521,13 +568,7 @@ $(document).ready(function() {
                     <div class="col-md-5">
                         <table class="table table-sm invoice-totals">
                             <tbody>
-                                <tr><td>Sub Total:</td><td>${data.subtotal}</td></tr>
-                                <tr><td>Discount:</td><td>${data.discount}</td></tr>
-                                <tr><td>Shipping:</td><td>${data.shipping_cost}</td></tr>
-                                <tr><td><strong>Total:</strong></td><td><strong>${data.total_amount}</strong></td></tr>
-                                <tr><td>Total Pay:</td><td>${data.total_pay}</td></tr>
-                                <tr><td><strong>Cod:</strong></td><td><strong>${data.cod}</strong></td></tr>
-                            </tbody>
+                                ${summaryHtml} </tbody>
                         </table>
                     </div>
                 </div>
@@ -536,11 +577,9 @@ $(document).ready(function() {
             `;
             $('#detailsModalBody').html(detailsHtml);
             
-            // --- JAVASCRIPT LOGIC UPDATED ---
             $('#printOrderBtnA4').attr('href', `{{ url('order-print-a4') }}/${orderId}`);
             $('#printOrderBtnA5').attr('href', `{{ url('order-print-a5') }}/${orderId}`);
             $('#printOrderBtnPOS').attr('href', `{{ url('order-print-pos') }}/${orderId}`);
-            // --- END OF UPDATE ---
 
             detailsModal.show();
         });

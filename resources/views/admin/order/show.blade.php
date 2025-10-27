@@ -140,8 +140,36 @@
                                         <td class="ps-4">{{ $detail->product->name ?? 'N/A' }}</td>
                                         <td>{{ $detail->color }} / {{ $detail->size }}</td>
                                         <td class="text-center">{{ $detail->quantity }}</td>
-                                        <td class="text-end">{{ number_format($detail->unit_price, 2) }}</td>
-                                        <td class="text-end pe-4">{{ number_format($detail->subtotal, 2) }}</td>
+                                        <td class="text-end">@if(isset($detail->discount) && $detail->discount > 0 && isset($detail->after_discount_price))
+                        {{-- Logic 1: Use the discount data from the order detail --}}
+                        <span style="text-decoration: line-through; color: #999;">
+                            {{ number_format($detail->unit_price, 2) }}
+                        </span>
+                        <br>
+                        <strong>
+                            {{-- Calculate the final discounted unit price --}}
+                            {{ number_format($detail->after_discount_price / $detail->quantity, 2) }}
+                        </strong>
+                    @elseif($detail->product && $detail->product->base_price > $detail->unit_price)
+                        {{-- Logic 2: Fallback to comparing with the main product price --}}
+                        <span style="text-decoration: line-through; color: #999;">
+                            {{ number_format($detail->product->base_price, 2) }}
+                        </span>
+                        <br>
+                        <strong>{{ number_format($detail->unit_price, 2) }}</strong>
+                    @else
+                        {{-- Logic 3: No discount, just show the unit price --}}
+                        {{ number_format($detail->unit_price, 2) }}
+                    @endif</td>
+                                        <td class="text-end pe-4">
+                                            
+                                       @if(isset($detail->discount) && $detail->discount > 0)
+                {{ number_format($detail->after_discount_price, 2) }}
+            @else
+                {{ number_format($detail->subtotal, 2) }}
+            @endif
+                                        
+                                        </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -212,10 +240,36 @@
                         Order Summary
                         <span class="badge bg-success text-uppercase">{{ $order->status }}</span>
                     </div>
+
+                    @php
+            $hasLineItemDiscounts = false;
+            $trueOriginalSubtotal = 0;
+
+            foreach ($order->orderDetails as $detail) {
+                // $trueOriginalSubtotal is the sum of (qty * original unit price)
+                $trueOriginalSubtotal += $detail->after_discount_price; 
+                
+                if (isset($detail->discount) && $detail->discount > 0) {
+                    $hasLineItemDiscounts = true;
+                }
+            }
+        @endphp
+
                     <div class="card-body">
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item">Subtotal <span>{{ number_format($order->subtotal, 2) }}</span></li>
-                            <li class="list-group-item">Discount <span>- {{ number_format($order->discount, 2) }}</span></li>
+                           @if($hasLineItemDiscounts)
+                    {{-- If line-item discounts exist, show the *original* subtotal --}}
+                    {{-- and hide the main discount row. --}}
+                    <li class="list-group-item">Subtotal <span>{{ number_format($trueOriginalSubtotal, 2) }}</span></li>
+                @else
+                    {{-- Otherwise, use the default behavior --}}
+                    <li class="list-group-item">Subtotal <span>{{ number_format($order->subtotal, 2) }}</span></li>
+                    
+                    {{-- Only show the main discount if it exists AND no line-item discounts were found --}}
+                    @if($order->discount > 0)
+                    <li class="list-group-item">Discount <span>- {{ number_format($order->discount, 2) }}</span></li>
+                    @endif
+                @endif
                             <li class="list-group-item">Shipping <span>{{ number_format($order->shipping_cost, 2) }}</span></li>
                             <li class="list-group-item grand-total">Total <span>{{ number_format($order->total_amount, 2) }}</span></li>
 
