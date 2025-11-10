@@ -131,6 +131,22 @@ Update Panel Setting | {{ $ins_name }}
                                     <label class="form-label">Service Charge (%)<span class="text-danger font-w900">*</span></label>
                                     <input type="number" class="form-control" name="charge" value="{{ $panelSettingInfo->charge }}" placeholder="e.g., 5" required>
                                 </div>
+                                 <div class="col-md-12 mb-4">
+    <label class="form-label">Mobile Version(Logo)<span class="text-danger font-w900">*</span></label>
+    <input type="file" class="form-control" name="mobile_version_logo"  onchange="previewImage(this, 'mobile-logo-preview')">
+                                        <small class="form-text text-muted">Leave blank to keep the current logo.</small>
+    <div class="image-preview-container mt-2">
+        <img id="mobile-logo-preview" 
+             src="{{ $panelSettingInfo->mobile_version_logo ? asset($panelSettingInfo->mobile_version_logo) : '' }}" 
+             class="image-preview" 
+             alt="Logo Preview" 
+             style="display: {{ $panelSettingInfo->mobile_version_logo ? 'block' : 'none' }};">
+        <span class="preview-text" 
+              style="display: {{ $panelSettingInfo->mobile_version_logo ? 'none' : 'block' }};">
+              130x30
+        </span>
+    </div>
+</div>
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">System Logo</label>
                                     <input type="file" class="form-control" name="logo" onchange="previewImage(this, 'logo-preview')">
@@ -184,13 +200,20 @@ Update Panel Setting | {{ $ins_name }}
 <script>
     function previewImage(input, previewId) {
         const preview = document.getElementById(previewId);
-        
+        const text = preview.nextElementSibling; // Finds the <span> text
+
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 preview.src = e.target.result;
+                preview.style.display = 'block'; // Shows the <img>
+                if (text) text.style.display = 'none'; // Hides the <span>
             };
             reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none'; // Hides the <img>
+            if (text) text.style.display = 'block'; // Shows the <span>
         }
     }
 </script>

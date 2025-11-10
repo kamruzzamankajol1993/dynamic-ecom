@@ -60,6 +60,9 @@ class BundleOfferController extends Controller
 
            $data = $request->except('_token', 'image');
 
+           $data['status'] = $request->has('status') ? 1 : 0;
+        $data['is_free_delivery'] = $request->has('is_free_delivery') ? 1 : 0;
+
         if ($request->hasFile('image')) {
             $image = $request->file('image');
             $imageName = time() . '.' . $image->getClientOriginalExtension();
@@ -109,9 +112,10 @@ class BundleOfferController extends Controller
 
         $data = $request->except('_token', '_method', 'image');
 
-        // START: FIX FOR STATUS
+       // START: FIX FOR STATUS
         // Manually handle the status field because unchecked checkboxes are not submitted.
         $data['status'] = $request->has('status') ? 1 : 0;
+        $data['is_free_delivery'] = $request->has('is_free_delivery') ? 1 : 0; // <-- ADD THIS
         // END: FIX FOR STATUS
 
         if ($request->hasFile('image')) {

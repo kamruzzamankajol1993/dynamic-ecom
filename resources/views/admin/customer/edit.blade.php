@@ -61,7 +61,9 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">New Password</label>
                                 <div class="input-group">
-                                    <input type="password" name="password" id="password" class="form-control">
+                                    <input type="password" name="password" id="password" class="form-control" autocomplete="new-password" 
+       readonly 
+       onfocus="this.removeAttribute('readonly');">
                                     <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#password">
                                         <i class="fa fa-eye-slash"></i>
                                     </button>
@@ -70,7 +72,9 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Confirm New Password</label>
                                 <div class="input-group">
-                                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" autocomplete="new-password" 
+       readonly 
+       onfocus="this.removeAttribute('readonly');">
                                     <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#password_confirmation">
                                         <i class="fa fa-eye-slash"></i>
                                     </button>
@@ -94,7 +98,9 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Password</label>
                                     <div class="input-group">
-                                        <input type="password" name="password" id="password" class="form-control">
+                                        <input type="password" name="password" id="password" class="form-control" autocomplete="new-password" 
+       readonly 
+       onfocus="this.removeAttribute('readonly');">
                                         <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#password">
                                             <i class="fa fa-eye-slash"></i>
                                         </button>
@@ -105,7 +111,9 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Confirm Password</label>
                                     <div class="input-group">
-                                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" autocomplete="new-password" 
+       readonly 
+       onfocus="this.removeAttribute('readonly');">
                                         <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#password_confirmation">
                                             <i class="fa fa-eye-slash"></i>
                                         </button>

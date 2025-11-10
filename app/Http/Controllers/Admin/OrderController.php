@@ -31,11 +31,14 @@ class OrderController extends Controller
      */
     public function quickStoreCustomer(Request $request)
     {
+        // --- START: MODIFICATION ---
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'phone' => 'required|string|digits:11|unique:customers,phone',
+            'secondary_phone' => 'nullable|string|digits:11|unique:customers,secondary_phone', // Added validation
             'address' => 'required|string|max:255',
         ]);
+        // --- END: MODIFICATION ---
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
@@ -46,13 +49,16 @@ class OrderController extends Controller
             $address = null;
 
             DB::transaction(function () use ($request, &$customer, &$address) {
+                // --- START: MODIFICATION ---
                 // Create the customer
                 $customer = Customer::create([
                     'name' => $request->name,
                     'phone' => $request->phone,
+                    'secondary_phone' => $request->secondary_phone, // Added field
                     'type' => 'normal', // Default type
                     'status' => 1,
                 ]);
+                // --- END: MODIFICATION ---
 
                 // Create the address
                 $address = $customer->addresses()->create([

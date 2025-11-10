@@ -211,7 +211,8 @@ try {
                 'thumbnail_image' => $thumbnailPaths,
                 'main_image' => $mainPaths,
                 'real_image' => $realImagePaths,
-                'status' => $request->status ?? 1,
+                'status' => $request->has('status') ? 1 : 0, // <-- UPDATED
+                'is_free_delivery' => $request->has('is_free_delivery') ? 1 : 0, // <-- ADDED
             ]);
 
             // --- NEW: Handle Multiple Category Assignment ---
@@ -448,7 +449,8 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
                 'thumbnail_image' => $finalThumbnails, // Save the updated array of thumbnails
                 'main_image' => $finalMains, 
                 'real_image' => $finalReals,
-                'status' => $request->status ?? 1,
+                'status' => $request->has('status') ? 1 : 0, // <-- UPDATED
+                'is_free_delivery' => $request->has('is_free_delivery') ? 1 : 0,
             ]);
 
 

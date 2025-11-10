@@ -18,6 +18,7 @@ class SystemInformation extends Model
             'description',
             'develop_by',
             'icon',
+            'mobile_version_logo',
             'address',
             'email',
             'phone',11,

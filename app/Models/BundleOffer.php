@@ -14,6 +14,7 @@ class BundleOffer extends Model
         'slug',
         'title',
         'status',
+        'is_free_delivery',
         'image',
         'startdate',
         'enddate',
@@ -21,6 +22,7 @@ class BundleOffer extends Model
 protected $casts = [
         'startdate' => 'datetime',
         'enddate' => 'datetime',
+        'is_free_delivery' => 'boolean',
     ];
     /**
      * Get the product sets for the bundle offer.

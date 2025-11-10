@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('icon')->nullable();
             $table->string('address')->nullable();
             $table->string('keyword')->nullable();
+            $table->string('mobile_version_logo')->nullable();
+            
             $table->text('description')->nullable();
             $table->string('email')->nullable();
             $table->string('phone',11)->nullable();

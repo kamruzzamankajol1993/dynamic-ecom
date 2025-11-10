@@ -129,6 +129,19 @@ Create Panel Info | {{ $ins_name }}
                                     <label class="form-label">Service Charge (%)<span class="text-danger font-w900">*</span></label>
                                     <input type="number" class="form-control" name="charge" placeholder="e.g., 5" required>
                                 </div>
+
+                                
+
+                                <div class="col-md-12 mb-4">
+                                    <label class="form-label">Mobile Version(Logo)<span class="text-danger font-w900">*</span></label>
+                                    <input type="file" class="form-control" name="mobile_version_logo" required onchange="previewImage(this, 'mobile-logo-preview')">
+                                    <div class="image-preview-container mt-2">
+                                        <img id="mobile-logo-preview" class="image-preview" alt="Logo Preview">
+                                        <span class="preview-text">130x30</span>
+                                    </div>
+                                </div>
+
+
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">System Logo<span class="text-danger font-w900">*</span></label>
                                     <input type="file" class="form-control" name="logo" required onchange="previewImage(this, 'logo-preview')">

@@ -25,6 +25,7 @@
                                 <th class="sortable" data-column="title">Title</th>
                                 <th>Dates</th>
                                 <th class="sortable" data-column="status">Status</th>
+                                <th>Free Delivery</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -69,7 +70,11 @@ $(document).ready(function() {
                     const editUrl = `{{ url('bundle-offer') }}/${offer.id}/edit`;
                   const defaultImageUrl = `https://placehold.co/50x50/eee/ccc?text=No+Img`;
                     const imageUrl = offer.image ? `{{ asset('/') }}public/${offer.image}` : defaultImageUrl;
-                    
+                    // START: NEW BADGE
+                    const freeDeliveryBadge = offer.is_free_delivery == 1 
+                        ? '<span class="badge bg-success">Yes</span>' 
+                        : '<span class="badge bg-secondary">No</span>';
+                    // END: NEW BADGE
                     // Format dates without time
                     const startDate = offer.startdate ? new Date(offer.startdate).toLocaleDateString('en-CA') : 'N/A'; // en-CA gives YYYY-MM-DD format
                     const endDate = offer.enddate ? new Date(offer.enddate).toLocaleDateString('en-CA') : 'N/A';
@@ -84,6 +89,7 @@ $(document).ready(function() {
                         <td>${offer.title}</td>
                         <td>${startDate} - ${endDate}</td>
                         <td>${statusBadge}</td>
+                        <td>${freeDeliveryBadge}</td>
                         <td>
                             <a href="${editUrl}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
                            

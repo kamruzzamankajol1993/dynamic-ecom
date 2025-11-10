@@ -105,6 +105,7 @@
                                 <th>Total Stock</th>
                                 <th class="sortable" data-column="created_at">Created At</th>
                                 <th class="sortable" data-column="status">Status</th>
+                                <th>Free Delivery</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -198,6 +199,11 @@ $(document).ready(function() {
                     const imageUrl = firstImage ? `{{ asset('public/uploads') }}/${firstImage}` : 'https://placehold.co/50x50';
                     const editUrl = `{{ url('product') }}/${product.id}/edit`;
                     const showUrl = `{{ url('product') }}/${product.id}`;
+                    // START: NEW BADGE
+                    const freeDeliveryBadge = product.is_free_delivery == 1 
+                        ? '<span class="badge bg-success">Yes</span>' 
+                        : '<span class="badge bg-secondary">No</span>';
+                    // END: NEW BADGE
 
                     let priceHtml = `<b>${product.base_price}</b>`;
                     if (product.discount_price) {
@@ -238,6 +244,7 @@ $(document).ready(function() {
                         <td>${stockButton}</td>
                         <td>${createdAt}</td>
                         <td>${statusBadge}</td>
+                        <td>${freeDeliveryBadge}</td>
                         <td>
                             <a href="${showUrl}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
                             <a href="${editUrl}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>

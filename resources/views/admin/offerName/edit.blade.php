@@ -50,6 +50,12 @@
                         <input class="form-check-input" type="checkbox" name="status" value="1" id="status" @if($bundleOffer->status) checked @endif>
                         <label class="form-check-label" for="status">Active</label>
                     </div>
+                    {{-- START: NEW FIELD --}}
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" name="is_free_delivery" value="1" id="is_free_delivery" @if($bundleOffer->is_free_delivery) checked @endif>
+                        <label class="form-check-label" for="is_free_delivery">Free Delivery</label>
+                    </div>
+                    {{-- END: NEW FIELD --}}
                     <button type="submit" class="btn btn-primary mt-4">Update Offer</button>
                 </div>
             </div>

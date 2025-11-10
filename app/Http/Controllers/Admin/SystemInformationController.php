@@ -207,6 +207,24 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
                     $systemInformation->logo =  'public/uploads/'.$imageName;
 
                 }
+
+                  if ($request->hasfile('mobile_version_logo')) {
+
+
+                    $productImage = $request->file('mobile_version_logo');
+                    $imageName = 'mobile_version_logo'.$time_dy.$productImage->getClientOriginalName();
+                    $directory = 'public/uploads/';
+                    $imageUrl = $directory.$imageName;
+
+                    $img=Image::read($productImage);
+                        // ->resize(140,50);
+                    $img->save($imageUrl);
+
+                    $systemInformation->mobile_version_logo =  'public/uploads/'.$imageName;
+
+                }
+
+                
                 if ($request->hasfile('icon')) {
 
 
@@ -283,6 +301,22 @@ $panelSettingInfo = SystemInformation::where('branch_id',Auth::user()->branch_id
             $systemInformation->logo =  'public/uploads/'.$imageName;
 
         }
+
+          if ($request->hasfile('mobile_version_logo')) {
+
+
+                    $productImage = $request->file('mobile_version_logo');
+                    $imageName = 'mobile_version_logo'.$time_dy.$productImage->getClientOriginalName();
+                    $directory = 'public/uploads/';
+                    $imageUrl = $directory.$imageName;
+
+                    $img=Image::read($productImage);
+                        // ->resize(140,50);
+                    $img->save($imageUrl);
+
+                    $systemInformation->mobile_version_logo =  'public/uploads/'.$imageName;
+
+                }
         if ($request->hasfile('icon')) {
 
 

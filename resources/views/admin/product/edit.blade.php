@@ -282,6 +282,17 @@
                                     @endforeach
                                 </select>
                             </div>
+                            {{-- START: ADDED TOGGLES --}}
+                            <hr>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" name="status" value="1" id="status" @if($product->status) checked @endif>
+                                <label class="form-check-label" for="status">Status (Active)</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_free_delivery" value="1" id="is_free_delivery" @if($product->is_free_delivery) checked @endif>
+                                <label class="form-check-label" for="is_free_delivery">Free Delivery</label>
+                            </div>
+                            {{-- END: ADDED TOGGLES --}}
                         </div>
                     </div>
 

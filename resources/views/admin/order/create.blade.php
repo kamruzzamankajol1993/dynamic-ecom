@@ -320,6 +320,14 @@
                                oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value.length > 11) this.value = this.value.slice(0, 11);" 
                                pattern="[0-9]{11}" title="Please enter an 11-digit mobile number" required>
                     </div>
+                    {{-- --- START: MODIFICATION --- --}}
+                    <div class="mb-3">
+                        <label for="quick_secondary_phone" class="form-label">Secondary Phone (Optional)</label>
+                        <input type="number" class="form-control" id="quick_secondary_phone" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value.length > 11) this.value = this.value.slice(0, 11);" 
+                               pattern="[0-9]{11}" title="Please enter an 11-digit mobile number">
+                    </div>
+                    {{-- --- END: MODIFICATION --- --}}
                     <div class="mb-3">
                         <label for="quick_address" class="form-label">Address* (Home & Default)</label>
                         <textarea class="form-control" id="quick_address" rows="3" required></textarea>
@@ -389,7 +397,14 @@ $(document).ready(function() {
         minLength: 0,
         select: function(event, ui) {
             const customer = ui.item;
-            $('#customerSearch').val(`${customer.name} - ${customer.phone}`);
+            
+            // --- START: MODIFICATION ---
+            // Create the type string, matching the format from _renderItem (but without HTML)
+            const itemType = customer.type ? ` (${customer.type})` : '';
+            // Set the input value to include the type
+            $('#customerSearch').val(`${customer.name} - ${customer.phone}${itemType}`);
+            // --- END: MODIFICATION ---
+
             $('#customerId').val(customer.id);
             
             // Call the new function to populate addresses
@@ -402,9 +417,12 @@ $(document).ready(function() {
     });
 
     // 2. Customize the renderer (no change here)
+    // --- START: MODIFICATION ---
     $("#customerSearch").data("ui-autocomplete")._renderItem = function(ul, item) {
-        return $("<li>").append(`<div>${item.name} - ${item.phone}</div>`).appendTo(ul);
+        const itemType = item.type ? ` <strong class="text-success">(${item.type})</strong>` : ''; // Add parentheses and check if type exists
+        return $("<li>").append(`<div>${item.name} - ${item.phone}${itemType}</div>`).appendTo(ul);
     };
+    // --- END: MODIFICATION ---
 
     // 3. Handle selection from the shipping address dropdown
     $('#shippingAddressSelect').on('change', function() {
@@ -462,7 +480,7 @@ $(document).ready(function() {
     });
     // --- END: MODIFICATION ---
 
-     // --- START: Quick Customer Modal Logic ---
+    // --- START: Quick Customer Modal Logic ---
     var quickCustomerModal = new bootstrap.Modal(document.getElementById('quickCustomerModal'));
     var quickCustomerErrors = $('#quickCustomerErrors');
     var quickCustomerErrorList = quickCustomerErrors.find('ul');
@@ -475,9 +493,12 @@ $(document).ready(function() {
         quickCustomerErrorList.empty();
 
         // Get data
+        // --- START: MODIFICATION ---
         const name = $('#quick_name').val();
         const phone = $('#quick_phone').val();
+        const secondary_phone = $('#quick_secondary_phone').val(); // Added
         const address = $('#quick_address').val();
+        // --- END: MODIFICATION ---
 
         // Disable button
         $(this).prop('disabled', true).text('Saving...');
@@ -486,15 +507,22 @@ $(document).ready(function() {
             url: "{{ route('order.customer.quick-store') }}",
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            // --- START: MODIFICATION ---
             data: {
                 name: name,
                 phone: phone,
+                secondary_phone: secondary_phone, // Added
                 address: address
             },
+            // --- END: MODIFICATION ---
            success: function(response) {
                 // 1. Populate customer fields
                 $('#customerId').val(response.customer.id);
-                $('#customerSearch').val(response.customer.name + ' - ' + response.customer.phone);
+                // --- START: MODIFICATION ---
+                // Also update the customer search text here to include the type (which is 'normal' by default)
+                const itemType = response.customer.type ? ` (${response.customer.type})` : '';
+                $('#customerSearch').val(response.customer.name + ' - ' + response.customer.phone + itemType);
+                // --- END: MODIFICATION ---
 
                 // 2. Populate address text boxes
                 $('#clientHomeAddress').val(response.address.address);
@@ -532,7 +560,7 @@ $(document).ready(function() {
 
                 // 3d. Select the new address
                 shippingAddressSelect.val(response.address.address); 
-
+toastr.success(response.message);
                 // 4. Reset form and close modal
                 $('#quickCustomerForm')[0].reset();
                 quickCustomerModal.hide();
