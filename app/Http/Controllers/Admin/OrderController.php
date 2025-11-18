@@ -721,16 +721,45 @@ public function show(Order $order)
 public function printA4(Order $order)
 {
     try {
-    $order->load('customer', 'orderDetails.product', 'payments');
-    $companyInfo = DB::table('system_information')->first(); // Fetch company info
-    $pdf = new Mpdf(['mode' => 'utf-8', 'format' => 'A4']);
-    $html = view('admin.order.print_a4', compact('order', 'companyInfo'))->render();
-    $pdf->WriteHTML($html);
-    return $pdf->Output('invoice-'.$order->invoice_no.'.pdf', 'I');
-     } catch (\Exception $e) {
-            Log::error('Error generating A4 PDF: ' . $e->getMessage());
-            return response('Could not generate PDF.', 500);
-        }
+        $order->load('customer', 'orderDetails.product', 'payments');
+        $companyInfo = DB::table('system_information')->first();
+
+        // 1. Get default mPDF font configurations
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        // 2. Initialize mPDF
+        $pdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            // Add your custom font directory
+            'fontDir' => array_merge($fontDirs, [
+                public_path('fonts'),
+            ]),
+            // Register the font
+            'fontdata' => $fontData + [
+                'nikosh' => [
+                    'R' => 'Nikosh.ttf', // Must match your filename in public/fonts/
+                    'useOTL' => 0xFF,    // Required for correct Bangla rendering
+                    'useKashida' => 75,
+                ]
+            ],
+            // FORCE this font for the entire document
+            'default_font' => 'nikosh' 
+        ]);
+
+        $html = view('admin.order.print_a4', compact('order', 'companyInfo'))->render();
+        $pdf->WriteHTML($html);
+
+        return $pdf->Output('invoice-'.$order->invoice_no.'.pdf', 'I');
+
+    } catch (\Exception $e) {
+        Log::error('Error generating A4 PDF: ' . $e->getMessage());
+        return response('Could not generate PDF.', 500);
+    }
 }
 
 /**
@@ -739,16 +768,41 @@ public function printA4(Order $order)
 public function printPOS(Order $order)
 {
     try {
-    $order->load('customer', 'orderDetails.product', 'payments');
-    $companyInfo = DB::table('system_information')->first(); // Fetch company info
-    $pdf = new Mpdf(['mode' => 'utf-8', 'format' => [75, 100]]); // Adjusted height for more content
-    $html = view('admin.order.print_pos', compact('order', 'companyInfo'))->render();
-    $pdf->WriteHTML($html);
-    return $pdf->Output('receipt-'.$order->invoice_no.'.pdf', 'I');
-     } catch (\Exception $e) {
-            Log::error('Error generating POS PDF: ' . $e->getMessage());
-            return response('Could not generate PDF.', 500);
-        }
+        $order->load('customer', 'orderDetails.product', 'payments');
+        $companyInfo = DB::table('system_information')->first(); 
+
+        // 1. Get default mPDF font configurations
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        // 2. Initialize mPDF with POS size and Nikosh font
+        $pdf = new Mpdf([
+            'mode' => 'utf-8', 
+            'format' => [75, 100], // Your specific POS paper size
+            'fontDir' => array_merge($fontDirs, [
+                public_path('fonts'),
+            ]),
+            'fontdata' => $fontData + [
+                'nikosh' => [
+                    'R' => 'Nikosh.ttf',
+                    'useOTL' => 0xFF,
+                    'useKashida' => 75,
+                ]
+            ],
+            'default_font' => 'nikosh' // Forces Bangla support globally
+        ]);
+
+        $html = view('admin.order.print_pos', compact('order', 'companyInfo'))->render();
+        $pdf->WriteHTML($html);
+        return $pdf->Output('receipt-'.$order->invoice_no.'.pdf', 'I');
+
+    } catch (\Exception $e) {
+        Log::error('Error generating POS PDF: ' . $e->getMessage());
+        return response('Could not generate PDF.', 500);
+    }
 }
 
 /**

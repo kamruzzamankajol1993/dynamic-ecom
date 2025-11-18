@@ -5,9 +5,10 @@
   <title>Receipt - {{ $order->invoice_no }}</title>
    <style>
         body {
-            color: #333639;
-            font-family: Arial, Helvetica, sans-serif;
-        }
+        color: #333639;
+        /* Update this line to use the Nikosh font */
+        font-family: 'nikosh', sans-serif; 
+    }
 
         @page  {
       size: 75mm 100mm;

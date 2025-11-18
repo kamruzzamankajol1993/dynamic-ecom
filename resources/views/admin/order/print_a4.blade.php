@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <title>Invoice - {{ $order->invoice_no }}</title>
     <style>
-        body { font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-size: 12px; color: #333; }
+       body { 
+        /* Use the key defined in 'fontdata' above */
+        font-family: 'nikosh', sans-serif; 
+        font-size: 12px; 
+        color: #333; 
+    }
         .invoice-box { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, .15); }
         .address-table { width: 100%; margin-bottom: 30px; }
         .items-table { width: 100%; line-height: inherit; text-align: left; border-collapse: collapse; }
