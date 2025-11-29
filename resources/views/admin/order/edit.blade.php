@@ -102,14 +102,19 @@
                         <div class="card-body">
                              <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Search Client (Name/Phone)*</label>
-                                    <div class="input-group">
-                                        <input type="text" id="customerSearch" class="form-control" placeholder="Start typing to search..." value="{{ $order->customer->name }} - {{ $order->customer->phone }}">
-                                        <button class="btn btn-outline-success" type="button" id="openQuickCustomerModal" title="Add New Customer" data-bs-toggle="modal" data-bs-target="#quickCustomerModal">
-                                            <i class="fa fa-user-plus"></i>
-                                        </button>
-                                    </div>
-                                    <input type="hidden" name="customer_id" id="customerId" value="{{ $order->customer_id }}">
+                               <label class="form-label">Search Client (Name/Phone)*</label>
+<div class="input-group">
+    <input type="text" id="customerSearch" class="form-control" 
+           placeholder="Start typing to search..." 
+           {{-- If customer exists, show name, otherwise leave empty --}}
+           value="{{ $order->customer ? $order->customer->name . ' - ' . $order->customer->phone : '' }}">
+           
+    <button class="btn btn-outline-success" type="button" id="openQuickCustomerModal" title="Add New Customer" data-bs-toggle="modal" data-bs-target="#quickCustomerModal">
+        <i class="fa fa-user-plus"></i>
+    </button>
+</div>
+{{-- If customer is deleted, set value to empty so you are forced to select a new one --}}
+<input type="hidden" name="customer_id" id="customerId" value="{{ $order->customer ? $order->customer_id : '' }}">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Shipping Address</label>
@@ -123,7 +128,7 @@
                                 <div class="col-md-6">
                                     <div class="address-box border-primary">
                                         <h6 class="text-primary"><i class="fa fa-home me-2"></i>Client Home Address</h6>
-                                        <textarea name="home_address" id="clientHomeAddress" class="form-control bg-transparent border-0" rows="3" placeholder="Client Home Address">{{ $order->customer->address }}</textarea>
+                                        <textarea name="home_address" id="clientHomeAddress" class="form-control bg-transparent border-0" rows="3" placeholder="Client Home Address">{{ $order->customer->address ?? '' }}</textarea>
                                     </div>
                                 </div>
                                 <div class="col-md-6">

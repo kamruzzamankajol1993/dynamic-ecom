@@ -103,17 +103,28 @@
                             <div class="col-md-6">
                                 <h6 class="section-title">Billed To</h6>
                                 <address class="address-block">
-                                    <strong>{{ $order->customer->name }}</strong><br>
-                                    {{ $order->customer->address ?? 'N/A' }}<br>
-                                    <i class="fa fa-phone me-1"></i> {{ $order->customer->phone }}<br>
-                                    <i class="fa fa-envelope me-1"></i> {{ $order->customer->email ?? 'N/A' }}
+                                   {{-- Check if customer exists --}}
+    @if($order->customer)
+        <strong>{{ $order->customer->name }}</strong><br>
+        {{ $order->customer->address ?? 'N/A' }}<br>
+        <i class="fa fa-phone me-1"></i> {{ $order->customer->phone }}<br>
+        <i class="fa fa-envelope me-1"></i> {{ $order->customer->email ?? 'N/A' }}
+    @else
+        <strong class="text-danger">Customer Deleted</strong><br>
+        <span class="text-muted">Original details unavailable</span>
+    @endif
                                 </address>
                             </div>
                             <div class="col-md-6 text-md-end">
                                 <h6 class="section-title">Shipped To</h6>
                                 <address class="address-block">
+                                    @if($order->customer)
                                     <strong>{{ $order->customer->name }}</strong><br>
                                     {{ $order->shipping_address }}
+                                     @else
+        <strong class="text-danger">Customer Deleted</strong><br>
+        <span class="text-muted">Original details unavailable</span>
+    @endif
                                 </address>
                             </div>
                         </div>

@@ -59,9 +59,18 @@
                     <h4>Review Images</h4>
                     <div class="d-flex flex-wrap gap-3" id="review-images-container">
                         @foreach($review->images as $image)
+
+                         @php
+                                    // Check if the image specifically was uploaded by admin to use asset()
+                                    // Otherwise use the custom path logic
+                                    $imageUrl = ($image->is_upload_from_admin == 1) 
+                                        ? asset('public/'.$image->image_path) 
+                                        : $ins_url . 'public/' . $image->image_path;
+                                @endphp
+                                
                             <div class="position-relative" id="review-image-{{ $image->id }}">
                                 {{-- Changed '$image->image' to '$image->image_path' --}}
-                                <img src="{{ $ins_url .'public/'. $image->image_path }}" alt="Review Image" class="img-thumbnail" style="width: 120px; height: 120px; object-fit: cover;">
+                                <img src="{{ $imageUrl }}" alt="Review Image" class="img-thumbnail" style="width: 120px; height: 120px; object-fit: cover;">
                                 <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-image-btn"
                                         data-id="{{ $image->id }}"
                                         title="Delete Image">

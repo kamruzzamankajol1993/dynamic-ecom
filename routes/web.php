@@ -434,7 +434,7 @@ Route::resource('defaultLocation', DefaultLocationController::class);
     Route::resource('clientSay', ClientSayController::class);
     //Route::resource('review', ReviewController::class);
     // Review Routes
-    Route::resource('review', ReviewController::class)->except(['create', 'store']);
+    Route::resource('review', ReviewController::class);
     Route::get('ajax/reviews/data', [ReviewController::class, 'data'])->name('ajax.review.data');
     Route::resource('newsAndMedia', NewsAndMediaController::class);
     Route::resource('gallery', GalleryController::class);
