@@ -105,6 +105,7 @@
                             <li class="list-group-item"><strong>Phone:</strong> {{ $customer->phone }}</li>
                             <li class="list-group-item"><strong>Secondary Phone:</strong> {{ $customer->secondary_phone ?? 'N/A' }}</li>
                             <li class="list-group-item"><strong>Type:</strong> <span class="badge bg-info">{{ ucfirst($customer->type) }}</span></li>
+                            <li class="list-group-item"><strong>Discount:</strong> {{ $customer->discount_in_percent ?? 0 }}%</li>
                             <li class="list-group-item"><strong>Status:</strong>
                                 @if($customer->status)
                                     <span class="badge bg-success">Active</span>

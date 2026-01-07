@@ -47,13 +47,19 @@ $(document).ready(function() {
             let viewLogUrl = "{{ route('reward.customer.history', ':id') }}";
             viewLogUrl = viewLogUrl.replace(':id', customer.id);
 
+            // --- Calculation Logic Start ---
+            // ডাটাবেস আপডেট ছাড়াই সরাসরি আর্ন এবং রিডিম পয়েন্টের যোগফল থেকে ব্যালেন্স বের করা হচ্ছে
+            let earned = parseFloat(customer.total_earned) || 0;
+            let redeemed = parseFloat(customer.total_redeemed) || 0;
+            let currentBalance = earned - redeemed;
+            // --- Calculation Logic End ---
+
             const row = `
                 <tr>
                     <td>${sl}</td>
                     <td>${customer.name}</td>
                     <td>${customer.phone}</td>
-                    <td><strong>${customer.reward_points}</strong></td>
-                    <td>${customer.reward_point_logs_count}</td>
+                    <td><strong>${currentBalance}</strong></td> <td>${customer.reward_point_logs_count}</td>
                     <td>
                         <a href="${viewLogUrl}" class="btn btn-sm btn-secondary">
                             <i class="fa fa-eye"></i> View Log
@@ -67,7 +73,6 @@ $(document).ready(function() {
 
     function renderPagination(response) {
         paginationContainer.empty();
-        // Using the same beautiful pagination logic from the coupon script
         const currentPage = response.current_page;
         const lastPage = response.last_page;
 

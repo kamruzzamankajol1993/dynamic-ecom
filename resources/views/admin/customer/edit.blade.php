@@ -39,12 +39,17 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Type</label>
-                            <select name="type" class="form-select" required>
+                            <select name="type" id="type" class="form-select" required>
                                 <option value="normal" @selected(old('type', $customer->type) == 'normal')>Normal</option>
                                 <option value="silver" @selected(old('type', $customer->type) == 'silver')>Silver</option>
                                 <option value="platinum" @selected(old('type', $customer->type) == 'platinum')>Platinum</option>
                             </select>
                         </div>
+
+                        <div class="col-md-6 mb-3">
+    <label class="form-label">Discount (%)</label>
+    <input type="number" id="discount" name="discount_in_percent" class="form-control" value="{{ old('discount_in_percent', $customer->discount_in_percent) }}" step="0.1" min="0" max="100">
+</div>
                     </div>
 
                     @if($user)
@@ -178,6 +183,20 @@
 @section('script')
 <script>
 $(document).ready(function() {
+
+// Auto Discount Logic
+    $('#type').on('change', function() {
+        let type = $(this).val();
+        let discountField = $('#discount');
+
+        if(type === 'silver') {
+            discountField.val(5);
+        } else if(type === 'platinum') {
+            discountField.val(10);
+        } else {
+            discountField.val(0);
+        }
+    });
     $('#createLoginAccount').on('change', function() {
         const loginFields = $('#loginFields');
         const isChecked = $(this).is(':checked');

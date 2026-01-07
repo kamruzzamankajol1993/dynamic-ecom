@@ -223,6 +223,23 @@
                             <li class="list-group-item d-flex justify-content-between"><strong>Brand:</strong> <span>{{ $product->brand->name ?? 'N/A' }}</span></li>
                             <li class="list-group-item d-flex justify-content-between"><strong>Unit:</strong> <span>{{ $product->unit->name ?? 'N/A' }}</span></li>
                             <li class="list-group-item d-flex justify-content-between"><strong>Fabric:</strong> <span>{{ $product->fabric->name ?? 'N/A' }}</span></li>
+                            {{-- নতুন আইটেম --}}
+    <li class="list-group-item d-flex justify-content-between">
+        <strong>Pre Order:</strong>
+        @if($product->is_pre_order)
+            <span class="badge bg-warning text-dark">Yes</span>
+        @else
+            <span class="badge bg-secondary">No</span>
+        @endif
+    </li>
+
+    {{-- মেসেজ দেখান যদি থাকে --}}
+    @if($product->is_pre_order && $product->pre_order_msg)
+    <li class="list-group-item">
+        <strong>Pre Order Message:</strong>
+        <p class="mt-1 text-muted">{{ $product->pre_order_msg }}</p>
+    </li>
+    @endif
                             <li class="list-group-item d-flex justify-content-between"><strong>Status:</strong>
                                 @if($product->status)
                                     <span class="badge bg-success">Active</span>

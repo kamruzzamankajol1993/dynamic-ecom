@@ -22,6 +22,8 @@ return new class extends Migration
             $table->decimal('total_pay', 10, 2)->default(0);
             $table->decimal('due', 10, 2)->default(0);
             $table->decimal('cod', 10, 2)->default(0);
+            $table->decimal('reward_point_discount', 10, 2)->default(0);
+            	
             $table->string('old_id')->nullable();
             $table->string('status')->default('pending'); // e.g., pending, processing, shipped, delivered, cancelled
             $table->text('shipping_address');

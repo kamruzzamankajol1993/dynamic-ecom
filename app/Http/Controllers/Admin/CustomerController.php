@@ -15,6 +15,31 @@ use Exception;
 
 class CustomerController extends Controller
 {
+
+    public function bulkUpdateType(Request $request)
+{
+    $request->validate([
+        'ids' => 'required|array',
+        'type' => 'required|in:normal,silver,platinum',
+    ]);
+
+    try {
+        $discount = 0;
+        if($request->type == 'silver') $discount = 5;
+        if($request->type == 'platinum') $discount = 10;
+
+        // Update Type and Discount for all selected IDs
+        Customer::whereIn('id', $request->ids)->update([
+            'type' => $request->type,
+            'discount_in_percent' => $discount
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Selected customers updated successfully.']);
+    } catch (Exception $e) {
+        Log::error('Bulk update failed: ' . $e->getMessage());
+        return response()->json(['success' => false, 'message' => 'Failed to update.'], 500);
+    }
+}
     public function index()
     {
         try {
@@ -26,33 +51,54 @@ class CustomerController extends Controller
     }
 
     public function data(Request $request)
-    {
-        try {
-            $query = Customer::with('addresses')->withSum(['orders' => function ($query) {
-                $query->where('payment_status', 'paid');
-            }], 'total_amount');
+{
+    try {
+        // 1. Capture the year from the request
+        $year = $request->year;
 
-            if ($request->filled('search')) {
-                $query->where('name', 'like', $request->search . '%')
-                      ->orWhere('email', 'like', $request->search . '%')
-                      ->orWhere('phone', 'like', $request->search . '%')
-                      ->orWhere('secondary_phone', 'like', $request->search . '%'); // Added search for secondary phone
+        // 2. Start Query with Address and Orders Sum
+        // We pass $year into the closure with 'use ($year)'
+        $query = Customer::with('addresses')->withSum(['orders' => function ($query) use ($year) {
+            $query->where('payment_status', 'paid');
+            
+            // If a specific year is selected, filter the sum calculation by that year
+            if (!empty($year)) {
+                $query->whereYear('created_at', $year);
             }
+        }], 'total_amount');
 
-            $query->orderBy($request->get('sort', 'id'), $request->get('direction', 'desc'));
-            $customers = $query->paginate(10);
-
-            return response()->json([
-                'data' => $customers->items(),
-                'total' => $customers->total(),
-                'current_page' => $customers->currentPage(),
-                'last_page' => $customers->lastPage(),
-            ]);
-        } catch (Exception $e) {
-            Log::error('Failed to fetch customer data: ' . $e);
-            return response()->json(['error' => 'Failed to retrieve data.'], 500);
+        // 3. Search Logic
+        // Wrapped in a closure to ensure it works correctly with other filters
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', $searchTerm . '%')
+                  ->orWhere('email', 'like', $searchTerm . '%')
+                  ->orWhere('phone', 'like', $searchTerm . '%')
+                  ->orWhere('secondary_phone', 'like', $searchTerm . '%');
+            });
         }
+
+        // 4. Type Filter Logic
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // 5. Sorting and Pagination
+        $query->orderBy($request->get('sort', 'id'), $request->get('direction', 'desc'));
+        $customers = $query->paginate(10);
+
+        return response()->json([
+            'data' => $customers->items(),
+            'total' => $customers->total(),
+            'current_page' => $customers->currentPage(),
+            'last_page' => $customers->lastPage(),
+        ]);
+    } catch (Exception $e) {
+        Log::error('Failed to fetch customer data: ' . $e);
+        return response()->json(['error' => 'Failed to retrieve data.'], 500);
     }
+}
 
     public function create()
     {
@@ -173,6 +219,7 @@ class CustomerController extends Controller
             'phone' => ['required', 'string', 'max:255', 'unique:customers'],
             'secondary_phone' => ['nullable', 'string', 'digits:11', 'unique:customers', 'unique:users'],
             'type' => ['required', 'string', 'in:normal,silver,platinum'],
+            'discount_in_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'addresses' => ['required', 'array', 'min:1'],
             'addresses.*.address' => ['required', 'string', 'max:255'],
             'default_address_index' => ['required', 'numeric'],
@@ -210,6 +257,7 @@ class CustomerController extends Controller
                     'phone' => $request->phone,
                     'secondary_phone' => $request->secondary_phone,
                     'type' => $request->type,
+                    'discount_in_percent' => $request->discount_in_percent ?? 0,
                     'source' => 'admin',
                 ]);
 
@@ -292,6 +340,7 @@ class CustomerController extends Controller
             'addresses' => ['required', 'array', 'min:1'],
             'addresses.*.address' => ['required', 'string', 'max:255'],
             'default_address_index' => ['required', 'numeric'],
+            'discount_in_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
 
         if ($customer->user_id || $request->boolean('create_login_account')) {
@@ -343,6 +392,7 @@ class CustomerController extends Controller
                     'phone' => $request->phone,
                     'secondary_phone' => $request->secondary_phone,
                     'type' => $request->type,
+                    'discount_in_percent' => $request->discount_in_percent ?? 0,
                 ]);
 
                 $customer->addresses()->delete();

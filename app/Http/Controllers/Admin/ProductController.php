@@ -29,6 +29,71 @@ use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
+
+    public function exportVariantsStock()
+{
+    try {
+        $filename = 'product_variant_stock_' . date('Y-m-d_H-i-s') . '.csv';
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        // ১. রিলেশনশিপ দিয়ে কালার লোড করা হচ্ছে (যাতে color_id থেকে নাম পাওয়া যায়)
+        $products = Product::with(['variants.color'])->where('status', 1)->get();
+
+        // ২. সব সাইজের নাম ID সহকারে নিয়ে আসা হচ্ছে (লুকআপ করার জন্য)
+        // এটি [1 => 'M', 2 => 'L', 3 => 'XL'] এমন ফরম্যাটে ডাটা আনবে
+        $allSizes = Size::pluck('name', 'id');
+
+        $callback = function() use ($products, $allSizes) {
+            $file = fopen('php://output', 'w');
+            
+            // এক্সেল হেডার
+            fputcsv($file, ['Product Name', 'Color', 'Size', 'Quantity']);
+
+            foreach ($products as $product) {
+                if ($product->variants->isNotEmpty()) {
+                    foreach ($product->variants as $variant) {
+                        
+                        // এখানে color_id এর বদলে রিলেশন ব্যবহার করে কালারের নাম নেওয়া হচ্ছে
+                        $colorName = $variant->color ? $variant->color->name : 'No Color';
+                        
+                        $variantSizes = $variant->sizes; 
+
+                        if (is_array($variantSizes)) {
+                            foreach ($variantSizes as $sizeItem) {
+                                
+                                $sizeId = $sizeItem['size_id'] ?? null;
+                                $quantity = $sizeItem['quantity'] ?? 0;
+                                
+                                // এখানে size_id দিয়ে $allSizes অ্যারে থেকে নাম খুঁজে নেওয়া হচ্ছে
+                                $sizeName = $allSizes[$sizeId] ?? 'N/A';
+
+                                fputcsv($file, [
+                                    $product->name,
+                                    $colorName,      // আইডির বদলে নাম যাবে
+                                    $sizeName,       // আইডির বদলে নাম যাবে
+                                    $quantity
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Could not export data.');
+    }
+}
     private function getProductData()
     {
         try {
@@ -167,6 +232,7 @@ try {
             'real_image.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'size_chart_id' => 'nullable|exists:size_charts,id',
             'chart_entries' => 'nullable|array',
+            'pre_order_msg' => 'nullable|string',
         ]);
 
         // --- NEW: Get all parent categories from the selection ---
@@ -213,6 +279,8 @@ try {
                 'real_image' => $realImagePaths,
                 'status' => $request->has('status') ? 1 : 0, // <-- UPDATED
                 'is_free_delivery' => $request->has('is_free_delivery') ? 1 : 0, // <-- ADDED
+                'is_pre_order' => $request->has('is_pre_order') ? 1 : 0,
+        'pre_order_msg' => $request->pre_order_msg,
             ]);
 
             // --- NEW: Handle Multiple Category Assignment ---
@@ -355,6 +423,7 @@ try {
                 'variants' => 'nullable|array',
                 'delete_images' => 'nullable|array',
                 'delete_real_images' => 'nullable|array',
+                'pre_order_msg' => 'nullable|string',
         ]);
 
         //dd($request->all());
@@ -451,6 +520,8 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
                 'real_image' => $finalReals,
                 'status' => $request->has('status') ? 1 : 0, // <-- UPDATED
                 'is_free_delivery' => $request->has('is_free_delivery') ? 1 : 0,
+                'is_pre_order' => $request->has('is_pre_order') ? 1 : 0,
+        'pre_order_msg' => $request->pre_order_msg,
             ]);
 
 

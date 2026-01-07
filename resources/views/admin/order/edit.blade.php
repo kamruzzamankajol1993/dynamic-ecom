@@ -6,7 +6,7 @@
     <style>
          /* --- Global Font & Layout Adjustments --- */
         .main-content {
-            font-size: 0.9rem; /* Reduced base font size */
+            font-size: 0.9rem;
         }
         .main-content h2 { font-size: 1.6rem; }
         .main-content h5 { font-size: 1.1rem; }
@@ -15,14 +15,14 @@
         /* --- Beautiful Label Style --- */
         .form-label {
             font-weight: 500;
-            color: #4a5568; /* A softer, modern dark gray */
+            color: #4a5568;
             margin-bottom: 0.3rem;
             font-size: 0.85rem;
         }
 
         /* --- Form & Table Adjustments --- */
         .form-control, .form-select, .btn, .ui-autocomplete {
-            font-size: 0.875rem; /* Consistent smaller font size for inputs */
+            font-size: 0.875rem;
         }
         .product-information-table th {
             background-color: #f8f9fa;
@@ -46,10 +46,9 @@
             background-color: #f8f9fa;
         }
          .ui-autocomplete {
-            z-index: 1055 !important; /* Ensure autocomplete appears over modals */
+            z-index: 1055 !important;
         }
         
-        /* --- START: MODIFICATION --- */
         /* Custom styles for product autocomplete */
         .ui-autocomplete.product-autocomplete-list li {
             padding: 5px;
@@ -71,7 +70,6 @@
             font-weight: 500;
             line-height: 1.2;
         }
-        /* --- END: MODIFICATION --- */
     </style>
 @endsection
 
@@ -102,19 +100,17 @@
                         <div class="card-body">
                              <div class="row">
                                 <div class="col-md-6 mb-3">
-                               <label class="form-label">Search Client (Name/Phone)*</label>
-<div class="input-group">
-    <input type="text" id="customerSearch" class="form-control" 
-           placeholder="Start typing to search..." 
-           {{-- If customer exists, show name, otherwise leave empty --}}
-           value="{{ $order->customer ? $order->customer->name . ' - ' . $order->customer->phone : '' }}">
-           
-    <button class="btn btn-outline-success" type="button" id="openQuickCustomerModal" title="Add New Customer" data-bs-toggle="modal" data-bs-target="#quickCustomerModal">
-        <i class="fa fa-user-plus"></i>
-    </button>
-</div>
-{{-- If customer is deleted, set value to empty so you are forced to select a new one --}}
-<input type="hidden" name="customer_id" id="customerId" value="{{ $order->customer ? $order->customer_id : '' }}">
+                                    <label class="form-label">Search Client (Name/Phone)*</label>
+                                    <div class="input-group">
+                                        <input type="text" id="customerSearch" class="form-control" 
+                                               placeholder="Start typing to search..." 
+                                               value="{{ $order->customer ? $order->customer->name . ' - ' . $order->customer->phone : '' }}">
+                                               
+                                        <button class="btn btn-outline-success" type="button" id="openQuickCustomerModal" title="Add New Customer" data-bs-toggle="modal" data-bs-target="#quickCustomerModal">
+                                            <i class="fa fa-user-plus"></i>
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="customer_id" id="customerId" value="{{ $order->customer ? $order->customer_id : '' }}">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Shipping Address</label>
@@ -204,7 +200,6 @@
                                         </tr>
                                     </thead>
                                     <tbody id="product-rows-container">
-                                        {{-- START: MODIFICATION - Updated loop to create selects and add data attributes --}}
                                         @foreach($order->orderDetails as $index => $detail)
                                         <tr class="product-row" 
                                             data-index="{{ $index }}"
@@ -225,7 +220,6 @@
                                             <td><button type="button" class="btn btn-danger btn-sm remove-product-btn">&times;</button></td>
                                         </tr>
                                         @endforeach
-                                        {{-- END: MODIFICATION --}}
                                     </tbody>
                                 </table>
                             </div>
@@ -257,10 +251,48 @@
                                         <td>Net Price</td>
                                         <td><input type="text" id="netPrice" name="subtotal" class="form-control" value="{{ $order->subtotal }}" readonly></td>
                                     </tr>
+                                    {{-- Discount Section --}}
                                     <tr>
-                                        <td>Total Discount</td>
-                                        <td><input type="number" id="totalDiscount" name="discount" class="form-control" value="{{ $order->discount ?? 0 }}" step="0.01"></td>
+                                        <td>
+                                            Total Discount
+                                            <div class="mt-1">
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input discount-type" type="radio" name="discount_type" id="discountFixed" value="fixed" 
+                                                        {{ $order->discount_type == 'fixed' || !$order->discount_type ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="discountFixed">Fixed</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input discount-type" type="radio" name="discount_type" id="discountPercent" value="percent"
+                                                        {{ $order->discount_type == 'percent' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="discountPercent">%</label>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="number" id="discountValue" name="discount_value" class="form-control" 
+                                                   value="{{ $order->discount_value ?? 0 }}" step="0.01">
+                                            <input type="hidden" id="totalDiscount" name="discount" value="{{ $order->discount ?? 0 }}">
+                                            <small id="calculatedDiscountText" class="text-success fw-bold d-block mt-1"></small>
+                                        </td>
                                     </tr>
+                                    
+                                    {{-- START: REWARD POINT DISCOUNT DISPLAY --}}
+                                    {{-- এই সেকশনটি নতুন যোগ করা হয়েছে --}}
+                                    @if(isset($order->reward_point_discount) && $order->reward_point_discount > 0)
+                                    <tr>
+                                        <td class="text-warning fw-bold">Reward Discount</td>
+                                        <td>
+                                            <input type="text" class="form-control text-warning fw-bold" value="{{ $order->reward_point_discount }}" readonly>
+                                            {{-- Hidden field for calculation in JS --}}
+                                            <input type="hidden" id="rewardPointDiscount" value="{{ $order->reward_point_discount }}">
+                                        </td>
+                                    </tr>
+                                    @else
+                                        {{-- If no reward discount, value is 0 --}}
+                                        <input type="hidden" id="rewardPointDiscount" value="0">
+                                    @endif
+                                    {{-- END: REWARD POINT DISCOUNT DISPLAY --}}
+
                                     <tr>
                                         <td>Delivery Charge</td>
                                         <td><input type="number" id="deliveryCharge" name="shipping_cost" class="form-control" value="{{ $order->shipping_cost ?? 0 }}" step="0.01"></td>
@@ -289,9 +321,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-             <div class="mt-4">
-                 {{-- <button type="submit" class="btn btn-primary">Update Order</button> --}}
             </div>
         </form>
     </div>
@@ -347,14 +376,12 @@
                                oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value.length > 11) this.value = this.value.slice(0, 11);" 
                                pattern="[0-9]{11}" title="Please enter an 11-digit mobile number" required>
                     </div>
-                    {{-- --- START: MODIFICATION --- --}}
                     <div class="mb-3">
                         <label for="quick_secondary_phone" class="form-label">Secondary Phone (Optional)</label>
                         <input type="number" class="form-control" id="quick_secondary_phone" 
                                oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (this.value.length > 11) this.value = this.value.slice(0, 11);" 
                                pattern="[0-9]{11}" title="Please enter an 11-digit mobile number">
                     </div>
-                    {{-- --- END: MODIFICATION --- --}}
                     <div class="mb-3">
                         <label for="quick_address" class="form-label">Address* (Home & Default)</label>
                         <textarea class="form-control" id="quick_address" rows="3" required></textarea>
@@ -375,79 +402,17 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 <script>
 $(document).ready(function() {
-    // --- START: MODIFICATION ---
-    // Data for existing products passed from controller
     let initialProductDetails = @json($productDetailsJs);
-    // Initialize the product cache with this data
     let productsCache = initialProductDetails;
-    // --- END: MODIFICATION ---
 
     // Initialize the date picker
     $("#orderDate").datepicker({
         dateFormat: 'dd-mm-yy'
     });
 
-
-
-    // --- START: MODIFICATION ---
-    // New function to populate dropdowns for existing product rows on page load
-    function initializeExistingRows() {
-        $('#product-rows-container .product-row').each(function() {
-            const row = $(this);
-            const productId = row.data('product-id');
-            const selectedColor = row.data('selected-color');
-            const selectedSize = row.data('selected-size');
-            
-            if (productId && productsCache[productId]) {
-                const productData = productsCache[productId];
-                const colorSelect = row.find('.color-select');
-                
-                // 1. Populate Colors and select the correct one
-                colorSelect.empty().append('<option value="">Select Color</option>');
-                if (productData.variants) {
-                    productData.variants.forEach(variant => {
-                        const isSelected = variant.color_name === selectedColor ? 'selected' : '';
-                        colorSelect.append(`<option value="${variant.color_name}" ${isSelected}>${variant.color_name}</option>`);
-                    });
-                }
-
-                // 2. Populate Sizes based on the selected color and select the correct one
-                const sizeSelect = row.find('.size-select');
-                sizeSelect.empty().append('<option value="">Select Size</option>');
-                
-                const selectedVariant = productData.variants.find(v => v.color_name === selectedColor);
-                if (selectedVariant && selectedVariant.sizes) {
-                    selectedVariant.sizes.forEach(size => {
-                        const isSelected = size.name === selectedSize ? 'selected' : '';
-                        sizeSelect.append(`<option value="${size.name}" data-price="${size.additional_price || 0}" data-quantity="${size.quantity || 0}" ${isSelected}>${size.name} (${size.quantity} pcs)</option>`);
-                    });
-                }
-
-                // 3. Set max quantity attribute based on the selected size
-                const selectedSizeOption = sizeSelect.find('option:selected');
-                if (selectedSizeOption.length) {
-                    const availableQuantity = parseInt(selectedSizeOption.data('quantity')) || 0;
-                    const quantityInput = row.find('.quantity');
-                    quantityInput.attr('max', availableQuantity);
-                    quantityInput.attr('placeholder', `Max: ${availableQuantity}`);
-                }
-            }
-        });
-    }
-    // --- END: MODIFICATION ---
-
-
-    // --- MODIFIED: Call initialization functions in order ---
-    initializeExistingRows();
-    $('.product-search').each(function() {
-        initializeProductSearch(this);
-    });
-    calculateFinalTotals();
-    // --- END: MODIFICATION ---
-
     var newAddressModal = new bootstrap.Modal(document.getElementById('newAddressModal'));
 
- // This function populates the address dropdown
+    // --- Customer Address Logic ---
     function populateCustomerAddresses(customerId, shippingAddressSelect) {
         $.get(`{{ url('order-get-customer-details') }}/${customerId}`, function(data) {
             // Set home address
@@ -455,15 +420,12 @@ $(document).ready(function() {
             if (!homeAddress && data.addresses.length > 0) {
                 homeAddress = data.addresses[0].address;
             }
-            // Only set home address if it's empty (in edit mode)
             if ($('#clientHomeAddress').val() === '') {
                  $('#clientHomeAddress').val(homeAddress || '');
             }
 
-            // Populate shipping select
             shippingAddressSelect.empty().append('<option value="">Choose...</option>');
             
-            // Group 1: Existing Saved Addresses
             if (data.addresses.length > 0) {
                 shippingAddressSelect.append('<optgroup label="Saved Addresses">');
                 data.addresses.forEach(addr => {
@@ -472,72 +434,66 @@ $(document).ready(function() {
                 shippingAddressSelect.append('</optgroup>');
             }
 
-            // Group 2: Add New Address options
             shippingAddressSelect.append('<optgroup label="Add New Address">');
             shippingAddressSelect.append('<option value="add_new_home" data-type-to-add="Home">Add New Home Address...</option>');
             shippingAddressSelect.append('<option value="add_new_office" data-type-to-add="Office">Add New Office Address...</option>');
             shippingAddressSelect.append('<option value="add_new_others" data-type-to-add="Others">Add New Other Address...</option>');
             shippingAddressSelect.append('</optgroup>');
 
-            // --- EDIT PAGE LOGIC ---
-            // Try to re-select the saved shipping address
             const savedShippingAddress = `{{ $order->shipping_address ?? '' }}`;
             if (savedShippingAddress) {
-                // Check if the saved address is one of the options
                 if (shippingAddressSelect.find(`option[value="${savedShippingAddress}"]`).length > 0) {
                     shippingAddressSelect.val(savedShippingAddress);
                 } else {
-                    // It was likely a manually typed address.
-                    // The text area already has the value from Blade, so just leave the dropdown blank.
                     shippingAddressSelect.val('');
                 }
             }
-            // --- END EDIT PAGE LOGIC ---
         });
     }
-    
-    // --- THIS IS THE NEW PART FOR EDIT ---
-    // Call it on page load for the existing customer
+
+    // Initialize existing customer data
     const initialCustomerId = $('#customerId').val();
     if (initialCustomerId) {
         populateCustomerAddresses(initialCustomerId, $('#shippingAddressSelect'));
     }
-    // --- END NEW PART ---
 
-    // 1. Initialize customer autocomplete
+    // --- Customer Search & Discount Logic ---
     $("#customerSearch").autocomplete({
         source: "{{ route('order.search-customers') }}",
         minLength: 0,
         select: function(event, ui) {
             const customer = ui.item;
-            
-            // --- START: MODIFICATION ---
-            // Create the type string, matching the format from _renderItem (but without HTML)
             const itemType = customer.type ? ` (${customer.type})` : '';
-            // Set the input value to include the type
             $('#customerSearch').val(`${customer.name} - ${customer.phone}${itemType}`);
-            // --- END: MODIFICATION ---
-
             $('#customerId').val(customer.id);
             
-            // Call the new function to populate addresses
-            populateCustomerAddresses(customer.id, $('#shippingAddressSelect'));
+            // --- NEW: AUTO DISCOUNT LOGIC ---
+            let customerDiscountPercent = parseFloat(customer.discount_in_percent) || 0;
+            if (customerDiscountPercent > 0) {
+                $('#discountPercent').prop('checked', true);
+                $('#discountValue').val(customerDiscountPercent);
+            } else {
+                $('#discountFixed').prop('checked', true);
+                $('#discountValue').val(0);
+            }
+            calculateFinalTotals();
+            // ---------------------------------
 
+            populateCustomerAddresses(customer.id, $('#shippingAddressSelect'));
             return false;
         }
     }).on('focus', function() {
         $(this).autocomplete("search", "");
     });
 
-    // 2. Customize the renderer
-    // --- START: MODIFICATION ---
+    // --- NEW: Custom Renderer for Platinum Red Color ---
     $("#customerSearch").data("ui-autocomplete")._renderItem = function(ul, item) {
-        const itemType = item.type ? ` <strong class="text-success">(${item.type})</strong>` : ''; // Add parentheses and check if type exists
+        const typeClass = (item.type && item.type.toLowerCase() === 'platinum') ? 'text-danger fw-bold' : 'text-success';
+        const itemType = item.type ? ` <span class="${typeClass}">(${item.type})</span>` : '';
         return $("<li>").append(`<div>${item.name} - ${item.phone}${itemType}</div>`).appendTo(ul);
     };
-    // --- END: MODIFICATION ---
 
-    // 3. Handle selection from the shipping address dropdown
+    // Address Dropdown Change Logic
     $('#shippingAddressSelect').on('change', function() {
         const selected = $(this).find('option:selected');
         const value = $(this).val();
@@ -553,7 +509,7 @@ $(document).ready(function() {
         }
     });
 
-    // 4. Handle saving the new address from the modal
+    // Save New Address Modal
     $('#saveNewAddressBtn').on('click', function() {
         const newAddress = $('#newAddressText').val();
         const newType = $('#newAddressType').val();
@@ -561,41 +517,34 @@ $(document).ready(function() {
         
         if (newAddress) {
             const displayText = `${newAddress} (${newType})`;
-            
             let optgroup = shippingAddressSelect.find('optgroup[label="Saved Addresses"]');
             if (optgroup.length === 0) {
                 shippingAddressSelect.prepend('<optgroup label="Saved Addresses"></optgroup>');
                 optgroup = shippingAddressSelect.find('optgroup[label="Saved Addresses"]');
             }
-            
             const newOption = $(`<option value="${newAddress}" data-type="${newType}">${displayText}</option>`);
             optgroup.append(newOption);
             newOption.prop('selected', true);
             $('#clientShippingAddress').val(newAddress);
-            
             $('#newAddressText').val('');
             $('#newAddressType').val('Home'); 
             newAddressModal.hide();
         }
     });
-    // --- END: MODIFICATION ---
 
-    // --- START: Quick Customer Modal Logic ---
+    // --- Quick Customer Modal Logic ---
     var quickCustomerErrors = $('#quickCustomerErrors');
     var quickCustomerErrorList = quickCustomerErrors.find('ul');
 
     $('#saveQuickCustomerBtn').on('click', function(e) {
         e.preventDefault();
-        
         quickCustomerErrors.hide();
         quickCustomerErrorList.empty();
 
-        // --- START: MODIFICATION ---
         const name = $('#quick_name').val();
         const phone = $('#quick_phone').val();
-        const secondary_phone = $('#quick_secondary_phone').val(); // Added
+        const secondary_phone = $('#quick_secondary_phone').val();
         const address = $('#quick_address').val();
-        // --- END: MODIFICATION ---
 
         $(this).prop('disabled', true).text('Saving...');
 
@@ -603,61 +552,35 @@ $(document).ready(function() {
             url: "{{ route('order.customer.quick-store') }}",
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            // --- START: MODIFICATION ---
-            data: {
-                name: name,
-                phone: phone,
-                secondary_phone: secondary_phone, // Added
-                address: address
-            },
-            // --- END: MODIFICATION ---
+            data: { name, phone, secondary_phone, address },
             success: function(response) {
-                // 1. Populate customer fields
                 $('#customerId').val(response.customer.id);
-                // --- START: MODIFICATION ---
-                // Also update the customer search text here to include the type (which is 'normal' by default)
                 const itemType = response.customer.type ? ` (${response.customer.type})` : '';
                 $('#customerSearch').val(response.customer.name + ' - ' + response.customer.phone + itemType);
-                // --- END: MODIFICATION ---
 
-                // 2. Populate address text boxes
+                // Default discount for new customer
+                $('#discountFixed').prop('checked', true);
+                $('#discountValue').val(0);
+                calculateFinalTotals();
+
                 $('#clientHomeAddress').val(response.address.address);
                 $('#clientShippingAddress').val(response.address.address);
 
-                // 3. Re-build the entire shipping address dropdown
                 const shippingAddressSelect = $('#shippingAddressSelect');
-                
-                // 3a. Clear old options
-                shippingAddressSelect.empty();
-                shippingAddressSelect.append('<option value="">Choose...</option>');
+                shippingAddressSelect.empty().append('<option value="">Choose...</option>');
 
-                // --- START: CORRECTED CODE ---
-                
-                // 3b. Add Group 1: The new saved address
-                // Create the optgroup as a jQuery object first
                 const savedOptgroup = $('<optgroup label="Saved Addresses"></optgroup>');
                 const newAddressOption = $(`<option value="${response.address.address}" data-type="Home">${response.address.address} (Home)</option>`);
-                // Append the option *to the object*
                 savedOptgroup.append(newAddressOption);
-                // Append the *object* to the select
                 shippingAddressSelect.append(savedOptgroup);
 
-                // 3c. Add Group 2: The "Add New..." options
-                // Create the second optgroup as a jQuery object
                 const addNewOptgroup = $('<optgroup label="Add New Address"></optgroup>');
-                // Append options *to the object*
                 addNewOptgroup.append('<option value="add_new_home" data-type-to-add="Home">Add New Home Address...</option>');
                 addNewOptgroup.append('<option value="add_new_office" data-type-to-add="Office">Add New Office Address...</option>');
                 addNewOptgroup.append('<option value="add_new_others" data-type-to-add="Others">Add New Other Address...</option>');
-                // Append the *object* to the select
                 shippingAddressSelect.append(addNewOptgroup);
                 
-                // --- END: CORRECTED CODE ---
-
-                // 3d. Select the new address
                 shippingAddressSelect.val(response.address.address); 
-
-                // 4. Reset form and close modal
                 $('#quickCustomerForm')[0].reset();
                 quickCustomerModal.hide();
             },
@@ -678,10 +601,56 @@ $(document).ready(function() {
             }
         });
     });
-    // --- END: Quick Customer Modal Logic ---
 
-    // --- Product Rows & Calculation Logic ---
+    // --- Product Logic ---
     let productRowIndex = {{ $order->orderDetails->count() }}; 
+
+    function initializeExistingRows() {
+        $('#product-rows-container .product-row').each(function() {
+            const row = $(this);
+            const productId = row.data('product-id');
+            const selectedColor = row.data('selected-color');
+            const selectedSize = row.data('selected-size');
+            
+            if (productId && productsCache[productId]) {
+                const productData = productsCache[productId];
+                const colorSelect = row.find('.color-select');
+                
+                colorSelect.empty().append('<option value="">Select Color</option>');
+                if (productData.variants) {
+                    productData.variants.forEach(variant => {
+                        const isSelected = variant.color_name === selectedColor ? 'selected' : '';
+                        colorSelect.append(`<option value="${variant.color_name}" ${isSelected}>${variant.color_name}</option>`);
+                    });
+                }
+
+                const sizeSelect = row.find('.size-select');
+                sizeSelect.empty().append('<option value="">Select Size</option>');
+                
+                const selectedVariant = productData.variants.find(v => v.color_name === selectedColor);
+                if (selectedVariant && selectedVariant.sizes) {
+                    selectedVariant.sizes.forEach(size => {
+                        const isSelected = size.name === selectedSize ? 'selected' : '';
+                        sizeSelect.append(`<option value="${size.name}" data-price="${size.additional_price || 0}" data-quantity="${size.quantity || 0}" ${isSelected}>${size.name} (${size.quantity} pcs)</option>`);
+                    });
+                }
+
+                const selectedSizeOption = sizeSelect.find('option:selected');
+                if (selectedSizeOption.length) {
+                    const availableQuantity = parseInt(selectedSizeOption.data('quantity')) || 0;
+                    const quantityInput = row.find('.quantity');
+                    quantityInput.attr('max', availableQuantity);
+                    quantityInput.attr('placeholder', `Max: ${availableQuantity}`);
+                }
+            }
+        });
+    }
+
+    initializeExistingRows();
+    $('.product-search').each(function() {
+        initializeProductSearch(this);
+    });
+    calculateFinalTotals(); // Initial Calculation
 
     function addProductRow() {
         const rowHtml = `
@@ -713,9 +682,8 @@ $(document).ready(function() {
                 const row = $(this).closest('tr');
                 const productId = ui.item.id;
                 
-                const index = row.data('index');
                 row.find('input[name$="[product_id]"]').val(productId);
-                $(this).val(ui.item.value); // Set input value
+                $(this).val(ui.item.value); 
 
                 if (productsCache[productId]) {
                     populateVariations(row, productsCache[productId]);
@@ -728,9 +696,7 @@ $(document).ready(function() {
                  return false; 
             }
         }).data("ui-autocomplete")._renderItem = function(ul, item) {
-            // Add a CSS class to the <ul> for styling
             ul.addClass('product-autocomplete-list'); 
-
             return $("<li>")
                 .append(`
                     <div class="autocomplete-item">
@@ -798,47 +764,66 @@ $(document).ready(function() {
         quantityInput.trigger('input'); 
     });
 
+   // --- UPDATED CALCULATION LOGIC WITH REWARD DISCOUNT ---
    function calculateFinalTotals() {
         let netPrice = 0;
-        // REMOVED: let itemTotalDiscount = 0; 
+        
+        // 1. Calculate Product Totals
         $('.product-row').each(function() {
             const row = $(this);
             const quantity = parseFloat(row.find('.quantity').val()) || 0;
             const unitPrice = parseFloat(row.find('.unit-price').val()) || 0;
-            const discount = parseFloat(row.find('.discount').val()) || 0;
+            const itemDiscount = parseFloat(row.find('.discount').val()) || 0;
             const amount = quantity * unitPrice;
-            const afterDiscount = amount - discount;
+            const afterDiscount = amount - itemDiscount;
+            
             row.find('.amount').val(amount.toFixed(2));
             row.find('.after-discount').val(afterDiscount.toFixed(2));
             netPrice += amount;
-            // REMOVED: itemTotalDiscount += discount;
         });
-        // REMOVED: $('#totalDiscount').val(itemTotalDiscount.toFixed(2));
 
-        // This part now correctly READS the value from the input
-        const totalDiscount = parseFloat($('#totalDiscount').val()) || 0;
+        // 2. Calculate Total Manual/Coupon Discount
+        const discountType = $('input[name="discount_type"]:checked').val();
+        const discountValue = parseFloat($('#discountValue').val()) || 0;
+        let finalTotalDiscountAmt = 0;
+
+        if (discountType === 'percent') {
+            finalTotalDiscountAmt = (netPrice * discountValue) / 100;
+            $('#calculatedDiscountText').text(`(${discountValue}% = ${finalTotalDiscountAmt.toFixed(2)} Tk)`);
+        } else {
+            finalTotalDiscountAmt = discountValue;
+            $('#calculatedDiscountText').text('');
+        }
+
+        $('#totalDiscount').val(finalTotalDiscountAmt.toFixed(2));
+
+        // 3. Get Reward Point Discount
+        const rewardDiscount = parseFloat($('#rewardPointDiscount').val()) || 0;
+
+        // 4. Final Sum
         const deliveryCharge = parseFloat($('#deliveryCharge').val()) || 0;
         const totalPay = parseFloat($('#totalPay').val()) || 0;
-        const grandTotal = netPrice - totalDiscount + deliveryCharge;
+        
+        // Calculate raw grand total
+        // Formula: Net Price - Manual Discount - Reward Discount + Delivery
+        let rawGrandTotal = netPrice - finalTotalDiscountAmt - rewardDiscount + deliveryCharge;
+        
+        // Round UP to next integer
+        const grandTotal = Math.ceil(rawGrandTotal);
+
         const cod = grandTotal - totalPay;
+
         $('#netPrice').val(netPrice.toFixed(2));
-        $('#grandTotal').val(grandTotal.toFixed(2));
-        $('#cod').val(cod.toFixed(2));
-        $('#totalDueText').text(`${cod.toFixed(2)} Taka`);
+        $('#grandTotal').val(grandTotal);
+        $('#cod').val(cod);
+        $('#totalDueText').text(`${cod} Taka`);
     }
 
-   $('#product-rows-container').on('input', '.quantity, .unit-price, .discount', function() {
-        // First, sum up the item discounts and update the summary field
-        let itemTotalDiscount = 0;
-        $('.product-row .discount').each(function() {
-            itemTotalDiscount += parseFloat($(this).val()) || 0;
-        });
-        $('#totalDiscount').val(itemTotalDiscount.toFixed(2));
-        
-        // NOW, call the main calculation function
-        calculateFinalTotals();
-    });
-    $('#deliveryCharge, #totalPay, #totalDiscount').on('input', calculateFinalTotals);
+    // --- EVENT LISTENERS FOR CALCULATION ---
+    $('#product-rows-container').on('input', '.quantity, .unit-price, .discount', calculateFinalTotals);
+    $('#deliveryCharge, #totalPay').on('input', calculateFinalTotals);
+    // New listener for discount fields
+    $('#discountValue, input[name="discount_type"]').on('input change', calculateFinalTotals);
 
     $('#addNewProductBtn').on('click', addProductRow);
     $('#product-rows-container').on('click', '.remove-product-btn', function() { 

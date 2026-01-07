@@ -281,6 +281,11 @@
                     <li class="list-group-item">Discount <span>- {{ number_format($order->discount, 2) }}</span></li>
                     @endif
                 @endif
+                {{-- NEW: Reward Point Discount --}}
+                            @if($order->reward_point_discount > 0)
+                            <li class="list-group-item text-warning">Reward Discount <span>- {{ number_format($order->reward_point_discount, 2) }}</span></li>
+                            @endif
+                            {{-- -------------------------- --}}
                             <li class="list-group-item">Shipping <span>{{ number_format($order->shipping_cost, 2) }}</span></li>
                             <li class="list-group-item grand-total">Total <span>{{ number_format($order->total_amount, 2) }}</span></li>
 

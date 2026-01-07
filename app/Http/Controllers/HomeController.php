@@ -42,9 +42,8 @@ class HomeController extends Controller
             ->join('products', 'order_details.product_id', '=', 'products.id')
             ->where('orders.status', 'delivered');
 
-        // --- START: NEW Expense Query ---
+        // --- NEW Expense Query ---
         $totalExpenseQuery = Expense::query();
-        // --- END: NEW Expense Query ---
 
         switch ($filter) {
             case 'today':
@@ -52,14 +51,14 @@ class HomeController extends Controller
                 $newOrdersQuery->whereDate('created_at', $now->today());
                 $newCustomersQuery->whereDate('created_at', $now->today());
                 $totalProductionCostQuery->whereDate('orders.created_at', $now->today());
-                $totalExpenseQuery->whereDate('expense_date', $now->today()); // <-- ADDED
+                $totalExpenseQuery->whereDate('expense_date', $now->today());
                 break;
             case 'this_year':
                 $totalSalesQuery->whereYear('orders.created_at', $now->year);
                 $newOrdersQuery->whereYear('created_at', $now->year);
                 $newCustomersQuery->whereYear('created_at', $now->year);
                 $totalProductionCostQuery->whereYear('orders.created_at', $now->year);
-                $totalExpenseQuery->whereYear('expense_date', $now->year); // <-- ADDED
+                $totalExpenseQuery->whereYear('expense_date', $now->year);
                 break;
             case 'this_month':
             default:
@@ -67,37 +66,37 @@ class HomeController extends Controller
                 $newOrdersQuery->whereMonth('created_at', $now->month)->whereYear('created_at', $now->year);
                 $newCustomersQuery->whereMonth('created_at', $now->month)->whereYear('created_at', $now->year);
                 $totalProductionCostQuery->whereMonth('orders.created_at', $now->month)->whereYear('orders.created_at', $now->year);
-                $totalExpenseQuery->whereMonth('expense_date', $now->month)->whereYear('expense_date', $now->year); // <-- ADDED
+                $totalExpenseQuery->whereMonth('expense_date', $now->month)->whereYear('expense_date', $now->year);
                 break;
         }
 
-        // --- START: MODIFIED Calculations ---
+        // --- Calculations ---
         $totalSales = $totalSalesQuery->sum(DB::raw('subtotal - IFNULL(discount, 0)'));
-        
         $totalProductionCost = $totalProductionCostQuery->sum(DB::raw('IFNULL(products.purchase_price, 0) * order_details.quantity'));
-        
-        $totalGrossProfit = $totalSales - $totalProductionCost; // <-- RENAMED
-        
-        $totalExpense = $totalExpenseQuery->sum('amount'); // <-- CALCULATED
-        
-        $totalNetIncome = $totalGrossProfit - $totalExpense; // <-- CALCULATED
+        $totalGrossProfit = $totalSales - $totalProductionCost;
+        $totalExpense = $totalExpenseQuery->sum('amount');
+        $totalNetIncome = $totalGrossProfit - $totalExpense;
 
         $newOrdersCount = $newOrdersQuery->count();
         $newCustomersCount = $newCustomersQuery->count();
         $totalProducts = Product::count();
-        // --- END: MODIFIED Calculations ---
 
 
         // --- Recent Orders Table ---
         $recentOrders = Order::with('customer')->latest()->take(5)->get();
 
-        // --- Sales Overview Chart Data ---
+        // --- Sales Overview Chart Data (FIXED SORTING) ---
+        // আমরা Year এবং Month নম্বর সিলেক্ট করে সে অনুযায়ী সর্ট করছি যাতে সাল পরিবর্তন হলেও সিরিয়াল ঠিক থাকে
         $salesQuery = Order::select(
             DB::raw("DATE_FORMAT(created_at, '%b') as month"),
+            DB::raw("YEAR(created_at) as year"),
+            DB::raw("MONTH(created_at) as month_num"),
             DB::raw("SUM(subtotal - IFNULL(discount, 0)) as total")
         )->where('created_at', '>=', Carbon::now()->subMonths(5)->startOfMonth())
         ->where('status', 'delivered')
-         ->groupBy('month')->orderByRaw("MONTH(created_at) DESC");
+        ->groupBy('year', 'month_num', 'month') // Group by all selected columns to adhere to SQL standards
+        ->orderBy('year', 'DESC')      // প্রথমে বছর অনুযায়ী সর্ট (2026 আগে আসবে)
+        ->orderBy('month_num', 'DESC'); // তারপর মাস অনুযায়ী সর্ট
 
         $salesData = $salesQuery->get();
         $salesChartData = [['Month', 'Sales']];
@@ -142,7 +141,7 @@ class HomeController extends Controller
         if ($previousMonthSales > 0) {
             $salesPercentageChange = (($currentMonthSales - $previousMonthSales) / $previousMonthSales) * 100;
         } elseif ($currentMonthSales > 0) {
-            $salesPercentageChange = 100.0; // 100% increase if previous was 0
+            $salesPercentageChange = 100.0;
         }
 
         $monthComparisonChartData = [
@@ -189,9 +188,9 @@ class HomeController extends Controller
             'topSellingProducts',
             'topViewedProducts',
             'totalProductionCost',
-            'totalGrossProfit',     // <-- RENAMED
-            'totalExpense',         // <-- ADDED
-            'totalNetIncome'        // <-- ADDED
+            'totalGrossProfit',
+            'totalExpense',
+            'totalNetIncome'
         ));
     }
 }

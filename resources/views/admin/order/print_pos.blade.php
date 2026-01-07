@@ -202,6 +202,14 @@
                 <td>{{ number_format($order->discount, 2) }}</td>
               </tr>
               @endif
+              {{-- NEW: Reward Discount --}}
+            @if($order->reward_point_discount > 0)
+            <tr>
+                <td>Reward Disc.</td>
+                <td>{{ number_format($order->reward_point_discount, 2) }}</td>
+            </tr>
+            @endif
+            {{-- -------------------- --}}
             <tr style="font-weight:bold">
               <td>Total</td>
               <td>{{ number_format($order->total_amount, 2) }}</td>

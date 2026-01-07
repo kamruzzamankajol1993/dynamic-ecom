@@ -35,6 +35,8 @@ class Product extends Model
         'real_image',
         'status',
         'is_free_delivery',
+        'is_pre_order', // নতুন
+    'pre_order_msg', // নতুন
     ];
 
 
@@ -43,6 +45,7 @@ class Product extends Model
         'main_image' => 'array',
         'real_image' => 'array', 
         'is_free_delivery' => 'boolean',
+        'is_pre_order' => 'boolean',
     ];
 
     /**

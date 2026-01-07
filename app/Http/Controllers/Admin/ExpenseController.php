@@ -23,20 +23,32 @@ class ExpenseController extends Controller
     /**
      * Provide data for the AJAX-powered table.
      */
-    public function data(Request $request)
-    {
-        $query = Expense::with('category');
+   public function data(Request $request)
+{
+    $query = Expense::with('category');
 
-        if ($request->filled('search')) {
-            $searchTerm = $request->search;
-            $query->whereHas('category', function ($q) use ($searchTerm) {
-                $q->where('name', 'LIKE', "%{$searchTerm}%");
+    // ১. সার্চ লজিক
+    if ($request->filled('search')) {
+        $searchTerm = $request->search;
+        $query->where(function($q) use ($searchTerm) {
+            $q->whereHas('category', function ($subQ) use ($searchTerm) {
+                $subQ->where('name', 'LIKE', "%{$searchTerm}%");
             })->orWhere('description', 'LIKE', "%{$searchTerm}%");
-        }
-
-        $expenses = $query->latest()->paginate(10);
-        return response()->json($expenses);
+        });
     }
+
+    // ২. মাস এবং বছর ফিল্টার লজিক
+    // যদি month এবং year সেট করা থাকে এবং তাদের ভ্যালু 'all' না হয়, তবেই ফিল্টার হবে
+    if ($request->filled('month') && $request->filled('year')) {
+        if ($request->month !== 'all' && $request->year !== 'all') {
+            $query->whereMonth('expense_date', $request->month)
+                  ->whereYear('expense_date', $request->year);
+        }
+    }
+
+    $expenses = $query->latest()->paginate(10);
+    return response()->json($expenses);
+}
 
     /**
      * Store a new expense record.

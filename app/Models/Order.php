@@ -29,8 +29,11 @@ class Order extends Model
         'payment_term',
         'order_from',
         'trxID',
+        'reward_point_discount',	
         'statusMessage',
         'notes',
+        'discount_type',  // নতুন
+    'discount_value', // নতুন
     ];
 
     /**

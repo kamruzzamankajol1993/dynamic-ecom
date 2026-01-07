@@ -15,6 +15,7 @@ class Customer extends Authenticatable
         'old_customer_id',
         'reward_points',
         'user_id',
+        'discount_in_percent',
         'slug',
         'source',
         'type',

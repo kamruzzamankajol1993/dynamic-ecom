@@ -155,6 +155,14 @@
                         </tr>
                         @endif
                     @endif
+                    {{-- NEW: Reward Point Discount --}}
+                    @if($order->reward_point_discount > 0)
+                    <tr>
+                        <td>Reward Discount:</td>
+                        <td style="text-align: right;">- {{ number_format($order->reward_point_discount, 2) }}</td>
+                    </tr>
+                    @endif
+                    {{-- -------------------------- --}}
                     <tr><td>Shipping:</td><td style="text-align: right;">{{ number_format($order->shipping_cost, 2) }}</td></tr>
                     <tr class="grand-total"><td>Grand Total:</td><td style="text-align: right;">{{ number_format($order->total_amount, 2) }}</td></tr>
                     <tr><td>Paid:</td><td style="text-align: right;">{{ number_format($order->total_pay, 2) }}</td></tr>

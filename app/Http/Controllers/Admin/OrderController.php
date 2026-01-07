@@ -20,10 +20,62 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Traits\StockManagementTrait;
 use Illuminate\Support\Facades\Validator;
+use App\Models\RewardPoint;
+use App\Models\RewardPointSetting;
 class OrderController extends Controller
 {
 
      use StockManagementTrait;
+
+
+     // --- START: MODIFICATION (New Helper Function) ---
+    /**
+     * Calculate and store reward points for a customer when an order is delivered.
+     */
+    private function processRewardPoints(Order $order)
+    {
+        try {
+            // 1. Fetch Reward Settings
+            $settings = RewardPointSetting::first();
+
+            // 2. Check if system is enabled and order has a valid amount
+            if (!$settings || !$settings->is_enabled || $order->total_amount <= 0) {
+                return;
+            }
+
+            // 3. Check if points have already been awarded for this order to prevent duplicates
+            $existingReward = RewardPoint::where('order_id', $order->id)
+                                        ->where('type', 'earned')
+                                        ->exists();
+            if ($existingReward) {
+                return;
+            }
+
+            // 4. Calculate Points: (Total Amount / Amount Per Unit) * Points Per Unit
+            // Example: ($1000 / $100) * 1 = 10 Points
+            if ($settings->earn_per_unit_amount > 0) {
+                $points = floor($order->total_amount / $settings->earn_per_unit_amount) * $settings->earn_points_per_unit;
+
+                if ($points > 0) {
+                    // 5. Log the reward point transaction
+                    RewardPoint::create([
+                        'customer_id' => $order->customer_id,
+                        'order_id' => $order->id,
+                        'points' => $points,
+                        'type' => 'earned',
+                        'meta' => 'Points earned from Order #' . $order->invoice_no,
+                    ]);
+
+                    // Optional: If you have a 'reward_points' column in your `customers` table, increment it here.
+                    // $order->customer()->increment('reward_points', $points);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error processing reward points for Order ID ' . $order->id . ': ' . $e->getMessage());
+            // We do not throw the error to avoid breaking the order status update flow
+        }
+    }
+    // --- END: MODIFICATION ---
 
 
      /**
@@ -100,28 +152,30 @@ class OrderController extends Controller
 
  // --- START: MODIFICATION ---
     public function searchCustomers(Request $request)
-    {
-        try {
-            $term = $request->get('term');
-            
-            if (empty($term)) {
-                // If the term is empty, fetch the 5 most recent customers
-                $customers = Customer::latest()->limit(5)->get();
-            } else {
-                // If a term is provided, search by name or phone
-                $customers = Customer::where('name', 'LIKE', '%' . $term . '%')
-                                   ->orWhere('phone', 'LIKE', '%' . $term . '%')
-                                   ->limit(10)
-                                   ->get();
-            }
-            
-            return response()->json($customers);
+{
+    try {
+        $term = $request->get('term');
+        
+        $query = Customer::query();
 
-        } catch (\Exception $e) {
-            Log::error('Error searching customers: ' . $e->getMessage());
-            return response()->json(['error' => 'An error occurred during search.'], 500);
+        if (empty($term)) {
+            $query->latest()->limit(5);
+        } else {
+            $query->where('name', 'LIKE', '%' . $term . '%')
+                  ->orWhere('phone', 'LIKE', '%' . $term . '%')
+                  ->limit(10);
         }
+        
+        // এখানে নির্দিষ্ট কলামগুলো সিলেক্ট করুন, বিশেষ করে discount_in_percent এবং type
+        $customers = $query->get(['id', 'name', 'phone', 'type', 'discount_in_percent']);
+        
+        return response()->json($customers);
+
+    } catch (\Exception $e) {
+        Log::error('Error searching customers: ' . $e->getMessage());
+        return response()->json(['error' => 'An error occurred during search.'], 500);
     }
+}
     // --- END: MODIFICATION ---
     public function index()
     {
@@ -315,6 +369,7 @@ class OrderController extends Controller
         'items' => 'required|array|min:1',
         'items.*.product_id' => 'required|exists:products,id',
         'items.*.quantity' => 'required|integer|min:1',
+        'discount_value' => 'nullable|numeric|min:0',
     ]);
 
     DB::transaction(function () use ($request) {
@@ -323,6 +378,8 @@ class OrderController extends Controller
             'invoice_no' => $request->invoice_no,
             'subtotal' => $request->subtotal,
             'discount' => $request->discount,
+            'discount_type' => $request->discount_type, // 'fixed' or 'percent'
+            'discount_value' => $request->discount_value,
             'shipping_cost' => $request->shipping_cost,
             'total_amount' => $request->total_amount,
             'total_pay' => $request->total_pay,
@@ -367,6 +424,7 @@ class OrderController extends Controller
      /**
      * MODIFIED: updateStatus
      * This method now includes logic to adjust stock based on status transitions.
+     * AND REWARD POINT LOGIC.
      */
     public function updateStatus(Request $request, Order $order)
     {
@@ -391,15 +449,12 @@ class OrderController extends Controller
                 $order->load('orderDetails');
 
                 // --- STOCK ADJUSTMENT LOGIC ---
-                // Case 1: Deduct stock when moving from a non-deducting state to a deducting one.
                 if (in_array($oldStatus, $nonDeductingStatuses) && in_array($newStatus, $deductingStatuses)) {
                     $this->adjustStockForOrder($order, 'deduct');
                 }
-                // Case 2: Add stock back when moving from a deducting state back to a non-deducting one.
                 elseif (in_array($oldStatus, $deductingStatuses) && in_array($newStatus, $nonDeductingStatuses)) {
                     $this->adjustStockForOrder($order, 'add');
                 }
-                // Case 3: Add stock back when moving from a deducting state to a cancelled/failed state.
                 elseif (in_array($oldStatus, $deductingStatuses) && in_array($newStatus, $returnStockStatuses)) {
                     $this->adjustStockForOrder($order, 'add');
                 }
@@ -415,7 +470,7 @@ class OrderController extends Controller
                     'status' => $newStatus,
                 ]);
 
-                // 3. Update payment status if order is delivered
+                // 3. Update payment status AND Process Rewards if order is delivered
                 if ($newStatus == 'delivered') {
                     $order->update([
                         'total_pay' => $order->total_amount,
@@ -423,6 +478,10 @@ class OrderController extends Controller
                         'cod' => 0,
                         'payment_status' => 'paid'
                     ]);
+                    
+                    // --- START: MODIFICATION (Process Reward Points) ---
+                    $this->processRewardPoints($order);
+                    // --- END: MODIFICATION ---
                 }
             });
 
@@ -446,6 +505,7 @@ class OrderController extends Controller
     /**
      * MODIFIED: bulkUpdateStatus
      * This method now includes logic to adjust stock for each order in the bulk request.
+     * AND REWARD POINT LOGIC.
      */
     public function bulkUpdateStatus(Request $request)
     {
@@ -499,6 +559,13 @@ class OrderController extends Controller
                         $updateData['due'] = 0;
                         $updateData['cod'] = 0;
                         $updateData['payment_status'] = 'paid';
+                        
+                        // --- START: MODIFICATION (Process Reward Points) ---
+                        // We must save the order update first before processing points 
+                        // in case the helper relies on updated data, but here we pass the $order object.
+                        // However, to be safe, we perform the check inside the loop.
+                        $this->processRewardPoints($order);
+                        // --- END: MODIFICATION ---
                     }
                     $order->update($updateData);
                 }
@@ -524,7 +591,6 @@ class OrderController extends Controller
             return response()->json(['error' => 'Could not update selected orders.'], 500);
         }
     }
-
     /**
      * Fetch details for the order detail modal.
      */
@@ -646,6 +712,7 @@ public function update(Request $request, Order $order)
         'items' => 'required|array|min:1',
         'items.*.product_id' => 'required|exists:products,id',
         'items.*.quantity' => 'required|integer|min:1',
+        'discount_value' => 'nullable|numeric|min:0',
     ]);
 
     DB::transaction(function () use ($request, $order) {
@@ -655,6 +722,8 @@ public function update(Request $request, Order $order)
             'invoice_no' => $request->invoice_no,
             'subtotal' => $request->subtotal,
             'discount' => $request->discount,
+            'discount_type' => $request->discount_type, // 'fixed' or 'percent'
+                'discount_value' => $request->discount_value,
             'shipping_cost' => $request->shipping_cost,
             'total_amount' => $request->total_amount,
             'total_pay' => $request->total_pay,

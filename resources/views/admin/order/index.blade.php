@@ -537,6 +537,12 @@ $(document).ready(function() {
                     summaryHtml += `<tr><td>Discount:</td><td>${data.discount}</td></tr>`;
                 }
             }
+
+            // --- NEW: Reward Point Discount Logic ---
+            if (data.reward_point_discount && parseFloat(data.reward_point_discount) > 0) {
+                summaryHtml += `<tr><td>Reward Discount:</td><td>-${data.reward_point_discount}</td></tr>`;
+            }
+            // ----------------------------------------
             
             // Add the rest of the rows
             summaryHtml += `

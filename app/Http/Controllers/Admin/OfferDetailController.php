@@ -241,7 +241,7 @@ class OfferDetailController extends Controller
         $getAllid = AssignCategory::whereIn('category_id', $request->category_ids)
         ->pluck('product_id');
 
-        $products = Product::whereIn('id',$getAllid)->get();
+        $products = Product::whereIn('id',$getAllid)->where('status', 1)->get();
 
         // Format the response for Select2
         $response = $products->map(function($product) {

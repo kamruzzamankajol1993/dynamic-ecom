@@ -293,6 +293,17 @@
                                 <label class="form-check-label" for="is_free_delivery">Free Delivery</label>
                             </div>
                             {{-- END: ADDED TOGGLES --}}
+                            {{-- নতুন Pre Order সেকশন --}}
+<div class="form-check form-switch mt-2">
+    <input class="form-check-input" type="checkbox" name="is_pre_order" value="1" id="is_pre_order" @if($product->is_pre_order) checked @endif>
+    <label class="form-check-label" for="is_pre_order">Pre Order Product</label>
+</div>
+
+{{-- যদি is_pre_order true হয়, তাহলে স্টাইল display: block হবে, নাহলে none --}}
+<div class="mb-3 mt-2" id="preOrderMsgContainer" style="{{ $product->is_pre_order ? '' : 'display: none;' }}">
+    <label class="form-label">Pre Order Message</label>
+    <textarea name="pre_order_msg" class="form-control" rows="3">{{ old('pre_order_msg', $product->pre_order_msg) }}</textarea>
+</div>
                         </div>
                     </div>
 
@@ -344,6 +355,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
+    // --- Pre Order Toggle Logic ---
+const preOrderCheck = document.getElementById('is_pre_order');
+const preOrderContainer = document.getElementById('preOrderMsgContainer');
+
+if(preOrderCheck && preOrderContainer) {
+    preOrderCheck.addEventListener('change', function() {
+        if(this.checked) {
+            $(preOrderContainer).slideDown();
+        } else {
+            $(preOrderContainer).slideUp();
+        }
+    });
+}
 
       // --- NEW: JavaScript for Category Tree Toggle ---
     $('.category-tree-container').on('click', '.toggle-icon', function(e) {

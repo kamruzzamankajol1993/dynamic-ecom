@@ -37,13 +37,18 @@
                                    pattern="[0-9]{11}" title="Please enter an 11-digit mobile number">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Type</label>
-                            <select name="type" class="form-select" required>
-                                <option value="normal" @selected(old('type') == 'normal')>Normal</option>
-                                <option value="silver" @selected(old('type') == 'silver')>Silver</option>
-                                <option value="platinum" @selected(old('type') == 'platinum')>Platinum</option>
-                            </select>
-                        </div>
+    <label class="form-label">Type</label>
+    <select name="type" id="type" class="form-select" required>
+        <option value="normal" @selected(old('type') == 'normal')>Normal</option>
+        <option value="silver" @selected(old('type') == 'silver')>Silver</option>
+        <option value="platinum" @selected(old('type') == 'platinum')>Platinum</option>
+    </select>
+</div>
+
+<div class="col-md-6 mb-3">
+    <label class="form-label">Discount (%)</label>
+    <input type="number" id="discount" name="discount_in_percent" class="form-control" value="{{ old('discount_in_percent', 0) }}" step="0.1" min="0" max="100">
+</div>
                     </div>
                     <hr>
                     <div class="form-check form-switch mb-3">
@@ -120,6 +125,22 @@
 @section('script')
 <script>
 $(document).ready(function() {
+
+
+// Auto Discount Logic
+    $('#type').on('change', function() {
+        let type = $(this).val();
+        let discountField = $('#discount');
+
+        if(type === 'silver') {
+            discountField.val(5);
+        } else if(type === 'platinum') {
+            discountField.val(10);
+        } else {
+            discountField.val(0);
+        }
+    });
+    
     $('#createLoginAccount').on('change', function() {
         const loginFields = $('#loginFields');
         const isChecked = $(this).is(':checked');

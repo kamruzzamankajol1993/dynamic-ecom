@@ -42,6 +42,11 @@
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <h2 class="mb-0">Product List</h2>
+            {{-- এই নতুন বাটনটি যুক্ত করুন --}}
+        <a href="{{ route('product.export.variants') }}" class="btn text-white me-2" style="background-color: #28a745; white-space: nowrap;">
+            <i class="fa fa-file-excel me-1"></i> Stock Export
+        </a>
+        {{-- -------------------------- --}}
             <a href="{{ route('product.create') }}" class="btn text-white" style="background-color: var(--primary-color); white-space: nowrap;">
                 <i data-feather="plus" class="me-1" style="width:18px; height:18px;"></i> Add New Product
             </a>
@@ -106,6 +111,7 @@
                                 <th class="sortable" data-column="created_at">Created At</th>
                                 <th class="sortable" data-column="status">Status</th>
                                 <th>Free Delivery</th>
+                                <th>Pre Order</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -205,6 +211,11 @@ $(document).ready(function() {
                         : '<span class="badge bg-secondary">No</span>';
                     // END: NEW BADGE
 
+                    // নতুন Pre Order Badge লজিক
+const preOrderBadge = product.is_pre_order == 1 
+    ? '<span class="badge bg-warning text-dark">Yes</span>' 
+    : '<span class="badge bg-secondary">No</span>';
+
                     let priceHtml = `<b>${product.base_price}</b>`;
                     if (product.discount_price) {
                         priceHtml = `<del>${product.base_price}</del><br><b>${product.discount_price}</b>`;
@@ -245,6 +256,7 @@ $(document).ready(function() {
                         <td>${createdAt}</td>
                         <td>${statusBadge}</td>
                         <td>${freeDeliveryBadge}</td>
+                        <td>${preOrderBadge}</td>
                         <td>
                             <a href="${showUrl}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
                             <a href="${editUrl}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>

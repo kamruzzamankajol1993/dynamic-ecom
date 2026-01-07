@@ -10,6 +10,10 @@
         height: 1.5rem;
         border-width: .2em;
     }
+    /* Checkbox Styles */
+    .form-check-input {
+        cursor: pointer;
+    }
 </style>
 @endsection
 @section('body')
@@ -17,11 +21,37 @@
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <h2 class="mb-0">Customer List</h2>
-            <div class="d-flex align-items-center">
-                <form class="d-flex me-2" role="search">
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                
+                <select id="filterType" class="form-select" style="width: 130px;">
+                    <option value="">All Types</option>
+                    <option value="normal">Normal</option>
+                    <option value="silver">Silver</option>
+                    <option value="platinum">Platinum</option>
+                </select>
+
+                <select id="filterYear" class="form-select" style="width: 130px;">
+                    <option value="">All Years</option>
+                    @foreach(range(2030, 2025) as $year)
+                        <option value="{{ $year }}">{{ $year }}</option>
+                    @endforeach
+                </select>
+
+                <div id="bulkActionContainer" class="d-flex align-items-center bg-light p-1 rounded border" style="display: none;">
+                    <span class="me-2 text-muted small px-2">Selected:</span>
+                    <select id="bulkTypeSelect" class="form-select form-select-sm me-2" style="width: 130px;">
+                        <option value="">Change Type</option>
+                        <option value="normal">Set Normal</option>
+                        <option value="silver">Set Silver</option>
+                        <option value="platinum">Set Platinum</option>
+                    </select>
+                    <button type="button" id="applyBulkUpdate" class="btn btn-warning btn-sm text-white">Update</button>
+                </div>
+                
+                <form class="d-flex" role="search">
                     <input class="form-control" id="searchInput" type="search" placeholder="Search customers..." aria-label="Search">
                 </form>
-                <a href="{{ route('customer.create') }}" class="btn text-white" style="background-color: var(--primary-color); white-space: nowrap;"><i data-feather="plus" class="me-1" style="width:18px; height:18px;"></i> Add New Customer</a>
+                <a href="{{ route('customer.create') }}" class="btn text-white" style="background-color: var(--primary-color); white-space: nowrap;"><i data-feather="plus" class="me-1" style="width:18px; height:18px;"></i> Add Customer</a>
             </div>
         </div>
         <div class="card">
@@ -31,15 +61,15 @@
                     <table class="table table-hover table-bordered">
                         <thead>
                             <tr>
+                                <th width="40"><input type="checkbox" id="checkAll" class="form-check-input"></th>
                                 <th>Sl</th>
                                 <th class="sortable" data-column="name">Name</th>
                                 <th>Contact</th>
                                 <th>Address</th>
-                                <th>Total Buy</th>
+                                <th>Total Buy <span id="yearLabel" class="text-muted small"></span></th>
                                 <th class="sortable" data-column="type">Type</th>
                                 <th class="sortable" data-column="status">Status</th>
                                 <th>Source</th>
-                                {{-- Added New Column Header --}}
                                 <th class="sortable" data-column="created_at">Created At</th>
                                 <th>Action</th>
                             </tr>
@@ -68,13 +98,13 @@ $(document).ready(function() {
     var routes = {
         fetch: "{{ route('ajax.customer.data') }}",
         destroy: id => `{{ url('customer') }}/${id}`,
+        bulkUpdate: "{{ route('customer.bulk-update-type') }}",
         csrf: "{{ csrf_token() }}"
     };
 
     const loaderRow = `
         <tr class="loader-row">
-            {{-- Updated colspan from 9 to 10 --}}
-            <td colspan="10">
+            <td colspan="11">
                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
@@ -83,21 +113,39 @@ $(document).ready(function() {
     `;
 
     function fetchData() {
-        $('#tableBody').html(loaderRow); // Show loader before fetching
+        $('#tableBody').html(loaderRow);
+        
+        // Reset check all box and hide bulk action
+        $('#checkAll').prop('checked', false);
+        toggleBulkAction();
+
+        let typeFilter = $('#filterType').val();
+        let yearFilter = $('#filterYear').val(); // New Year Filter Value
+
+        // Update Table Header Label
+        if(yearFilter) {
+            $('#yearLabel').text(`(${yearFilter})`);
+        } else {
+            $('#yearLabel').text('');
+        }
 
         $.get(routes.fetch, {
-            page: currentPage, search: searchTerm, sort: sortColumn, direction: sortDirection
+            page: currentPage, 
+            search: searchTerm, 
+            sort: sortColumn, 
+            direction: sortDirection,
+            type: typeFilter,
+            year: yearFilter // Sending year to controller
         }, function (res) {
             let rows = '';
             if (res.data.length === 0) {
-                 {{-- Updated colspan from 9 to 10 --}}
-                rows = '<tr><td colspan="10" class="text-center">No customers found.</td></tr>';
+                rows = '<tr><td colspan="11" class="text-center">No customers found.</td></tr>';
             } else {
                 res.data.forEach((customer, i) => {
                     const statusBadge = customer.status == 1 ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
                     const showUrl = `{{ url('customer') }}/${customer.id}`;
                     const editUrl = `{{ url('customer') }}/${customer.id}/edit`;
-                    const typeText = customer.type.charAt(0).toUpperCase() + customer.type.slice(1);
+                    const typeText = customer.type ? (customer.type.charAt(0).toUpperCase() + customer.type.slice(1)) : 'N/A';
 
                     let contactHtml = `<div>${customer.phone}</div>`;
                     if (customer.email) {
@@ -116,23 +164,23 @@ $(document).ready(function() {
                         sourceBadge = '<span class="badge bg-secondary">Website</span>';
                     }
 
+                    // This value will now reflect the filtered year if controller is updated
                     const totalBuy = customer.orders_sum_total_amount ? parseFloat(customer.orders_sum_total_amount).toFixed(2) : '0.00';
                     
-                   // --- UPDATED DATE FORMATTING (d/m/Y) ---
                     const createdAt = new Date(customer.created_at);
                     const formattedDate = `${String(createdAt.getDate()).padStart(2, '0')}/${String(createdAt.getMonth() + 1).padStart(2, '0')}/${createdAt.getFullYear()}`;
-                    // --- END OF UPDATE ---
 
                     rows += `<tr>
+                        <td><input type="checkbox" class="form-check-input row-checkbox" value="${customer.id}"></td>
                         <td>${(res.current_page - 1) * 10 + i + 1}</td>
                         <td>${customer.name}</td>
                         <td>${contactHtml}</td>
                         <td>${addressHtml}</td>
-                        <td>৳${totalBuy}</td>
+                        <td class="fw-bold">৳${totalBuy}</td>
                         <td>${typeText}</td>
                         <td>${statusBadge}</td>
                         <td>${sourceBadge}</td>
-                        <td>${formattedDate}</td> {{-- Added New Cell --}}
+                        <td>${formattedDate}</td>
                         <td class="d-flex gap-2">
                             <a href="${showUrl}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
                             <a href="${editUrl}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
@@ -145,7 +193,7 @@ $(document).ready(function() {
                     </tr>`;
                 });
             }
-            $('#tableBody').html(rows); // Replace loader with data
+            $('#tableBody').html(rows);
 
             let paginationHtml = '';
             if (res.last_page > 1) {
@@ -163,12 +211,20 @@ $(document).ready(function() {
         });
     }
 
+    // --- Filter Listeners ---
+    $('#filterType, #filterYear').on('change', function() {
+        currentPage = 1;
+        fetchData();
+    });
+
     $('#searchInput').on('keyup', function () { searchTerm = $(this).val(); currentPage = 1; fetchData(); });
+    
     $(document).on('click', '.sortable', function () {
         let col = $(this).data('column');
         sortDirection = sortColumn === col ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'asc';
         sortColumn = col; fetchData();
     });
+    
     $(document).on('click', '.page-link', function (e) { e.preventDefault(); currentPage = $(this).data('page'); fetchData(); });
 
     $(document).on('click', '.btn-delete', function () {
@@ -184,6 +240,92 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 deleteButton.closest('form').submit();
+            }
+        });
+    });
+
+    // ----------------------------------------------------
+    // BULK ACTION LOGIC
+    // ----------------------------------------------------
+
+    // 1. Check All functionality
+    $('#checkAll').on('change', function() {
+        $('.row-checkbox').prop('checked', $(this).prop('checked'));
+        toggleBulkAction();
+    });
+
+    // 2. Individual Checkbox functionality
+    $(document).on('change', '.row-checkbox', function() {
+        if(!$(this).prop('checked')) {
+            $('#checkAll').prop('checked', false);
+        }
+        toggleBulkAction();
+    });
+
+    // 3. Show/Hide Bulk Action Div (Fixed Logic)
+    function toggleBulkAction() {
+        var checkedCount = $('.row-checkbox:checked').length;
+        if(checkedCount > 0) {
+            $('#bulkActionContainer').css('display', 'flex'); // Show
+        } else {
+            $('#bulkActionContainer').hide(); // Hide
+        }
+    }
+
+    // 4. Apply Bulk Update
+    $('#applyBulkUpdate').on('click', function() {
+        let selectedType = $('#bulkTypeSelect').val();
+        let ids = [];
+        
+        $('.row-checkbox:checked').each(function() {
+            ids.push($(this).val());
+        });
+
+        if(ids.length === 0) {
+            Swal.fire('Error', 'Please select at least one customer.', 'error');
+            return;
+        }
+        if(!selectedType) {
+            Swal.fire('Error', 'Please select a type to update.', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Confirm Update',
+            text: `Are you sure you want to change ${ids.length} customers to ${selectedType.toUpperCase()}? This will update their discount accordingly.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Update'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: routes.bulkUpdate,
+                    type: "POST",
+                    data: {
+                        _token: routes.csrf,
+                        ids: ids,
+                        type: selectedType
+                    },
+                    success: function(response) {
+                        if(response.success) {
+                            Swal.fire('Success', response.message, 'success');
+                            
+                            // Reset everything
+                            $('#checkAll').prop('checked', false);
+                            $('.row-checkbox').prop('checked', false);
+                            $('#bulkTypeSelect').val('');
+                            $('#bulkActionContainer').hide();
+                            
+                            fetchData(); // Refresh table
+                        } else {
+                            Swal.fire('Error', 'Something went wrong.', 'error');
+                        }
+                    },
+                    error: function(err) {
+                        console.log(err);
+                        Swal.fire('Error', 'Failed to update. Check console/logs.', 'error');
+                    }
+                });
             }
         });
     });

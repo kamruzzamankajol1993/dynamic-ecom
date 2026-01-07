@@ -11,7 +11,12 @@ $(document).ready(function() {
     const paginationContainer = $('#pagination-container');
     const paginationInfo = $('#pagination-info');
     const spinner = $('.loading-spinner');
+    
+    // Search and Filter Selectors
     const searchInput = $('#search-input');
+    const filterMonth = $('#filter_month');
+    const filterYear = $('#filter_year');
+    
     let searchTimeout;
 
     var routes = {
@@ -19,10 +24,17 @@ $(document).ready(function() {
         csrf: "{{ csrf_token() }}"
     };
 
-    function fetchData(page = 1, searchQuery = '') {
+    function fetchData(page = 1) {
         spinner.show();
         tableBody.empty();
-        let url = `{{ route('expense.data') }}?page=${page}&search=${searchQuery}`;
+        
+        // Get values from inputs
+        let searchQuery = searchInput.val();
+        let month = filterMonth.val();
+        let year = filterYear.val();
+
+        // Construct URL with search, month, and year parameters
+        let url = `{{ route('expense.data') }}?page=${page}&search=${searchQuery}&month=${month}&year=${year}`;
 
         $.get(url, function(response) {
             spinner.hide();
@@ -98,13 +110,14 @@ $(document).ready(function() {
         $.post(url, $(this).serialize(), function(res) {
             $('#editModal').modal('hide');
             Swal.fire('Success!', res.success, 'success');
-            fetchData(paginationContainer.find('.active .page-link').data('page'), searchInput.val());
+            // Refresh current page
+            fetchData(paginationContainer.find('.active .page-link').data('page'));
         }).fail(() => Swal.fire('Error!', 'Something went wrong.', 'error'));
     });
 
-     // UPDATED DELETE BUTTON CLICK HANDLER
+    // Delete Button Handler
     $(document).on('click', '.btn-delete', function () {
-        const deleteButton = $(this); // Reference to the button
+        const deleteButton = $(this); 
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -115,15 +128,28 @@ $(document).ready(function() {
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Find the closest form and submit it
                 deleteButton.closest('form').submit();
             }
         });
     });
 
-    searchInput.on('keyup', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => fetchData(1, searchInput.val()), 500); });
-    paginationContainer.on('click', '.page-link', (e) => { e.preventDefault(); fetchData($(e.target).data('page'), searchInput.val()); });
+    // Event Listeners for Search and Filter
+    searchInput.on('keyup', () => { 
+        clearTimeout(searchTimeout); 
+        searchTimeout = setTimeout(() => fetchData(1), 500); 
+    });
 
+    // Reload data when Month or Year changes
+    $('#filter_month, #filter_year').on('change', function() {
+        fetchData(1);
+    });
+
+    paginationContainer.on('click', '.page-link', (e) => { 
+        e.preventDefault(); 
+        fetchData($(e.target).data('page')); 
+    });
+
+    // Initial Fetch
     fetchData();
 });
 </script>

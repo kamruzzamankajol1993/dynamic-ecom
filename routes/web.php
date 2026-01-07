@@ -271,7 +271,7 @@ Route::delete('review-images/{image}', [ReviewController::class, 'destroyImage']
 });
 
 Route::resource('pos', PosController::class);
-
+Route::post('customers-bulk-update-type', [CustomerController::class, 'bulkUpdateType'])->name('customer.bulk-update-type');
 // Route to handle live customer search
 Route::get('/orders-invoice/{order}', [PosController::class, 'showInvoice'])->name('pos.orders.invoice');
 Route::get('/orders-print/{order}', [PosController::class, 'printInvoice'])->name('pos.orders.print');
@@ -289,7 +289,7 @@ Route::get('ajax-expense-category', [ExpenseCategoryController::class, 'data'])-
 
 Route::resource('expense', ExpenseController::class);
 Route::get('ajax-expense', [ExpenseController::class, 'data'])->name('expense.data');
-
+Route::post('/reward/generate-historical', [App\Http\Controllers\Admin\RewardPointController::class, 'generateHistoricalPoints'])->name('reward.generate.historical');
     Route::prefix('reward-points')->name('reward.')->group(function () {
         Route::get('data', [RewardPointController::class, 'data'])->name('data');
     Route::get('settings', [RewardPointController::class, 'settings'])->name('settings');
@@ -389,7 +389,7 @@ Route::resource('unit', UnitController::class);
         'size-chart' => 'id'
     ]);
 
-
+Route::get('products/export-variants-stock', [App\Http\Controllers\Admin\ProductController::class, 'exportVariantsStock'])->name('product.export.variants');
 // Product Routes
 Route::post('products/bulk-status-update', [App\Http\Controllers\Admin\ProductController::class, 'bulkStatusUpdate'])->name('ajax.product.bulk-status-update');
     Route::get('ajax_products', [ProductController::class, 'data'])->name('ajax.product.data');
