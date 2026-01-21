@@ -286,36 +286,44 @@ class CustomerController extends Controller
     }
 
     public function show(Customer $customer)
-    {
-        try {
-            $customer->load('addresses', 'orders');
-            $user = $customer->user_id ? User::find($customer->user_id) : null;
-            $totalOrders = $customer->orders->count();
-            $pendingOrders = $customer->orders->where('status', 'pending')->count();
-            $totalBuyAmount = $customer->orders->where('payment_status', 'paid')->sum('total_amount');
+{
+    try {
+        $customer->load('addresses', 'orders', 'rewardPointLogs');
+        $user = $customer->user_id ? User::find($customer->user_id) : null;
+        $totalOrders = $customer->orders->count();
+        $pendingOrders = $customer->orders->where('status', 'pending')->count();
+        $totalBuyAmount = $customer->orders->where('payment_status', 'paid')->sum('total_amount');
 
-            $salesData = $customer->orders()
-                ->select(DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'), DB::raw('SUM(total_amount) as total_sales'))
-                ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
-                ->groupBy('month')->orderBy('month', 'asc')->get()->pluck('total_sales', 'month');
+        // রিওয়ার্ড পয়েন্ট ক্যালকুলেশন
+        $totalEarned = $customer->rewardPointLogs->where('type', 'earned')->sum('points');
+        $totalRedeemed = $customer->rewardPointLogs->where('type', 'redeemed')->sum('points');
+        $currentPoints = $totalEarned - $totalRedeemed;
 
-            $months = collect();
-            for ($i = 11; $i >= 0; $i--) {
-                $months->put(now()->subMonths($i)->format('Y-m'), 0);
-            }
-            $monthlyTotals = $months->merge($salesData);
+        // --- Chart Data Logic (Fix applied here) ---
+        $salesData = $customer->orders()
+            ->select(DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'), DB::raw('SUM(total_amount) as total_sales'))
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('month')->orderBy('month', 'asc')->get()->pluck('total_sales', 'month');
 
-            $chartData = [['Month', 'Amount']];
-            foreach ($monthlyTotals as $month => $total) {
-                $chartData[] = [date('M', strtotime($month . '-01')), $total];
-            }
-
-            return view('admin.customer.show', compact('customer', 'user', 'totalOrders', 'pendingOrders', 'totalBuyAmount', 'chartData'));
-        } catch (Exception $e) {
-            Log::error("Failed to show customer ID {$customer->id}: " . $e);
-            return redirect()->route('customer.index')->with('error', 'Could not load customer details.');
+        $months = collect();
+        for ($i = 11; $i >= 0; $i--) {
+            $months->put(now()->subMonths($i)->format('Y-m'), 0);
         }
+        $monthlyTotals = $months->merge($salesData);
+
+        $chartData = [['Month', 'Amount']];
+        foreach ($monthlyTotals as $month => $total) {
+            // (float) কাস্টিং ব্যবহার করা হয়েছে যাতে চার্ট সঠিকভাবে সংখ্যা চিনতে পারে
+            $chartData[] = [date('M', strtotime($month . '-01')), (float) $total];
+        }
+        // ------------------------------------------
+
+        return view('admin.customer.show', compact('customer', 'user', 'totalOrders', 'pendingOrders', 'totalBuyAmount', 'chartData', 'currentPoints'));
+    } catch (Exception $e) {
+        Log::error("Failed to show customer ID {$customer->id}: " . $e);
+        return redirect()->route('customer.index')->with('error', 'Could not load customer details.');
     }
+}
 
     public function edit(Customer $customer)
     {

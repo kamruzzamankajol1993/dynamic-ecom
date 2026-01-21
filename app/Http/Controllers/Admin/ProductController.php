@@ -30,6 +30,58 @@ use Illuminate\Validation\ValidationException;
 class ProductController extends Controller
 {
 
+
+public function updateSingleStock(Request $request)
+{
+    $request->validate([
+        'variant_id' => 'required|exists:product_variants,id',
+        'size_id' => 'required',
+        'quantity' => 'required|integer|min:0',
+    ]);
+
+    try {
+        $variant = ProductVariant::findOrFail($request->variant_id);
+        
+        // বর্তমান সাইজগুলো নেওয়া
+        $sizes = $variant->sizes; 
+        $updated = false;
+
+        // সাইজ অ্যারে লুপ করে স্পেসিফিক সাইজটি খুঁজে আপডেট করা
+        // নোট: $sizes একটি অ্যারে, কালেকশন নয়, কারণ মডেল কাস্ট করা আছে
+        foreach ($sizes as $key => $sizeData) {
+            // size_id স্ট্রিং বা ইন্টিজার হতে পারে, তাই loose comparison (==) ব্যবহার করা ভালো
+            if (isset($sizeData['size_id']) && $sizeData['size_id'] == $request->size_id) {
+                $sizes[$key]['quantity'] = (int) $request->quantity;
+                $updated = true;
+                break;
+            }
+        }
+
+        if ($updated) {
+            $variant->sizes = $sizes; // আপডেটেড অ্যারে অ্যাসাইন করা
+            $variant->save(); // সেভ করা (মডেল কাস্ট অটোমেটিক জেসন এনকোড করবে)
+            
+            // টোটাল স্টক ক্যালকুলেশন করে রেসপন্সে পাঠানো (অপশনাল, ফ্রন্টএন্ড আপডেট করার জন্য)
+            $totalStock = 0;
+            foreach ($sizes as $s) {
+                $totalStock += (int) ($s['quantity'] ?? 0);
+            }
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Stock updated successfully.',
+                'total_stock' => $totalStock
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Size not found in this variant.'], 404);
+
+    } catch (\Exception $e) {
+        \Log::error('Stock update failed: ' . $e->getMessage());
+        return response()->json(['success' => false, 'message' => 'Failed to update stock.'], 500);
+    }
+}
+
     public function exportVariantsStock()
 {
     try {

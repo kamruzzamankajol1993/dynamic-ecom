@@ -163,6 +163,7 @@ $(document).ready(function() {
         fetch: "{{ route('ajax.product.data') }}",
         destroy:"{{ route('ajax_products_delete') }}",
         bulk_status_update: "{{ route('ajax.product.bulk-status-update') }}",
+        update_stock: "{{ route('product.update_single_stock') }}",
         csrf: "{{ csrf_token() }}"
     };
     
@@ -285,45 +286,74 @@ const preOrderBadge = product.is_pre_order == 1
     }
 
     // Modal Population Logic
-    $(document).on('click', '.btn-stock-modal', function() {
-        const productName = $(this).data('product-name');
-        const variants = $(this).data('variants');
-        const modalTitle = $('#stockModalLabel');
-        const modalBody = $('#stockModalBodyContent');
+    // index.blade.php এর স্ক্রিপ্ট সেকশনে
 
-        modalTitle.text(`Stock Details for: ${productName}`);
-        modalBody.empty();
+// Modal Population Logic
+$(document).on('click', '.btn-stock-modal', function() {
+    const productName = $(this).data('product-name');
+    const variants = $(this).data('variants'); // Note: This grabs the variants as they were when page loaded
+    const modalTitle = $('#stockModalLabel');
+    const modalBody = $('#stockModalBodyContent');
 
-        if (variants && variants.length > 0) {
-            let contentHtml = '<table class="table table-sm table-bordered"><thead><tr><th>Color</th><th>Size</th><th>Quantity</th></tr></thead><tbody>';
-            let hasStock = false;
-            variants.forEach(variant => {
-                if (variant.sizes && Array.isArray(variant.sizes)) {
-                    const availableSizes = variant.sizes.filter(s => s.quantity > 0);
-                    if (availableSizes.length > 0) {
-                        hasStock = true;
-                        availableSizes.forEach(sizeInfo => {
-                            const sizeName = allSizes[sizeInfo.size_id] ? allSizes[sizeInfo.size_id].name : 'Unknown';
-                            contentHtml += `<tr>
-                                <td>${variant.color ? variant.color.name : 'N/A'}</td>
-                                <td>${sizeName}</td>
-                                <td><b>${sizeInfo.quantity}</b></td>
-                            </tr>`;
-                        });
-                    }
-                }
-            });
-            contentHtml += '</tbody></table>';
+    modalTitle.text(`Stock Details for: ${productName}`);
+    modalBody.empty();
 
-            if (!hasStock) {
-                modalBody.html('<p class="text-muted">No stock variations available for this product.</p>');
-            } else {
-                modalBody.html(contentHtml);
+    if (variants && variants.length > 0) {
+        // --- Table Head ---
+        let contentHtml = `
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Color</th>
+                        <th>Size</th>
+                        <th style="width: 150px;">Quantity</th>
+                        <th style="width: 80px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        
+        let hasStock = false;
+        
+        variants.forEach(variant => {
+            if (variant.sizes && Array.isArray(variant.sizes)) {
+                // আমরা সব সাইজই দেখাবো যাতে 0 হলেও আপডেট করা যায়
+                variant.sizes.forEach(sizeInfo => {
+                    hasStock = true;
+                    const sizeName = allSizes[sizeInfo.size_id] ? allSizes[sizeInfo.size_id].name : 'Unknown';
+                    const colorName = variant.color ? variant.color.name : 'N/A';
+                    
+                    // --- Input and Button Generation ---
+                    contentHtml += `
+                        <tr>
+                            <td>${colorName}</td>
+                            <td>${sizeName}</td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm stock-input" 
+                                    value="${sizeInfo.quantity}" min="0" 
+                                    id="qty-${variant.id}-${sizeInfo.size_id}">
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-success btn-update-single-stock" 
+                                    data-variant-id="${variant.id}" 
+                                    data-size-id="${sizeInfo.size_id}">
+                                    <i class="fa fa-check"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
             }
+        });
+        contentHtml += '</tbody></table>';
+
+        if (!hasStock) {
+            modalBody.html('<p class="text-muted text-center py-3">No stock variations config found.</p>');
         } else {
-            modalBody.html('<p class="text-muted">No stock variations available for this product.</p>');
+            modalBody.html(contentHtml);
         }
-    });
+    } else {
+        modalBody.html('<p class="text-muted text-center py-3">No stock variations available for this product.</p>');
+    }
+});
 
     // --- Central function to apply filters and fetch data ---
     function applyFiltersAndFetch() {
@@ -435,6 +465,61 @@ const preOrderBadge = product.is_pre_order == 1
             }
         });
     });
+
+
+    $(document).on('click', '.btn-update-single-stock', function() {
+    const btn = $(this);
+    const variantId = btn.data('variant-id');
+    const sizeId = btn.data('size-id');
+    const inputField = $(`#qty-${variantId}-${sizeId}`);
+    const newQuantity = inputField.val();
+
+    // Visual feedback (disable button)
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+    inputField.prop('disabled', true);
+
+    $.ajax({
+        url: routes.update_stock,
+        method: 'POST',
+        data: {
+            _token: routes.csrf,
+            variant_id: variantId,
+            size_id: sizeId,
+            quantity: newQuantity
+        },
+        success: function(response) {
+            if (response.success) {
+                // Success feedback via Toast or SweetAlert
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                });
+                Toast.fire({ icon: 'success', title: 'Stock updated!' });
+                
+                // Optional: Update the "Total Stock" badge on the main table behind the modal
+                // This requires fetching fresh data, easier to just refresh table on modal close
+            } else {
+                Swal.fire('Error', response.message, 'error');
+            }
+        },
+        error: function(xhr) {
+            Swal.fire('Error', 'Failed to update stock.', 'error');
+        },
+        complete: function() {
+            // Re-enable controls
+            btn.prop('disabled', false).html('<i class="fa fa-check"></i>');
+            inputField.prop('disabled', false);
+        }
+    });
+});
+
+// Optional: Refresh main table when modal is closed to reflect total stock changes
+$('#stockModal').on('hidden.bs.modal', function () {
+    fetchData(); 
+});
 
     fetchData(); // Initial data load
 });

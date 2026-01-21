@@ -400,6 +400,15 @@ Route::post('products/bulk-status-update', [App\Http\Controllers\Admin\ProductCo
 Route::get('ajax_products_delete', [ProductController::class, 'ajax_products_delete'])->name('ajax_products_delete');
 
 
+
+   Route::controller(ProductController::class)->group(function () {
+
+
+   Route::post('/product-update-single-stock', 'updateSingleStock')->name('product.update_single_stock');
+
+   });
+
+
 Route::get('ajax_animation_category', [AnimationCategoryController::class, 'data'])->name('ajax.animation_category.data');
 Route::resource('animationCategory', AnimationCategoryController::class);
 Route::resource('coupon', CouponController::class);
