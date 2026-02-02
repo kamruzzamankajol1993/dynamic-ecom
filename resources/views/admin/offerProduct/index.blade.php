@@ -67,10 +67,12 @@ $(document).ready(function() {
                 res.data.forEach((deal, i) => {
                     const showUrl = `{{ url('offer-product') }}/${deal.id}`;
                     const editUrl = `{{ url('offer-product') }}/${deal.id}/edit`;
-
+const imageHtml = deal.image 
+    ? `<img src="{{ asset('') }}${deal.image}" width="50" class="img-thumbnail">` 
+    : '';
                     rows += `<tr>
                         <td>${res.from + i}</td>
-                        <td>${deal.title}</td>
+                        <td>${imageHtml} ${deal.title}</td>
                         <td>${deal.bundle_offer ? deal.bundle_offer.name : 'N/A'}</td>
                         <td>Buy ${deal.buy_quantity} / Get ${deal.get_quantity}</td>
                         <td>

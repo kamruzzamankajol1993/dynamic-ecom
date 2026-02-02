@@ -8,7 +8,7 @@
 <main class="main-content">
     <div class="container-fluid">
         <h2 class="mb-4">Create New Product Deal</h2>
-        <form action="{{ route('offer-product.store') }}" method="POST">
+        <form action="{{ route('offer-product.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="card">
                 <div class="card-body">
@@ -25,6 +25,13 @@
                         <label class="form-label">Deal Title</label>
                         <input type="text" name="title" class="form-control" value="{{ old('title') }}" required>
                     </div>
+                    <div class="mb-3">
+    <label class="form-label">Deal Image</label>
+    <input type="file" name="image" id="imageInput" class="form-control" accept="image/*">
+    <div class="mt-2">
+        <img id="imagePreview" src="#" alt="Preview" style="display: none; width: 150px; height: auto;" class="img-thumbnail">
+    </div>
+</div>
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Buy Quantity</label>
@@ -67,6 +74,21 @@
 
 @section('script')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Image preview logic
+    $('#imageInput').change(function() {
+        const file = this.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(event) {
+                $('#imagePreview').attr('src', event.target.result).show();
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+});
+</script>
 <script>
 $(document).ready(function() {
     // Initialize Select2 without selection limit

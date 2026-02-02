@@ -24,6 +24,7 @@ class BundleOfferProduct extends Model
     protected $fillable = [
         'bundle_offer_id',
         'title',
+        'image',
         'product_id',
         'category_id',
         'discount_price',

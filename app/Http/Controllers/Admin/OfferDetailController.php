@@ -10,6 +10,8 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\AssignCategory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Intervention\Image\Laravel\Facades\Image;
 class OfferDetailController extends Controller
 {
     /**
@@ -85,6 +87,7 @@ class OfferDetailController extends Controller
             'product_id.*' => 'exists:products,id',
             'category_id' => 'nullable|array',
             'category_id.*' => 'exists:categories,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'discount_price' => [
                 'nullable',
                 'numeric',
@@ -110,6 +113,18 @@ class OfferDetailController extends Controller
         }
 
         $data = $request->all();
+        if ($request->hasFile('image')) {
+        $image = $request->file('image');
+        $imageName = 'bundle_' . time() . '.' . $image->getClientOriginalExtension();
+        $destinationPath = public_path('uploads/bundle_products');
+
+        if (!File::isDirectory($destinationPath)) {
+            File::makeDirectory($destinationPath, 0777, true, true);
+        }
+
+        Image::read($image->getRealPath())->save($destinationPath . '/' . $imageName);
+        $data['image'] = 'public/uploads/bundle_products/' . $imageName;
+    }
         $data['product_id'] = $request->product_id ?? [];
         $data['category_id'] = $request->category_id ?? [];
 
@@ -186,6 +201,7 @@ class OfferDetailController extends Controller
             ],
             'product_id.*' => 'exists:products,id',
             'category_id' => 'nullable|array',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'category_id.*' => 'exists:categories,id',
             'discount_price' => [
                 'nullable',
@@ -212,6 +228,19 @@ class OfferDetailController extends Controller
         }
 
         $data = $request->all();
+        if ($request->hasFile('image')) {
+        // Delete old image
+        if ($offerProduct->image && File::exists(public_path($offerProduct->image))) {
+            File::delete(public_path($offerProduct->image));
+        }
+
+        $image = $request->file('image');
+        $imageName = 'bundle_' . time() . '.' . $image->getClientOriginalExtension();
+        $destinationPath = public_path('uploads/bundle_products');
+        
+        Image::read($image->getRealPath())->save($destinationPath . '/' . $imageName);
+        $data['image'] = 'public/uploads/bundle_products/' . $imageName;
+    }
         $data['product_id'] = $request->product_id ?? [];
         $data['category_id'] = $request->category_id ?? [];
 

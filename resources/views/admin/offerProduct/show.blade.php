@@ -11,7 +11,15 @@
 
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">{{ $offerProduct->title }}</h5>
+
+                <div class="row">
+    <div class="col-md-4">
+        @if($offerProduct->image)
+            <img src="{{ asset($offerProduct->image) }}" class="img-fluid rounded">
+        @endif
+    </div>
+    <div class="col-md-8">
+         <h5 class="card-title">{{ $offerProduct->title }}</h5>
                 <h6 class="card-subtitle mb-3 text-muted">Part of: {{ $offerProduct->bundleOffer->name }}</h6>
                 <hr>
                 <div class="row">
@@ -28,6 +36,8 @@
                         <li class="list-group-item">No products found for this deal.</li>
                     @endforelse
                 </ul>
+    </div>
+                </div>
             </div>
         </div>
     </div>
