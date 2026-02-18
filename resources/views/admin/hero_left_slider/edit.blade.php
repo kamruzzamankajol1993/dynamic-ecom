@@ -32,7 +32,10 @@
                             <img id="image-preview" src="#" alt="New Image Preview" class="img-thumbnail" style="max-height: 150px;">
                         </div>
                     </div>
-                    
+                    {{-- Error message display --}}
+    @error('image')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
                     @php
                         $isProduct = $heroLeftSlider->linkable_type === App\Models\Product::class;
                         $isCategory = $heroLeftSlider->linkable_type === App\Models\Category::class;

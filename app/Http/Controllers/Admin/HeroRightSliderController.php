@@ -27,20 +27,28 @@ class HeroRightSliderController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'top.title' => 'required|string',
-            'top.image' => 'nullable|image',
-            'top.bundle_offer_id' => 'required|exists:bundle_offers,id',
+        'top.title' => 'required|string',
+        // Top section image: 800x400
+        'top.image' => 'nullable|image|mimes:jpeg,png,jpg,webp|dimensions:width=800,height=400',
+        'top.bundle_offer_id' => 'required|exists:bundle_offers,id',
 
-            'bottom_left.title' => 'required|string',
-            'bottom_left.image' => 'nullable|image',
-            'bottom_left.link_type' => 'required|in:category,extracategory',
-            'bottom_left.link_id' => 'required|integer',
+        'bottom_left.title' => 'required|string',
+        // Bottom left image: 330x300
+        'bottom_left.image' => 'nullable|image|mimes:jpeg,png,jpg,webp|dimensions:width=330,height=300',
+        'bottom_left.link_type' => 'required|in:category,extracategory',
+        'bottom_left.link_id' => 'required|integer',
 
-            'bottom_right.title' => 'required|string',
-            'bottom_right.image' => 'nullable|image',
-            'bottom_right.link_type' => 'required|in:category,extracategory',
-            'bottom_right.link_id' => 'required|integer',
-        ]);
+        'bottom_right.title' => 'required|string',
+        // Bottom right image: 330x300
+        'bottom_right.image' => 'nullable|image|mimes:jpeg,png,jpg,webp|dimensions:width=330,height=300',
+        'bottom_right.link_type' => 'required|in:category,extracategory',
+        'bottom_right.link_id' => 'required|integer',
+    ], [
+        // কাস্টম এরর মেসেজ
+        'top.image.dimensions' => 'Top section image must be 800x400 pixels.',
+        'bottom_left.image.dimensions' => 'Bottom Left image must be 330x300 pixels.',
+        'bottom_right.image.dimensions' => 'Bottom Right image must be 330x300 pixels.',
+    ]);
 
         $this->updateSection('top', $request->input('top'), $request->file('top.image'));
         $this->updateSection('bottom_left', $request->input('bottom_left'), $request->file('bottom_left.image'));

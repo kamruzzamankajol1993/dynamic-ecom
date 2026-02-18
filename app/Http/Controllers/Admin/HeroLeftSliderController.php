@@ -30,14 +30,18 @@ class HeroLeftSliderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'subtitle' => 'nullable|string|max:255',
-            'image' => 'required|image|mimes:jpeg,png,jpg,webp',
-            'link_type' => 'required|in:category,product,bundle_offer', // <<< ADD BUNDLE_OFFER TO VALIDATION
-            'category_id' => 'nullable|required_if:link_type,category|exists:categories,id',
-            'product_id' => 'nullable|required_if:link_type,product|exists:products,id',
-            'bundle_offer_id' => 'nullable|required_if:link_type,bundle_offer|exists:bundle_offers,id', // <<< VALIDATE BUNDLE_OFFER_ID
-        ]);
+        'title' => 'required|string|max:255',
+        'subtitle' => 'nullable|string|max:255',
+        // dimension validation added here
+        'image' => 'required|image|mimes:jpeg,png,jpg,webp|dimensions:width=680,height=695',
+        'link_type' => 'required|in:category,product,bundle_offer',
+        'category_id' => 'nullable|required_if:link_type,category|exists:categories,id',
+        'product_id' => 'nullable|required_if:link_type,product|exists:products,id',
+        'bundle_offer_id' => 'nullable|required_if:link_type,bundle_offer|exists:bundle_offers,id',
+    ], [
+        // Custom error message for dimensions
+        'image.dimensions' => 'The image must be exactly 680x695 pixels.'
+    ]);
 
         $path = $this->uploadImage($request->file('image'));
         
@@ -82,15 +86,18 @@ class HeroLeftSliderController extends Controller
     public function update(Request $request, HeroLeftSlider $heroLeftSlider)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'subtitle' => 'nullable|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp',
-            'link_type' => 'required|in:category,product,bundle_offer', // <<< ADD BUNDLE_OFFER TO VALIDATION
-            'category_id' => 'nullable|required_if:link_type,category|exists:categories,id',
-            'product_id' => 'nullable|required_if:link_type,product|exists:products,id',
-            'bundle_offer_id' => 'nullable|required_if:link_type,bundle_offer|exists:bundle_offers,id', // <<< VALIDATE BUNDLE_OFFER_ID
-            'status' => 'required|boolean',
-        ]);
+        'title' => 'required|string|max:255',
+        'subtitle' => 'nullable|string|max:255',
+        // dimension validation added here (nullable because it's update)
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|dimensions:width=680,height=695',
+        'link_type' => 'required|in:category,product,bundle_offer',
+        'category_id' => 'nullable|required_if:link_type,category|exists:categories,id',
+        'product_id' => 'nullable|required_if:link_type,product|exists:products,id',
+        'bundle_offer_id' => 'nullable|required_if:link_type,bundle_offer|exists:bundle_offers,id',
+        'status' => 'required|boolean',
+    ], [
+        'image.dimensions' => 'The image must be exactly 680x695 pixels.'
+    ]);
 
         $path = $heroLeftSlider->image;
         if ($request->hasFile('image')) {

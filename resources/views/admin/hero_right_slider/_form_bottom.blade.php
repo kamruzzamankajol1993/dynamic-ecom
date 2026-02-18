@@ -6,7 +6,21 @@
 <div class="row">
     <div class="col-md-12 mb-3"><label class="form-label">Title*</label><input type="text" name="{{ $prefix }}[title]" class="form-control" value="{{ $section->title }}" required></div>
     <div class="col-md-12 mb-3"><label class="form-label">Subtitle</label><input type="text" name="{{ $prefix }}[subtitle]" class="form-control" value="{{ $section->subtitle }}"></div>
-    <div class="col-md-12 mb-3"><label class="form-label">Image</label><input type="file" accept="image/webp" name="{{ $prefix }}[image]" class="form-control"><small class="text-muted">Upload to change. Required: 330x300px</small> @if($section->image)<img src="{{ asset('public/'.$section->image) }}" height="50" class="mt-2 d-block">@endif</div>
+    <div class="col-md-12 mb-3">
+    <label class="form-label">Image</label>
+    {{-- $prefix ব্যবহার করে ডাইনামিক এরর চেক --}}
+    <input type="file" accept="image/webp" name="{{ $prefix }}[image]" 
+           class="form-control @error($prefix . '.image') is-invalid @enderror">
+    <small class="text-muted">Upload to change. Required: 330x300px</small>
+    
+    @error($prefix . '.image')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+    @enderror
+
+    @if($section->image)
+        <img src="{{ asset('public/'.$section->image) }}" height="50" class="mt-2 d-block">
+    @endif
+</div>
     
     <div class="col-md-12 mb-3">
         <label class="form-label d-block">Link Type*</label>

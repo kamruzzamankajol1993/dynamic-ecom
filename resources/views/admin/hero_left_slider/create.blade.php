@@ -27,7 +27,10 @@
                             <img id="image-preview" src="#" alt="Image Preview" class="img-thumbnail" style="max-height: 150px;">
                         </div>
                     </div>
-                    
+                    {{-- Error message display --}}
+    @error('image')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
                     <div class="mb-3">
                         <label class="form-label d-block">Link Type*</label>
                         <div class="form-check form-check-inline">
