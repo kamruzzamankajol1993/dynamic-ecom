@@ -484,7 +484,14 @@ $(document).ready(function() {
                         }
                         variantDetails += '</div>';
                     }
-
+let customizationDetails = '';
+                if (item.is_custom) {
+                    customizationDetails = `
+                        <div class="mt-1 p-1" style="background: #f8f9fa; border-left: 2px solid #0d6efd; font-size: 0.85em;">
+                            <strong>Custom Name:</strong> ${item.custom_name || 'N/A'} | <strong>No:</strong> ${item.custom_number || 'N/A'}
+                        </div>
+                    `;
+                }
                     // --- START: MODIFICATION (Check discount and set totals) ---
                     let displayUnitPrice = '';
                     let displaySubtotal = '';
@@ -514,6 +521,7 @@ $(document).ready(function() {
                             <td>
                                 ${item.product.name}
                                 ${variantDetails}
+                                ${customizationDetails}
                                 <div class="text-muted">${displayUnitPrice} x ${item.quantity}</div>
                             </td>
                             <td class="text-end">${displaySubtotal}</td>

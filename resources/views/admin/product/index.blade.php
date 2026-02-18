@@ -94,6 +94,9 @@
                             <ul class="dropdown-menu" aria-labelledby="bulkActions">
                                 <li><a class="dropdown-item bulk-action-btn" href="#" data-status="1">Set to Active</a></li>
                                 <li><a class="dropdown-item bulk-action-btn" href="#" data-status="0">Set to Inactive</a></li>
+                                <li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item bulk-custom-btn" href="#" data-status="1">Enable Customization</a></li>
+<li><a class="dropdown-item bulk-custom-btn" href="#" data-status="0">Disable Customization</a></li>
                             </ul>
                         </div>
                     </div>
@@ -112,6 +115,7 @@
                                 <th class="sortable" data-column="status">Status</th>
                                 <th>Free Delivery</th>
                                 <th>Pre Order</th>
+                                <th>Custom</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -216,7 +220,9 @@ $(document).ready(function() {
 const preOrderBadge = product.is_pre_order == 1 
     ? '<span class="badge bg-warning text-dark">Yes</span>' 
     : '<span class="badge bg-secondary">No</span>';
-
+const customBadge = product.is_custom == 1 
+    ? '<span class="badge bg-info text-white">Yes</span>' 
+    : '<span class="badge bg-secondary">No</span>';
                     let priceHtml = `<b>${product.base_price}</b>`;
                     if (product.discount_price) {
                         priceHtml = `<del>${product.base_price}</del><br><b>${product.discount_price}</b>`;
@@ -258,6 +264,7 @@ const preOrderBadge = product.is_pre_order == 1
                         <td>${statusBadge}</td>
                         <td>${freeDeliveryBadge}</td>
                         <td>${preOrderBadge}</td>
+                        <td>${customBadge}</td>
                         <td>
                             <a href="${showUrl}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
                             <a href="${editUrl}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
@@ -515,7 +522,26 @@ $(document).on('click', '.btn-stock-modal', function() {
         }
     });
 });
+$(document).on('click', '.bulk-custom-btn', function(e) {
+    e.preventDefault();
+    const status = $(this).data('status');
+    const selectedIds = $('.product-checkbox:checked').map((_, el) => $(el).val()).get();
 
+    if (selectedIds.length === 0) {
+        Swal.fire('Error', 'Please select products first', 'error');
+        return;
+    }
+
+    $.ajax({
+        url: "{{ route('ajax.product.bulk-custom-update') }}", // রাউটটি web.php তে লিখুন
+        method: 'POST',
+        data: { _token: routes.csrf, ids: selectedIds, status: status },
+        success: function(res) {
+            Swal.fire('Success', res.message, 'success');
+            fetchData();
+        }
+    });
+});
 // Optional: Refresh main table when modal is closed to reflect total stock changes
 $('#stockModal').on('hidden.bs.modal', function () {
     fetchData(); 

@@ -73,6 +73,15 @@
                             <input type="number" step="0.01" name="discount_price" class="form-control" value="{{ $offerProduct->discount_price }}" placeholder="">
                         </div>
                     </div>
+                    <div class="row mb-3 mt-3">
+    <div class="col-md-12">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="is_custom" id="is_custom" value="1" {{ $offerProduct->is_custom ? 'checked' : '' }}>
+            <label class="form-check-label" for="is_custom">Allow Custom Name & Number (Jersey Customization)</label>
+        </div>
+        <small class="text-muted d-block">Update whether this deal allows custom name and number.</small>
+    </div>
+</div>
                     <button type="submit" class="btn btn-primary mt-4">Update Deal</button>
                 </div>
             </div>

@@ -67,6 +67,8 @@ class OfferDetailController extends Controller
      */
     public function store(Request $request)
     {
+
+    //dd($request->all());
         // MODIFIED: Updated validation and logic
        // MODIFIED: Added custom validation rule for discount_price
         $request->validate([
@@ -127,12 +129,22 @@ class OfferDetailController extends Controller
     }
         $data['product_id'] = $request->product_id ?? [];
         $data['category_id'] = $request->category_id ?? [];
-
+$data['is_custom'] = $request->has('is_custom') ? 1 : 0;
         BundleOfferProduct::create($data);
 
         return redirect()->route('offer-product.index')->with('success', 'Product Deal created successfully.');
     }
+public function bulkCustomUpdate(Request $request)
+{
+    $request->validate([
+        'ids' => 'required|array',
+        'status' => 'required|boolean',
+    ]);
 
+    \App\Models\BundleOfferProduct::whereIn('id', $request->ids)->update(['is_custom' => $request->status]);
+
+    return response()->json(['message' => 'Deal customization status updated successfully.']);
+}
     /**
      * Display the specified resource.
      */
@@ -184,6 +196,8 @@ class OfferDetailController extends Controller
      */
     public function update(Request $request, BundleOfferProduct $offerProduct)
     {
+
+   // dd($request->all());
         $request->validate([
             'bundle_offer_id' => 'required|exists:bundle_offers,id',
             'title' => 'required|string|max:255',
@@ -243,7 +257,7 @@ class OfferDetailController extends Controller
     }
         $data['product_id'] = $request->product_id ?? [];
         $data['category_id'] = $request->category_id ?? [];
-
+$data['is_custom'] = $request->has('is_custom') ? 1 : 0;
         $offerProduct->update($data);
 
         return redirect()->route('offer-product.index')->with('success', 'Product Deal updated successfully.');

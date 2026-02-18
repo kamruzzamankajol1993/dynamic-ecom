@@ -85,7 +85,14 @@
             <tbody>
                 @foreach($order->orderDetails as $detail)
                 <tr>
-                    <td>{{ $detail->product->name }} ({{ $detail->color }} / {{ $detail->size }})</td>
+                    <td>{{ $detail->product->name }} ({{ $detail->color }} / {{ $detail->size }})
+                        @if($detail->is_custom)
+        <div style="font-size: 10px; color: #555; margin-top: 2px;">
+            Custom Name: <strong>{{ $detail->custom_name }}</strong> | 
+            Number: <strong>{{ $detail->custom_number }}</strong>
+        </div>
+    @endif
+                    </td>
                     <td style="text-align: center;">{{ $detail->quantity }}</td>
                     <td style="text-align: right;">
                         @if(isset($detail->discount) && $detail->discount > 0 && isset($detail->after_discount_price))

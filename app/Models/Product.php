@@ -20,6 +20,7 @@ class Product extends Model
         'name',
         'slug',
         'product_code',
+        'is_custom',
         'brand_id',
         'category_id',
         'subcategory_id',
@@ -46,6 +47,7 @@ class Product extends Model
         'real_image' => 'array', 
         'is_free_delivery' => 'boolean',
         'is_pre_order' => 'boolean',
+        'is_custom' => 'boolean',
     ];
 
     /**

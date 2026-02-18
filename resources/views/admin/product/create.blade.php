@@ -219,6 +219,13 @@
     <label class="form-label">Pre Order Message</label>
     <textarea name="pre_order_msg" class="form-control" rows="3" placeholder="Enter pre-order details...">{{ old('pre_order_msg') }}</textarea>
 </div>
+
+{{-- কাস্টমাইজেশন অপশন (Name & Number) --}}
+<div class="form-check form-switch mt-2">
+    <input class="form-check-input" type="checkbox" name="is_custom" value="1" id="is_custom" {{ old('is_custom') ? 'checked' : '' }}>
+    <label class="form-check-label" for="is_custom">Allow Custom Name & Number</label>
+</div>
+<small class="text-muted d-block mb-3" style="font-size: 0.75rem;">Enable this for jerseys or products that require custom name/number printing.</small>
                         </div>
                     </div>
                       {{-- Animation Category --}}

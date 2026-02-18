@@ -329,6 +329,7 @@ try {
                 'thumbnail_image' => $thumbnailPaths,
                 'main_image' => $mainPaths,
                 'real_image' => $realImagePaths,
+                'is_custom' => $request->has('is_custom') ? 1 : 0,
                 'status' => $request->has('status') ? 1 : 0, // <-- UPDATED
                 'is_free_delivery' => $request->has('is_free_delivery') ? 1 : 0, // <-- ADDED
                 'is_pre_order' => $request->has('is_pre_order') ? 1 : 0,
@@ -565,6 +566,7 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
                 'unit_id' => $request->unit_id,
                 'description' => $request->description,
                 'base_price' => $request->base_price,
+                'is_custom' => $request->has('is_custom') ? 1 : 0,
                 'purchase_price' => $request->purchase_price,
                 'discount_price' => $request->discount_price,
                 'thumbnail_image' => $finalThumbnails, // Save the updated array of thumbnails
@@ -842,5 +844,16 @@ $primaryCategoryId = $request->category_ids[0] ?? null;
             return response()->json(['message' => 'An error occurred.'], 500);
         }
     }
+
+    public function bulkCustomUpdate(Request $request)
+{
+    $request->validate([
+        'ids' => 'required|array',
+        'status' => 'required|boolean',
+    ]);
+
+    Product::whereIn('id', $request->ids)->update(['is_custom' => $request->status]);
+    return response()->json(['message' => 'Customization status updated.']);
+}
     
 }

@@ -25,6 +25,7 @@ class BundleOfferProduct extends Model
         'bundle_offer_id',
         'title',
         'image',
+        'is_custom',
         'product_id',
         'category_id',
         'discount_price',
@@ -38,6 +39,7 @@ class BundleOfferProduct extends Model
      * @var array
      */
     protected $casts = [
+        'is_custom' => 'boolean',
         'product_id' => 'array', // Automatically handles JSON encoding and decoding
         'category_id' => 'array',
     ];

@@ -34,6 +34,8 @@ class Order extends Model
         'notes',
         'discount_type',  // নতুন
     'discount_value', // নতুন
+    'custom_name',   // নতুন যুক্ত করা হয়েছে
+    'custom_number', // নতুন যুক্ত করা হয়েছে
     ];
 
     /**

@@ -142,6 +142,10 @@ Route::controller(AuthController::class)->group(function () {
 
 
 Route::group(['middleware' => ['auth']], function() {
+
+Route::post('products-bulk-custom-update', [ProductController::class, 'bulkCustomUpdate'])->name('ajax.product.bulk-custom-update');
+
+
    Route::get('area-wise-price/data', [AreaWisePriceController::class, 'data'])->name('area-wise-price.data'); // ADD THIS LINE
      Route::resource('area-wise-price', AreaWisePriceController::class);
 
@@ -330,7 +334,7 @@ Route::get('order-search-customers', [OrderController::class, 'searchCustomers']
      Route::resource('bundle-offer', BundleOfferController::class);
     Route::get('ajax-bundle-offer-data', [BundleOfferController::class, 'data'])->name('ajax.bundle-offer.data');
     Route::get('ajax-bundle-offer-search-products', [BundleOfferController::class, 'searchProducts'])->name('ajax.bundle-offer.search-products');
-
+Route::post('offer-product-bulk-custom-update', [App\Http\Controllers\Admin\OfferDetailController::class, 'bulkCustomUpdate'])->name('ajax.offer-product.bulk-custom-update');
     // Routes for managing the specific Product Deals
     Route::resource('offer-product', OfferDetailController::class);
     // --- NEW: AJAX route for the product deals table ---

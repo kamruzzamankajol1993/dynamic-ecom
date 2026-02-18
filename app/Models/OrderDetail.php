@@ -17,6 +17,9 @@ class OrderDetail extends Model
         'size',
         'quantity',
         'unit_price',
+        'is_custom', // নতুন যুক্ত করা হয়েছে
+        'custom_name',   // নতুন যুক্ত করা হয়েছে
+    'custom_number', // নতুন যুক্ত করা হ
         'subtotal',
         'discount', // Add this
         'after_discount_price',
