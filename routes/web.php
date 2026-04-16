@@ -287,7 +287,8 @@ Route::get('/bundle-offers/{bundleOfferProduct}', [PosController::class, 'getBun
 Route::post('customers', [PosController::class, 'store'])->name('customers.store');
 Route::get('pos-products', [PosController::class, 'getProducts'])->name('pos.products.get');
     Route::get('pos-products/{product}', [PosController::class, 'getProductDetails'])->name('pos.products.details');
-
+// স্ক্যানার দিয়ে প্রোডাক্ট খোঁজার জন্য নতুন ডেডিকেটেড রুট
+Route::get('pos-scanner-search', [PosController::class, 'scannerSearch'])->name('pos.scanner.search');
     Route::resource('expense-category', ExpenseCategoryController::class);
 Route::get('ajax-expense-category', [ExpenseCategoryController::class, 'data'])->name('expense-category.data');
 

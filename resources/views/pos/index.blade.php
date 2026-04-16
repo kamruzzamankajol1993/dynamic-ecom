@@ -25,9 +25,9 @@
                                 <div id="customer-results" class="list-group position-absolute w-100" style="top: 100%; z-index: 1050; display: none; max-height: 200px; overflow-y: auto;"></div>
                             </div>
                             <div class="input-group mb-2">
-                                <input type="text" class="form-control" placeholder="Scan barcode or type the number then hit enter">
-                                <button class="btn btn-light border" type="button"><i class="fa-solid fa-check text-primary"></i></button>
-                            </div>
+    <input type="text" id="barcode-scan-input" class="form-control" placeholder="Scan barcode or type and hit enter" autofocus>
+    <button class="btn btn-light border" type="button"><i class="fa-solid fa-check text-primary"></i></button>
+</div>
                         </div>
 
                         <div class="cart-table-wrapper">
@@ -320,6 +320,86 @@ let isCartLocked = false;
     const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
     let cart = [];
 
+    $('#barcode-scan-input').on('keypress', function(e) {
+    if (e.which == 13) { 
+        e.preventDefault();
+        let barcode = $(this).val().trim();
+        if (barcode === "") return;
+
+        $(this).val(''); // ইনপুট ক্লিয়ার
+
+        let parts = barcode.split('*');
+        let sku = parts[0];
+
+        // নতুন ডেডিকেটেড রুটে রিকোয়েস্ট পাঠানো হচ্ছে
+        $.ajax({
+            url: "{{ route('pos.scanner.search') }}",
+            type: 'GET',
+            data: { sku: sku },
+            success: function(response) {
+                if (response.success) {
+                    let product = response.product;
+                    selectedProductData = product; // গ্লোবাল ভেরিয়েবলে ডাটা রাখা
+
+                    // যদি কম্পোজিট বারকোড হয় (SKU*VariantID*SizeID)
+                    if (parts.length === 3) {
+                        let variantId = parseInt(parts[1]);
+                        let sizeId = parseInt(parts[2]);
+
+                        let variant = product.variants.find(v => v.id === variantId);
+                        if (variant) {
+                            let size = variant.detailed_sizes.find(s => s.id == sizeId);
+                            
+                            if (size && size.quantity > 0) {
+                                // --- সংশোধিত প্রাইস লজিক ---
+                // যদি discount_price থাকে (null নয় এবং ০ এর বেশি) তবে সেটি নিবে, নাহলে base_price
+                let effectivePrice = (product.discount_price !== null && parseFloat(product.discount_price) > 0) 
+                                     ? parseFloat(product.discount_price) 
+                                     : parseFloat(product.base_price);
+
+                // কালার/ভেরিয়েন্টের যদি আলাদা অতিরিক্ত দাম থাকে (additional_price)
+                if (variant.additional_price) {
+                    effectivePrice += parseFloat(variant.additional_price);
+                }
+
+                const cartItem = {
+                    id: `product-${product.id}-${variant.id}-${size.id}`,
+                    type: 'product',
+                    productId: product.id,
+                    productName: product.name,
+                    variantId: variant.id,
+                    colorName: variant.color.name,
+                    sizeId: size.id,
+                    sizeName: size.name,
+                    quantity: 1,
+                    price: effectivePrice, // সঠিক দাম সেট হলো
+                    basePrice: product.base_price,
+                    isDiscounted: (product.discount_price !== null && parseFloat(product.discount_price) > 0),
+                    maxQty: size.quantity
+                };
+
+                addToCart(cartItem);
+                Swal.fire({ icon: 'success', title: 'Added to Cart!', toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
+                return;
+                            }
+                        }
+                    }
+
+                    // যদি কম্পোজিট না হয় বা ভুল ডাটা হয়, তবে মোডাল ওপেন হবে
+                    populateModal(product);
+                    productDetailModal.show();
+
+                } else {
+                    Swal.fire('Error', response.message, 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'Product not found or server error.', 'error');
+            }
+        });
+    }
+});
+
 
     // --- NEW: Event Listener for the Cancel Button ---
     $('#cancel-order-btn').on('click', function() {
@@ -517,8 +597,17 @@ let isCartLocked = false;
         const maxQty = parseInt(selectedSize.data('max-qty')); // Get max quantity from the button
 
         // --- NEW: Determine the correct price and discount status ---
-        const isDiscounted = selectedProductData.discount_price > 0 && selectedProductData.discount_price < selectedProductData.base_price;
-        const priceForCalculation = isDiscounted ? selectedProductData.discount_price : selectedProductData.base_price;
+        const isDiscounted = (selectedProductData.discount_price !== null && parseFloat(selectedProductData.discount_price) > 0);
+
+// সঠিক দাম নির্ধারণ
+let priceForCalculation = isDiscounted 
+                          ? parseFloat(selectedProductData.discount_price) 
+                          : parseFloat(selectedProductData.base_price);
+
+// ভেরিয়েন্ট ভিত্তিক অতিরিক্ত দাম থাকলে যোগ হবে
+if (variant.additional_price) {
+    priceForCalculation += parseFloat(variant.additional_price);
+}
         // --- END NEW ---
         
         const cartItem = {
@@ -872,12 +961,20 @@ let isCartLocked = false;
         $('#modal-product-name').text(product.name);
         
         const priceContainer = $('#modal-product-price');
-        if (product.discount_price > 0 && product.discount_price < product.base_price) {
-            const priceHtml = `৳${parseFloat(product.discount_price).toLocaleString()} <del class="text-danger small ms-2">৳${parseFloat(product.base_price).toLocaleString()}</del>`;
-            priceContainer.html(priceHtml);
-        } else {
-            priceContainer.text(`৳${parseFloat(product.base_price).toLocaleString()}`);
-        }
+    
+    // --- সংশোধিত প্রাইস ডিসপ্লে লজিক ---
+    // যদি discount_price থাকে (null নয় এবং ০ এর বেশি) এবং তা base_price থেকে কম হয়
+    const hasDiscount = (product.discount_price !== null && 
+                         parseFloat(product.discount_price) > 0 && 
+                         parseFloat(product.discount_price) < parseFloat(product.base_price));
+
+    if (hasDiscount) {
+        const priceHtml = `৳${parseFloat(product.discount_price).toLocaleString()} 
+                           <del class="text-danger small ms-2">৳${parseFloat(product.base_price).toLocaleString()}</del>`;
+        priceContainer.html(priceHtml);
+    } else {
+        priceContainer.text(`৳${parseFloat(product.base_price).toLocaleString()}`);
+    }
    // /// START: JAVASCRIPT UPDATE ///
         const categoriesContainer = $('#modal-product-categories');
         // Check if the product has assigned categories and the array is not empty
@@ -1163,5 +1260,15 @@ let isCartLocked = false;
         }
     });
 });
+
+// index.blade.php এর script সেকশনের ভেতর যোগ করুন
+
+// স্ক্যানার ছাড়া ডেমো দেখার জন্য টিপস: 
+// ইনপুট ফিল্ডে SKU লিখে (যেমন: 1001) এন্টার দিলে মোডাল খুলবে। 
+// আর SKU*VariantID*SizeID লিখে (যেমন: 1001*5*2) এন্টার দিলে সরাসরি কার্টে যাবে।
+
+// index.blade.php এর script সেকশনে বারকোড ইভেন্ট লিসেনারটি এভাবে লিখুন
+
+
 </script>
 @endsection

@@ -305,7 +305,10 @@ $(document).ready(function() {
                       const deliveryStatusButton = `<button class="btn btn-sm btn-${statusColors[statusKey]} btn-update-status" data-id="${order.id}" data-status="${order.status}">${order.status.replace(/_/g, ' ').toUpperCase()}</button>`;
                     const detailsButton = `<button class="btn btn-sm btn-primary btn-details" data-id="${order.id}"><i class="fa fa-eye me-1"></i></button>`;
                     const orderFromBadge = order.order_from ? (order.order_from === 'web' ? `<span class="badge bg-info">Web</span>` : `<span class="badge bg-secondary">Admin</span>`) : '';
-
+let deliveryBadge = '';
+if (order.delivery_type === 'express') {
+    deliveryBadge = `<span class="badge bg-danger ms-1"><i class="fa fa-bolt me-1"></i>Express</span>`;
+}
                     rows += `<tr>
                         <td><input type="checkbox" class="row-checkbox" value="${order.id}"></td>
                         <td>${(res.current_page - 1) * 10 + i + 1}</td>
@@ -318,7 +321,7 @@ $(document).ready(function() {
                         <td>${payStatusBadge}</td>
                         <td>${paymentMethod}</td>
                         <td>${deliveryStatusButton}</td>
-                        <td>${orderFromBadge}</td>
+                        <td><p>${orderFromBadge}</p> ${deliveryBadge}</td>
                         <td>${detailsButton}</td>
                         <td>
                             <div class="dropdown">

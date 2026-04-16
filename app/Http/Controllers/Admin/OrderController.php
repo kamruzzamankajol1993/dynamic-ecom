@@ -282,61 +282,63 @@ class OrderController extends Controller
 
      // AJAX method for product search
     // AJAX method for product search
-   public function searchProducts(Request $request)
+  public function searchProducts(Request $request)
 {
     try {
-    $term = $request->get('term');
+        $term = $request->get('term');
 
-    $products = Product::where('name', 'LIKE','%' . $term . '%')
-        ->orWhere('product_code', 'LIKE', '%' . $term . '%')
-        ->limit(10)
-        ->get();
+        // ১. প্রথমে চেক করুন ইনপুটটি কোনো প্রোডাক্টের হুবহু product_code কি না (স্ক্যানারের জন্য)
+        $exactProduct = Product::where('product_code', $term)->first();
 
-    // We need to format the results for the jQuery UI Autocomplete plugin.
-    // The frontend expects objects with 'label' and 'value' keys.
-    // We also include the 'id' so we can use it when a product is selected.
-    $formattedProducts = $products->map(function($product) {
-        
-        // --- START: MODIFICATION ---
-        // Find a valid image URL. Prioritize thumbnail_image.
-        $imageUrl = asset('backend/images/placeholder.jpg'); // Set a default placeholder
-        
-        if (is_array($product->thumbnail_image) && !empty($product->thumbnail_image[0])) {
-            $imageUrl = asset('public/uploads/'.$product->thumbnail_image[0]);
-        } elseif (is_array($product->main_image) && !empty($product->main_image[0])) {
-            $imageUrl = asset('public/uploads/'.$product->main_image[0]); // Fallback to main_image
+        if ($exactProduct) {
+            $products = collect([$exactProduct]);
+        } else {
+            // ২. যদি কোড না মিলে, তবে নাম বা কোড দিয়ে আংশিক সার্চ করুন (ম্যানুয়াল সার্চের জন্য)
+            $products = Product::where('name', 'LIKE', '%' . $term . '%')
+                ->orWhere('product_code', 'LIKE', '%' . $term . '%')
+                ->limit(10)
+                ->get();
         }
-        // --- END: MODIFICATION ---
 
+        $formattedProducts = $products->map(function($product) {
+            // ইমেজ পাথ লজিক (বিদ্যমান)
+            $imageUrl = asset('backend/images/placeholder.jpg');
+            if (is_array($product->thumbnail_image) && !empty($product->thumbnail_image[0])) {
+                $imageUrl = asset('public/uploads/'.$product->thumbnail_image[0]);
+            }
 
-        return [
-            'id' => $product->id, // We'll need this to fetch details later
-            'label' => $product->name . ' (' . $product->product_code . ')', // Text to display in the list
-            'value' => $product->name, // Text to place in the input field on select
-            'image_url' => $imageUrl // --- ADDED ---
-        ];
-    });
+           return [
+    'id' => $product->id,
+    'label' => $product->name . ' (' . $product->product_code . ')',
+    'value' => $product->name, 
+    'name' => $product->name, // সরাসরি নাম প্রপার্টি যোগ করে দিন
+    'image_url' => $imageUrl
+];
+        });
 
-    return response()->json($formattedProducts);
+        return response()->json($formattedProducts);
+
     } catch (\Exception $e) {
-            Log::error('Error searching products: ' . $e->getMessage());
-            return response()->json(['error' => 'An error occurred while searching for products.'], 500);
-        }
+        Log::error('Error searching products: ' . $e->getMessage());
+        return response()->json(['error' => 'An error occurred.'], 500);
+    }
 }
 
-    public function getProductDetails($id)
-    {
-        try {
+   public function getProductDetails($id)
+{
+    try {
+        // variants.color এর সাথে product_code এবং name ও নিশ্চিত করুন
         $product = Product::with('variants.color')->findOrFail($id);
         
         $variantsData = $product->variants->map(function ($variant) {
-            $sizes = collect($variant->sizes)->map(function ($sizeInfo) {
-                $sizeModel = Size::find($sizeInfo['size_id']);
+            $sizes = collect($variant->detailed_sizes)->map(function ($sizeInfo) {
+                // এখানে আপনার ProductVariant মডেলে থাকা detailed_sizes এক্সেসর ব্যবহার করা হচ্ছে
                 return [
-                    'id' => $sizeInfo['size_id'],
-                    'name' => $sizeModel ? $sizeModel->name : 'N/A',
+                    'id' => $sizeInfo['id'],
+                    'name' => $sizeInfo['name'],
+                    'quantity' => $sizeInfo['quantity'] ?? 0,
+                    // যদি সাইজ ভিত্তিক আলাদা দাম থাকে, তবে সেটি এখানে আসবে
                     'additional_price' => $sizeInfo['additional_price'] ?? 0, 
-                      'quantity' => $sizeInfo['quantity'] ?? 0,
                 ];
             });
 
@@ -344,19 +346,23 @@ class OrderController extends Controller
                 'variant_id' => $variant->id,
                 'color_id' => $variant->color->id,
                 'color_name' => $variant->color->name,
+                // কালার ভিত্তিক অতিরিক্ত দাম (যা আপনি বারকোড কন্ট্রোলারে ব্যবহার করেছেন)
+                'variant_additional_price' => $variant->additional_price ?? 0,
                 'sizes' => $sizes,
             ];
         });
 
-        return response()->json([
-            'base_price' => $product->discount_price ?? $product->base_price,
-            'variants' => $variantsData,
-        ]);
-        } catch (\Exception $e) {
-            Log::error('Error fetching product details: ' . $e->getMessage());
-            return response()->json(['error' => 'Could not fetch product details.'], 500);
-        }
+       return response()->json([
+    'id' => $product->id,
+    'name' => $product->name, // এটি নিশ্চিত করুন
+    'base_price' => $product->discount_price ?? $product->base_price,
+    'variants' => $variantsData,
+]);
+    } catch (\Exception $e) {
+        Log::error('Error fetching product details: ' . $e->getMessage());
+        return response()->json(['error' => 'Could not fetch product details.'], 500);
     }
+}
 
     public function store(Request $request)
 {

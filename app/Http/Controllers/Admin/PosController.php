@@ -111,6 +111,34 @@ class PosController extends Controller
     }
 
     /**
+ * স্ক্যানারের জন্য নতুন ডেডিকেটেড ফাংশন।
+ * এটি SKU দিয়ে সার্চ করবে এবং ভেরিয়েন্ট ডাটা রিটার্ন করবে।
+ */
+public function scannerSearch(Request $request)
+{
+    $sku = $request->get('sku');
+
+    if (!$sku) {
+        return response()->json(['success' => false, 'message' => 'No SKU provided'], 400);
+    }
+
+    // SKU দিয়ে প্রোডাক্ট খুঁজে বের করা
+    $product = Product::with(['variants.color', 'assigns.category'])
+        ->where('product_code', $sku)
+        ->first();
+
+    if (!$product) {
+        return response()->json(['success' => false, 'message' => 'No product found with this barcode'], 404);
+    }
+
+    // প্রোডাক্ট ডাটা সরাসরি রিটার্ন করা
+    return response()->json([
+        'success' => true,
+        'product' => $product
+    ]);
+}
+
+    /**
      * Fetch detailed information for a single product for the modal.
      */
      public function getProductDetails(Product $product)

@@ -136,6 +136,15 @@
                             </div>
                         </div>
                     </div>
+                        <div class="row mb-3">
+    <div class="col-md-12">
+        <div class="input-group">
+            <span class="input-group-text bg-primary text-white"><i class="fa fa-barcode"></i></span>
+            <input type="text" id="barcodeScannerInput" class="form-control form-control-lg" placeholder="Scan Barcode here..." autofocus>
+        </div>
+        <small class="text-muted">স্ক্যানার দিয়ে স্ক্যান করলে অটোমেটিক প্রোডাক্ট নিচের লিস্টে যোগ হবে।</small>
+    </div>
+</div>
                 </div>
 
                 {{-- Right Side: Invoice Details --}}
@@ -404,6 +413,112 @@
 $(document).ready(function() {
     let initialProductDetails = @json($productDetailsJs);
     let productsCache = initialProductDetails;
+
+    // বারকোড স্ক্যানার ইনপুট হ্যান্ডেল করা
+$('#barcodeScannerInput').on('keypress', function(e) {
+    if (e.which == 13) { // Enter key
+        e.preventDefault();
+        let barcodeData = $(this).val().trim();
+        if (barcodeData !== '') {
+            processBarcode(barcodeData);
+            $(this).val(''); 
+        }
+    }
+});
+
+function processBarcode(barcode) {
+    let parts = barcode.split('*');
+    let productCode = parts[0];
+    let variantId = parts[1] || null;
+    let sizeId = parts[2] || null;
+
+    $.ajax({
+        url: "{{ route('order.search-products') }}",
+        data: { term: productCode },
+        success: function(data) {
+            if (data.length > 0) {
+                // আমরা শুধু সেই প্রোডাক্টটি নিব যার product_code হুবহু মিলবে
+                let product = data.find(p => p.label.includes(productCode)) || data[0];
+                handleScannerProductAdd(product.id, variantId, sizeId);
+            } else {
+                if(window.toastr) toastr.error('Product not found!');
+            }
+        }
+    });
+}
+
+function handleScannerProductAdd(productId, variantId, sizeId) {
+    let targetRow = null;
+
+    // ১. ফাঁকা রো খুঁজে বের করা বা নতুন তৈরি করা
+    let firstRow = $('#product-rows-container tr').first();
+    if (firstRow.length > 0 && firstRow.find('input[name$="[product_id]"]').val() === "") {
+        targetRow = firstRow;
+    } else {
+        addProductRow();
+        targetRow = $('#product-rows-container tr').last();
+    }
+
+    // ২. প্রোডাক্ট ডেটা নিয়ে আসা
+    $.get(`{{ url('order-get-product-details') }}/${productId}`, function(data) {
+        productsCache[productId] = data;
+        
+        targetRow.find('input[name$="[product_id]"]').val(productId);
+        targetRow.find('.product-search').val(data.name); 
+        
+        // কালার পপুলেট করা
+        populateVariations(targetRow, data);
+
+        if (variantId) {
+            let selectedVariant = data.variants.find(v => v.variant_id == variantId);
+            if (selectedVariant) {
+                
+                // *** মূল ম্যাজিক: Numeric ID থেকে Size Name বের করা ***
+                let actualSizeName = sizeId; // ডিফল্ট
+                if (selectedVariant.sizes) {
+                    let matchedSize = selectedVariant.sizes.find(s => s.id == sizeId);
+                    if (matchedSize) {
+                        actualSizeName = matchedSize.name; // উদাহরণ: 5 থেকে "XL" এ রূপান্তর
+                    }
+                }
+
+                // কালার সিলেক্ট করা
+                targetRow.find('.color-select').val(selectedVariant.color_name).trigger('change');
+                
+                // সাইজ লোড হওয়ার জন্য অপেক্ষা
+                let checkExist = setInterval(function() {
+                    let sizeDropdown = targetRow.find('.size-select');
+                    
+                    if (sizeDropdown.find('option').length > 1) {
+                        clearInterval(checkExist); 
+                        
+                        let sizeFound = false;
+                        sizeDropdown.find('option').each(function() {
+                            // এখন আমরা সঠিক নামের (যেমন "XL") সাথে মেলাবো
+                            if ($(this).val() == actualSizeName) {
+                                $(this).prop('selected', true);
+                                sizeFound = true;
+                                return false; 
+                            }
+                        });
+
+                        // সাইজ পাওয়া গেলে change ট্রিগার করা, যা রেট ও এমাউন্ট বসিয়ে দেবে
+                        if (sizeFound) {
+                            sizeDropdown.trigger('change'); 
+                        }
+                        
+                        setTimeout(() => { calculateFinalTotals(); }, 150);
+                    }
+                }, 50);
+
+                // ইনফিনিট লুপ এড়াতে ৩ সেকেন্ড পর চেকিং বন্ধ করা
+                setTimeout(() => { clearInterval(checkExist); }, 3000);
+            }
+        } else {
+            targetRow.find('.unit-price').val(data.base_price).trigger('input');
+        }
+    });
+}
 
     // Initialize the date picker
     $("#orderDate").datepicker({
