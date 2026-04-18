@@ -125,6 +125,7 @@ public function scannerSearch(Request $request)
     // SKU দিয়ে প্রোডাক্ট খুঁজে বের করা
     $product = Product::with(['variants.color', 'assigns.category'])
         ->where('product_code', $sku)
+        ->orWhere('id', $sku) // <-- শুধু এই লাইনটি যোগ করা হয়েছে
         ->first();
 
     if (!$product) {

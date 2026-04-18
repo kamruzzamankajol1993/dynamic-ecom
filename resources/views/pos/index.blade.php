@@ -320,85 +320,99 @@ let isCartLocked = false;
     const invoiceModal = new bootstrap.Modal(document.getElementById('invoiceModal'));
     let cart = [];
 
-    $('#barcode-scan-input').on('keypress', function(e) {
-    if (e.which == 13) { 
-        e.preventDefault();
-        let barcode = $(this).val().trim();
-        if (barcode === "") return;
+   $('#barcode-scan-input').on('keypress', function(e) {
+        if (e.which == 13) { 
+            e.preventDefault();
+            let barcode = $(this).val().trim();
+            if (barcode === "") return;
 
-        $(this).val(''); // ইনপুট ক্লিয়ার
-
-        let parts = barcode.split('*');
-        let sku = parts[0];
-
-        // নতুন ডেডিকেটেড রুটে রিকোয়েস্ট পাঠানো হচ্ছে
-        $.ajax({
-            url: "{{ route('pos.scanner.search') }}",
-            type: 'GET',
-            data: { sku: sku },
-            success: function(response) {
-                if (response.success) {
-                    let product = response.product;
-                    selectedProductData = product; // গ্লোবাল ভেরিয়েবলে ডাটা রাখা
-
-                    // যদি কম্পোজিট বারকোড হয় (SKU*VariantID*SizeID)
-                    if (parts.length === 3) {
-                        let variantId = parseInt(parts[1]);
-                        let sizeId = parseInt(parts[2]);
-
-                        let variant = product.variants.find(v => v.id === variantId);
-                        if (variant) {
-                            let size = variant.detailed_sizes.find(s => s.id == sizeId);
-                            
-                            if (size && size.quantity > 0) {
-                                // --- সংশোধিত প্রাইস লজিক ---
-                // যদি discount_price থাকে (null নয় এবং ০ এর বেশি) তবে সেটি নিবে, নাহলে base_price
-                let effectivePrice = (product.discount_price !== null && parseFloat(product.discount_price) > 0) 
-                                     ? parseFloat(product.discount_price) 
-                                     : parseFloat(product.base_price);
-
-                // কালার/ভেরিয়েন্টের যদি আলাদা অতিরিক্ত দাম থাকে (additional_price)
-                if (variant.additional_price) {
-                    effectivePrice += parseFloat(variant.additional_price);
+            // --- START: 16-DIGIT BARCODE CONVERSION LOGIC ---
+            // যদি স্ক্যান করা কোডটি ঠিক ১৬ ডিজিটের নাম্বার হয়
+            if (barcode.length === 16 && !isNaN(barcode)) {
+                let pid = parseInt(barcode.substring(0, 6), 10);
+                let vid = parseInt(barcode.substring(6, 12), 10);
+                let sid = parseInt(barcode.substring(12, 16), 10);
+                
+                if (vid === 0 && sid === 0) {
+                    barcode = pid.toString(); // শুধু প্রোডাক্ট আইডি (যেমন: 50)
+                } else {
+                    barcode = pid + "*" + vid + "*" + sid; // ভেরিয়েন্ট সহ (যেমন: 50*1238*90)
                 }
+            }
+            // --- END: CONVERSION LOGIC ---
 
-                const cartItem = {
-                    id: `product-${product.id}-${variant.id}-${size.id}`,
-                    type: 'product',
-                    productId: product.id,
-                    productName: product.name,
-                    variantId: variant.id,
-                    colorName: variant.color.name,
-                    sizeId: size.id,
-                    sizeName: size.name,
-                    quantity: 1,
-                    price: effectivePrice, // সঠিক দাম সেট হলো
-                    basePrice: product.base_price,
-                    isDiscounted: (product.discount_price !== null && parseFloat(product.discount_price) > 0),
-                    maxQty: size.quantity
-                };
+            $(this).val(''); // ইনপুট ক্লিয়ার
 
-                addToCart(cartItem);
-                Swal.fire({ icon: 'success', title: 'Added to Cart!', toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
-                return;
+            // আপনার আগের কোনো কোড চেঞ্জ করা হয়নি, সব হুবহু এক আছে
+            let parts = barcode.split('*');
+            let sku = parts[0];
+
+            // নতুন ডেডিকেটেড রুটে রিকোয়েস্ট পাঠানো হচ্ছে
+            $.ajax({
+                url: "{{ route('pos.scanner.search') }}",
+                type: 'GET',
+                data: { sku: sku },
+                success: function(response) {
+                    if (response.success) {
+                        let product = response.product;
+                        selectedProductData = product; // গ্লোবাল ভেরিয়েবলে ডাটা রাখা
+
+                        // যদি কম্পোজিট বারকোড হয় (SKU*VariantID*SizeID)
+                        if (parts.length === 3) {
+                            let variantId = parseInt(parts[1]);
+                            let sizeId = parseInt(parts[2]);
+
+                            let variant = product.variants.find(v => v.id === variantId);
+                            if (variant) {
+                                let size = variant.detailed_sizes.find(s => s.id == sizeId);
+                                
+                                if (size && size.quantity > 0) {
+                                    // --- সংশোধিত প্রাইস লজিক ---
+                                    let effectivePrice = (product.discount_price !== null && parseFloat(product.discount_price) > 0) 
+                                                         ? parseFloat(product.discount_price) 
+                                                         : parseFloat(product.base_price);
+
+                                    if (variant.additional_price) {
+                                        effectivePrice += parseFloat(variant.additional_price);
+                                    }
+
+                                    const cartItem = {
+                                        id: `product-${product.id}-${variant.id}-${size.id}`,
+                                        type: 'product',
+                                        productId: product.id,
+                                        productName: product.name,
+                                        variantId: variant.id,
+                                        colorName: variant.color.name,
+                                        sizeId: size.id,
+                                        sizeName: size.name,
+                                        quantity: 1,
+                                        price: effectivePrice, 
+                                        basePrice: product.base_price,
+                                        isDiscounted: (product.discount_price !== null && parseFloat(product.discount_price) > 0),
+                                        maxQty: size.quantity
+                                    };
+
+                                    addToCart(cartItem);
+                                    Swal.fire({ icon: 'success', title: 'Added to Cart!', toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
+                                    return;
+                                }
                             }
                         }
+
+                        // যদি কম্পোজিট না হয় বা ভুল ডাটা হয়, তবে মোডাল ওপেন হবে
+                        populateModal(product);
+                        productDetailModal.show();
+
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
                     }
-
-                    // যদি কম্পোজিট না হয় বা ভুল ডাটা হয়, তবে মোডাল ওপেন হবে
-                    populateModal(product);
-                    productDetailModal.show();
-
-                } else {
-                    Swal.fire('Error', response.message, 'error');
+                },
+                error: function() {
+                    Swal.fire('Error', 'Product not found or server error.', 'error');
                 }
-            },
-            error: function() {
-                Swal.fire('Error', 'Product not found or server error.', 'error');
-            }
-        });
-    }
-});
+            });
+        }
+    });
 
 
     // --- NEW: Event Listener for the Cancel Button ---

@@ -282,13 +282,15 @@ class OrderController extends Controller
 
      // AJAX method for product search
     // AJAX method for product search
-  public function searchProducts(Request $request)
+ public function searchProducts(Request $request)
 {
     try {
         $term = $request->get('term');
 
-        // ১. প্রথমে চেক করুন ইনপুটটি কোনো প্রোডাক্টের হুবহু product_code কি না (স্ক্যানারের জন্য)
-        $exactProduct = Product::where('product_code', $term)->first();
+        // ১. প্রথমে চেক করুন ইনপুটটি কোনো প্রোডাক্টের হুবহু product_code অথবা Database ID কি না (স্ক্যানারের জন্য)
+        $exactProduct = Product::where('product_code', $term)
+                               ->orWhere('id', $term) // এই লাইনটি নতুন যোগ করা হয়েছে
+                               ->first();
 
         if ($exactProduct) {
             $products = collect([$exactProduct]);
@@ -301,19 +303,19 @@ class OrderController extends Controller
         }
 
         $formattedProducts = $products->map(function($product) {
-            // ইমেজ পাথ লজিক (বিদ্যমান)
+            // ইমেজ পাথ লজিক
             $imageUrl = asset('backend/images/placeholder.jpg');
             if (is_array($product->thumbnail_image) && !empty($product->thumbnail_image[0])) {
                 $imageUrl = asset('public/uploads/'.$product->thumbnail_image[0]);
             }
 
            return [
-    'id' => $product->id,
-    'label' => $product->name . ' (' . $product->product_code . ')',
-    'value' => $product->name, 
-    'name' => $product->name, // সরাসরি নাম প্রপার্টি যোগ করে দিন
-    'image_url' => $imageUrl
-];
+                'id' => $product->id,
+                'label' => $product->name . ' (' . $product->product_code . ')',
+                'value' => $product->name, 
+                'name' => $product->name,
+                'image_url' => $imageUrl
+            ];
         });
 
         return response()->json($formattedProducts);

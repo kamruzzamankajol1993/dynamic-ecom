@@ -372,15 +372,46 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 <script>
 $(document).ready(function() {
+// --- স্ক্যানার লোডার ফাংশন ---
+function showScannerLoader() {
+    const input = $('#barcodeScannerInput');
+    input.prop('disabled', true).val(''); // ইনপুট ডিজেবল করে দেওয়া
+    input.attr('placeholder', 'Loading product...'); // টেক্সট পরিবর্তন
+    input.prev('.input-group-text').html('<i class="fa fa-spinner fa-spin"></i>'); // বারকোড আইকনের জায়গায় স্পিনার
+}
+
+function hideScannerLoader() {
+    const input = $('#barcodeScannerInput');
+    input.prop('disabled', false).val(''); // ইনপুট আবার ইনেবল করা
+    input.attr('placeholder', 'Scan Barcode here...');
+    input.prev('.input-group-text').html('<i class="fa fa-barcode"></i>'); // স্পিনার সরিয়ে বারকোড আইকন
+    input.focus(); // কাজ শেষ হওয়ার পর আবার ফোকাস রাখা, যাতে পরের স্ক্যান সহজে করা যায়
+}
 
 // বারকোড স্ক্যানার ইনপুট হ্যান্ডেল করা
 $('#barcodeScannerInput').on('keypress', function(e) {
     if (e.which == 13) { // Enter key
         e.preventDefault();
         let barcodeData = $(this).val().trim();
+        
         if (barcodeData !== '') {
+            showScannerLoader(); // স্ক্যান করার সাথে সাথে লোডার চালু
+
+            // --- 16-DIGIT BARCODE CONVERSION LOGIC ---
+            if (barcodeData.length === 16 && !isNaN(barcodeData)) {
+                let pid = parseInt(barcodeData.substring(0, 6), 10);
+                let vid = parseInt(barcodeData.substring(6, 12), 10);
+                let sid = parseInt(barcodeData.substring(12, 16), 10);
+                
+                if (vid === 0 && sid === 0) {
+                    barcodeData = pid.toString();
+                } else {
+                    barcodeData = pid + "*" + vid + "*" + sid;
+                }
+            }
+            // ------------------------------------------
+
             processBarcode(barcodeData);
-            $(this).val(''); 
         }
     }
 });
@@ -396,12 +427,17 @@ function processBarcode(barcode) {
         data: { term: productCode },
         success: function(data) {
             if (data.length > 0) {
-                // আমরা শুধু সেই প্রোডাক্টটি নিব যার product_code হুবহু মিলবে
-                let product = data.find(p => p.label.includes(productCode)) || data[0];
+                // আইডি অথবা লেবেলের সাথে মিলিয়ে প্রোডাক্টটি খুঁজবে
+                let product = data.find(p => p.id == productCode || p.label.includes(productCode)) || data[0];
                 handleScannerProductAdd(product.id, variantId, sizeId);
             } else {
                 if(window.toastr) toastr.error('Product not found!');
+                hideScannerLoader(); // প্রোডাক্ট না পেলেও লোডার বন্ধ করতে হবে
             }
+        },
+        error: function() {
+            if(window.toastr) toastr.error('Something went wrong!');
+            hideScannerLoader(); // সার্ভার এরর আসলেও লোডার বন্ধ হবে
         }
     });
 }
@@ -409,7 +445,6 @@ function processBarcode(barcode) {
 function handleScannerProductAdd(productId, variantId, sizeId) {
     let targetRow = null;
 
-    // ১. ফাঁকা রো খুঁজে বের করা বা নতুন তৈরি করা
     let firstRow = $('#product-rows-container tr').first();
     if (firstRow.length > 0 && firstRow.find('input[name$="[product_id]"]').val() === "") {
         targetRow = firstRow;
@@ -418,33 +453,28 @@ function handleScannerProductAdd(productId, variantId, sizeId) {
         targetRow = $('#product-rows-container tr').last();
     }
 
-    // ২. প্রোডাক্ট ডেটা নিয়ে আসা
-    $.get(`{{ url('order-get-product-details') }}/${productId}`, function(data) {
+    // প্রোডাক্ট ডিটেইলস নিয়ে আসা
+    $.get(`{{ url('order-get-product-details') }}/${productId}`)
+    .done(function(data) {
         productsCache[productId] = data;
         
         targetRow.find('input[name$="[product_id]"]').val(productId);
         targetRow.find('.product-search').val(data.name); 
         
-        // কালার পপুলেট করা
         populateVariations(targetRow, data);
 
         if (variantId) {
             let selectedVariant = data.variants.find(v => v.variant_id == variantId);
             if (selectedVariant) {
                 
-                // *** মূল ম্যাজিক: Numeric ID থেকে Size Name বের করা ***
-                let actualSizeName = sizeId; // ডিফল্ট
+                let actualSizeName = sizeId; 
                 if (selectedVariant.sizes) {
                     let matchedSize = selectedVariant.sizes.find(s => s.id == sizeId);
-                    if (matchedSize) {
-                        actualSizeName = matchedSize.name; // উদাহরণ: 5 থেকে "XL" এ রূপান্তর
-                    }
+                    if (matchedSize) actualSizeName = matchedSize.name; 
                 }
 
-                // কালার সিলেক্ট করা
                 targetRow.find('.color-select').val(selectedVariant.color_name).trigger('change');
                 
-                // সাইজ লোড হওয়ার জন্য অপেক্ষা
                 let checkExist = setInterval(function() {
                     let sizeDropdown = targetRow.find('.size-select');
                     
@@ -453,7 +483,6 @@ function handleScannerProductAdd(productId, variantId, sizeId) {
                         
                         let sizeFound = false;
                         sizeDropdown.find('option').each(function() {
-                            // এখন আমরা সঠিক নামের (যেমন "XL") সাথে মেলাবো
                             if ($(this).val() == actualSizeName) {
                                 $(this).prop('selected', true);
                                 sizeFound = true;
@@ -461,21 +490,30 @@ function handleScannerProductAdd(productId, variantId, sizeId) {
                             }
                         });
 
-                        // সাইজ পাওয়া গেলে change ট্রিগার করা, যা রেট ও এমাউন্ট বসিয়ে দেবে
-                        if (sizeFound) {
-                            sizeDropdown.trigger('change'); 
-                        }
+                        if (sizeFound) sizeDropdown.trigger('change'); 
                         
-                        setTimeout(() => { calculateFinalTotals(); }, 150);
+                        setTimeout(() => { 
+                            calculateFinalTotals(); 
+                            hideScannerLoader(); // সব কাজ শেষ, এবার লোডার বন্ধ
+                        }, 150);
                     }
                 }, 50);
 
-                // ইনফিনিট লুপ এড়াতে ৩ সেকেন্ড পর চেকিং বন্ধ করা
-                setTimeout(() => { clearInterval(checkExist); }, 3000);
+                setTimeout(() => { 
+                    clearInterval(checkExist); 
+                    hideScannerLoader(); // ফেইলসেফ: ৩ সেকেন্ড পর অটোমেটিক লোডার বন্ধ
+                }, 3000);
+            } else {
+                hideScannerLoader();
             }
         } else {
             targetRow.find('.unit-price').val(data.base_price).trigger('input');
+            hideScannerLoader(); // ভেরিয়েন্ট না থাকলে সরাসরি লোডার বন্ধ
         }
+    })
+    .fail(function() {
+        if(window.toastr) toastr.error('Failed to load product details!');
+        hideScannerLoader(); // ডাটাবেস এরর আসলে লোডার বন্ধ
     });
 }
     // Initialize datepicker
